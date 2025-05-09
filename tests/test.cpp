@@ -111,8 +111,8 @@ test3 ()
           putln ("Inside else!!")
    */
   sts.push_back (static_cast<Statement *> (new IfConstruct (
-      static_cast<Expr *> (new ConstantExpr (
-          static_cast<Constant *> (new IntegerConstant (10)))),
+      static_cast<Expr *> (
+          new ConstantExpr (static_cast<Constant *> (new NoneConstant ()))),
       { static_cast<Statement *> (new FuncCallStatement (
           static_cast<Expr *> (new VariableExpr ("putln")),
           { static_cast<Expr *> (new ConstantExpr (static_cast<Constant *> (
