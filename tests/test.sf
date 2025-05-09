@@ -1,0 +1,4 @@
+a = 20
+b = 30
+putln (a)
+putln (b)
