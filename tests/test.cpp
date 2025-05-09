@@ -93,6 +93,7 @@ test3 ()
       static_cast<Expr *> (new ConstantExpr (
           static_cast<Constant *> (new IntegerConstant (20)))))));
 
+  /* c = a */
   sts.push_back (static_cast<Statement *> (
       new VarDeclStatement (static_cast<Expr *> (new VariableExpr ("c")),
                             static_cast<Expr *> (new VariableExpr ("a")))));
