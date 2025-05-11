@@ -35,6 +35,12 @@ test1 ()
   for (int i : v)
     std::cout << i << ", ";
   std::cout << std::endl;
+
+  v.reverse ();
+
+  for (int i : v)
+    std::cout << i << ", ";
+  std::cout << std::endl;
 }
 
 /* string test */
@@ -155,10 +161,84 @@ test3 ()
     delete i;
 }
 
+void
+test4 ()
+{
+  using namespace sf;
+
+  std::ifstream fl ("../../tests/test.sf");
+
+  if (!fl)
+    {
+      ERRMSG ("Invalid file path");
+    }
+
+  std::string s, p;
+  while (std::getline (fl, p))
+    s += p + '\n';
+
+  // std::cout << s << std::endl;
+  Vec<Token *> r = tokenize ((char *)s.c_str ());
+
+  std::cout << r.get_size () << '\n';
+  for (auto &&i : r)
+    {
+      i->print ();
+    }
+
+  Vec<Statement *> ast = stmt_gen (r);
+
+  NativeFunction *nv = new NativeFunction (native_putln, { "a" });
+
+  /* putln = <function...> */
+  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
+                     static_cast<Expr *> (new VariableExpr ("putln")),
+                     static_cast<Expr *> (
+                         new FunctionExpr (static_cast<Function *> (nv))))));
+
+  std::cout << ast.get_size () << std::endl;
+  for (auto &&i : ast)
+    {
+      i->print ();
+    }
+
+  std::cout << "--------------" << std::endl;
+
+  try
+    {
+      // while (1)
+      {
+        Module *m = new Module (ModuleType::File, ast);
+
+        mod_exec (*m);
+
+        std::cout << "--------------" << std::endl;
+
+        for (auto i : m->get_vtable ())
+          {
+            std::cout << i.first << std::endl;
+            i.second->print ();
+            std::cout << std::endl;
+          }
+
+        delete m;
+      }
+    }
+  catch (const char *e)
+    {
+      std::cerr << e << std::endl;
+    }
+
+  for (auto &&i : ast)
+    delete i;
+
+  fl.close ();
+}
+
 int
 main (int argc, char const *argv[])
 {
-  TEST (3);
+  TEST (4);
   std::cout << "Program ended." << std::endl;
   return 0;
 }

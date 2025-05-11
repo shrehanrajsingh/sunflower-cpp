@@ -40,6 +40,7 @@ public:
   virtual _MemNode &operator++ ();
   virtual _MemNode operator++ (int);
 
+  /* explicit method to change ref_count */
   void set_ref_count (int);
 
   inline int &

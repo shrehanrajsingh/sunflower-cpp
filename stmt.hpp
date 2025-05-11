@@ -56,7 +56,10 @@ public:
   print () override
   {
     std::cout << "VarDeclStatement\nName: ";
+    assert (name != nullptr);
     name->print ();
+
+    assert (value != nullptr);
     std::cout << "Value: ";
     value->print ();
   }
@@ -110,7 +113,7 @@ public:
   {
     std::cout << "FuncCallStatement:\nName: ";
     name->print ();
-    std::cout << "Args (" << args.get_size () << "):\n";
+    std::cout << "Args (" << args.get_size () << ")\n";
 
     for (size_t i = 0; i < args.get_size (); i++)
       {

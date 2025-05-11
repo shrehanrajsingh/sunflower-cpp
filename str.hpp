@@ -16,6 +16,7 @@ public:
 
   Str (const Str &rhs) { v = rhs.v; }
   Str (Str &&rhs) noexcept : v (std::move (rhs.v)) {}
+  Str (char &rhs) { v.push_back (rhs); }
   //   Str (const Str &rhs) { v = std::move (rhs.v); }
 
   Str &
@@ -103,6 +104,12 @@ public:
     return s;
   }
 
+  char *
+  get_internal_buffer ()
+  {
+    return v.get ();
+  }
+
   friend std::ostream &
   operator<< (std::ostream &_Out, Str &rhs)
   {
@@ -111,6 +118,22 @@ public:
 
     return _Out;
   }
+
+  Str
+  operator+ (const Str &rhs)
+  {
+    Str res (*this);
+
+    for (size_t i = 0; i < rhs.size (); i++)
+      res.push_back (rhs[i]);
+
+    return res;
+  }
+
+  friend Str operator+ (const Str &, const char);
+  friend bool operator== (const Str &, const Str &);
+  friend bool operator== (const Str &, char *);
+  friend bool operator== (const Str &, char);
 };
 
 // std::ostream &

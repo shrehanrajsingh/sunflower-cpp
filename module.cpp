@@ -132,6 +132,9 @@ mod_exec (Module &mod)
                         NativeFunction *nf
                             = static_cast<NativeFunction *> (fv);
 
+                        assert (nf->get_args ().get_size ()
+                                == args_eval.get_size ());
+
                         Module *fmod = new Module (ModuleType::Function,
                                                    Vec<Statement *> ());
                         fmod->set_parent (&mod);

@@ -89,6 +89,18 @@ public:
     return cap;
   }
 
+  inline T *&
+  get ()
+  {
+    return vals;
+  }
+
+  inline const T *
+  get () const
+  {
+    return vals;
+  }
+
   inline T &
   back ()
   {
@@ -168,6 +180,8 @@ public:
   {
     size = 0;
   };
+
+  void reverse ();
 
   ~Vec ();
 };
@@ -363,5 +377,22 @@ Vec<T>::insert (size_t i, T &&v)
     }
 
   push_back (pres);
+}
+
+template <typename T>
+void
+Vec<T>::reverse ()
+{
+  int i = 0, j = get_size () - 1;
+
+  while (i < j)
+    {
+      T tmp = vals[i];
+      vals[i] = vals[j];
+      vals[j] = tmp;
+
+      i++;
+      j--;
+    }
 }
 } // namespace sf

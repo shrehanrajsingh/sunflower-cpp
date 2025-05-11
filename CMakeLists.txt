@@ -21,5 +21,6 @@ add_library(sunflower
     module.hpp module.cpp
     memutil.hpp memutil.cpp
     func.hpp func.cpp
+    ast.hpp ast.cpp
     sunflower.hpp sunflower.cpp)
 

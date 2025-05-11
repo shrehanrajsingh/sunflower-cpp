@@ -13,6 +13,8 @@ enum class TokenType
   Integer = 5,
   Float = 6,
   Keyword = 7,
+  Boolean = 8,
+  NoneType = 9,
   EndOfFile
 };
 
@@ -84,13 +86,13 @@ public:
 class TabspaceToken : public Token
 {
 private:
-  Str val;
+  size_t val;
 
 public:
-  TabspaceToken (Str v) : Token (TokenType::Tabspace), val (v) {};
+  TabspaceToken (size_t v) : Token (TokenType::Tabspace), val (v) {};
   ~TabspaceToken () = default;
 
-  inline Str &
+  inline size_t &
   get_val ()
   {
     return val;
@@ -204,10 +206,41 @@ public:
   }
 };
 
+class BooleanToken : public Token
+{
+private:
+  bool val;
+
+public:
+  BooleanToken (bool v) : Token (TokenType::Boolean), val (v) {};
+  ~BooleanToken () = default;
+
+  inline bool
+  get_val ()
+  {
+    return val;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "Boolean: " << val << std::endl;
+  }
+};
+
+class NoneToken : public Token
+{
+public:
+  NoneToken () : Token (TokenType::NoneType) {}
+  ~NoneToken () = default;
+};
+
 class EndOfFileToken : public Token
 {
 public:
   EndOfFileToken () : Token (TokenType::EndOfFile) {}
   ~EndOfFileToken () = default;
 };
+
+Vec<Token *> tokenize (char *);
 } // namespace sf

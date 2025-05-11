@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ast.hpp"
 #include "expr.hpp"
 #include "func.hpp"
 #include "header.hpp"

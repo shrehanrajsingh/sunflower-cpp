@@ -150,7 +150,7 @@ public:
   void
   print () override
   {
-    std::cout << "None";
+    std::cout << "none";
   }
 };
 } // namespace sf

@@ -87,7 +87,6 @@ public:
   void
   set_c (std::shared_ptr<Constant> d)
   {
-    c.reset ();
     c = d;
   }
 };
