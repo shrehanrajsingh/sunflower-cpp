@@ -200,7 +200,7 @@ public:
     else
       std::cout << "(Null)" << std::endl;
 
-    std::cout << "Elifs: " << std::endl;
+    std::cout << "Elifs: (" << elif_constructs.get_size () << ')' << std::endl;
     for (auto &&i : elif_constructs)
       i->print ();
 

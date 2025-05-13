@@ -347,6 +347,27 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::Conditional:
+      {
+        ConditionalExpr *ce = static_cast<ConditionalExpr *> (e);
+        Object *lobj = expr_eval (mod, ce->get_lval ());
+        Object *robj = expr_eval (mod, ce->get_rval ());
+
+        bool cnd = _sfobj_cmp (lobj, robj, ce->get_cond_type ());
+
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ConstantObject (
+            static_cast<Constant *> (new BooleanConstant (cnd))));
+
+        I (res);
+
+        DR (lobj);
+        DR (robj);
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "const.hpp"
+#include "expr.hpp"
 #include "func.hpp"
 #include "header.hpp"
 #include "memutil.hpp"
@@ -127,7 +128,15 @@ public:
   }
 };
 
+#define OBJ_IS_NUMBER(X)                                                      \
+  ((X)->get_type () == ObjectType::Constant                                   \
+       && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()   \
+              == ConstantType::Float                                          \
+   || static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
+          == ConstantType::Integer)
+
 void _sfobj_refcheck (Object *&);
 bool _sfobj_isfalse (Module &, Object *&);
+bool _sfobj_cmp (Object *&, Object *&, ConditionalType);
 
 } // namespace sf

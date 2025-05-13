@@ -10,7 +10,19 @@ enum class ExprType
   Variable = 1,
   VarDecl = 2,
   Function = 3,
+  Conditional = 4,
   NoExpr, /* fallback type for default expr inits */
+};
+
+enum class ConditionalType
+{
+  EqEq = 0,
+  NEq = 1,
+  LEq = 2,
+  GEq = 3,
+  Le = 4,
+  Ge = 5,
+  NCond
 };
 
 namespace sf
@@ -178,5 +190,85 @@ public:
   {
     return v;
   }
+};
+
+class ConditionalExpr : public Expr
+{
+private:
+  ConditionalType cndtype;
+  Expr *lval, *rval;
+
+public:
+  ConditionalExpr ()
+      : Expr (ExprType::Conditional), cndtype (ConditionalType::NCond),
+        lval (nullptr), rval (nullptr)
+  {
+  }
+  ConditionalExpr (ConditionalType _Type)
+      : Expr (ExprType::Conditional), cndtype (_Type), lval (nullptr),
+        rval (nullptr)
+  {
+  }
+  ConditionalExpr (ConditionalType _Type, Expr *_Lval, Expr *_Rval)
+      : Expr (ExprType::Conditional), cndtype (_Type), lval (_Lval),
+        rval (_Rval)
+  {
+  }
+
+  inline ConditionalType
+  get_cond_type () const
+  {
+    return cndtype;
+  }
+
+  inline Expr *&
+  get_lval ()
+  {
+    return lval;
+  }
+
+  inline Expr *&
+  get_rval ()
+  {
+    return rval;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "ConditionalExpr: " << std::endl;
+    std::cout << "Type: ";
+    switch (cndtype)
+      {
+      case ConditionalType::EqEq:
+        std::cout << "==" << std::endl;
+        break;
+      case ConditionalType::NEq:
+        std::cout << "!=" << std::endl;
+        break;
+      case ConditionalType::LEq:
+        std::cout << "<=" << std::endl;
+        break;
+      case ConditionalType::GEq:
+        std::cout << ">=" << std::endl;
+        break;
+      case ConditionalType::Le:
+        std::cout << "<" << std::endl;
+        break;
+      case ConditionalType::Ge:
+        std::cout << ">" << std::endl;
+        break;
+      case ConditionalType::NCond:
+        std::cout << "No Condition" << std::endl;
+        break;
+      default:
+        std::cout << "Unknown" << std::endl;
+        break;
+      }
+    lval->print ();
+    rval->print ();
+  }
+
+  ~ConditionalExpr () {}
 };
 } // namespace sf

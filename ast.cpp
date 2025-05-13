@@ -11,6 +11,11 @@ int _sf_ast_getline_idx (Vec<Token *> &_Data, size_t _StartIdx,
 /* returns the next ',' idx */
 size_t _sf_ast_getarg_idx (Vec<Token *> &_Data, size_t _StartIdx, int _GB = 0);
 
+size_t _sf_ast_gettabspace (Vec<Token *> &_Data, int _StartIdx);
+
+size_t _sf_ast_getblock_idx (Vec<Token *> &_Data, size_t _StartIdx,
+                             size_t _Tabspace = 0);
+
 Expr *
 expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 {
@@ -39,6 +44,48 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 res = static_cast<Expr *> (new VarDeclExpr (e_name, e_val));
 
                 i = vv_idx;
+              }
+            else if (opv == "==")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::EqEq, res, expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == "!=")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::NEq, res, expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == "<=")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::LEq, res, expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == ">=")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::GEq, res, expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == "<")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::Le, res, expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == ">")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::Ge, res, expr_gen (toks, i + 1, ed)));
+
+                goto ret;
               }
           }
           break;
@@ -119,6 +166,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
       i++;
     }
 
+ret:
   return res;
 }
 
@@ -189,6 +237,107 @@ stmt_gen (Vec<Token *> &toks)
                     new FuncCallStatement (expr_gen (toks, nv_idx, i), args)));
 
                 i = j;
+              }
+          }
+          break;
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &kw = kt->get_val ();
+
+            if (kw == "if")
+              {
+                int gb = 0;
+                size_t cond_end_idx = i;
+
+                for (size_t j = i + 1; j < toks.get_size (); j++)
+                  {
+                    Token *d = toks[j];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *jop
+                              = static_cast<OperatorToken *> (d);
+
+                          Str &js = jop->get_val ();
+
+                          if (js == '(' || js == '[' || js == '{')
+                            gb++;
+
+                          if (js == ')' || js == ']' || js == '}')
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Newline:
+                        {
+                          if (!gb)
+                            {
+                              cond_end_idx = j;
+                              goto l1;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+                  }
+              l1:;
+
+                Expr *cond = expr_gen (toks, i + 1, cond_end_idx);
+                size_t block_end_idx = _sf_ast_getblock_idx (
+                    toks, i, _sf_ast_gettabspace (toks, i));
+
+                Vec<Token *> body_toks;
+                // std::cout << "-----\n";
+                for (size_t j = cond_end_idx + 1; j < block_end_idx; j++)
+                  {
+                    // toks[j]->print ();
+                    body_toks.push_back (toks[j]);
+                  }
+                // std::cout << "-----end\n";
+
+                Vec<Statement *> body = stmt_gen (body_toks);
+
+                IfConstruct *ifst = new IfConstruct (cond, body, {}, {});
+
+                // std::cout << block_end_idx << '\t' << toks.get_size () <<
+                // '\n';
+                while (block_end_idx < toks.get_size ()
+                           && toks[block_end_idx]->get_type ()
+                                  == TokenType::Newline
+                       || toks[block_end_idx]->get_type ()
+                              == TokenType::Tabspace)
+                  block_end_idx++;
+
+                if (toks[block_end_idx]->get_type () == TokenType::Keyword
+                    && static_cast<KeywordToken *> (toks[block_end_idx])
+                               ->get_val ()
+                           == "else")
+                  {
+                    /**
+                     * TODO: check for `else if`
+                     */
+
+                    size_t else_bei = _sf_ast_getblock_idx (
+                        toks, block_end_idx,
+                        _sf_ast_gettabspace (toks, block_end_idx));
+
+                    Vec<Token *> else_body_toks;
+                    for (size_t j = block_end_idx + 1; j < else_bei; j++)
+                      else_body_toks.push_back (toks[j]);
+
+                    Vec<Statement *> else_body = stmt_gen (else_body_toks);
+                    ifst->get_else_body () = else_body;
+
+                    block_end_idx = else_bei;
+                  }
+
+                res.push_back (ifst);
+                i = block_end_idx;
               }
           }
           break;
@@ -410,5 +559,111 @@ _sf_ast_getarg_idx (Vec<Token *> &data, size_t st, int gb)
     }
 
   return 0;
+}
+
+size_t
+_sf_ast_gettabspace (Vec<Token *> &data, int st)
+{
+  int gb = 0;
+  for (int i = st - 1; i >= 0; i--)
+    {
+      Token *d = data[i];
+
+      switch (d->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            OperatorToken *jop = static_cast<OperatorToken *> (d);
+
+            Str &js = jop->get_val ();
+
+            if (js == '(' || js == '[' || js == '{')
+              gb++;
+
+            if (js == ')' || js == ']' || js == '}')
+              gb--;
+          }
+          break;
+
+        case TokenType::Tabspace:
+          {
+            if (!gb)
+              return static_cast<TabspaceToken *> (d)->get_val ();
+          }
+          break;
+        case TokenType::Newline:
+          {
+            if (!gb)
+              return 0;
+          }
+          break;
+
+        default:
+          break;
+        }
+    }
+
+  return 0;
+}
+
+size_t
+_sf_ast_getblock_idx (Vec<Token *> &data, size_t st, size_t tb)
+{
+  int gb = 0;
+  for (size_t i = st; i < data.get_size (); i++)
+    {
+      Token *d = data[i];
+
+      switch (d->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            OperatorToken *jop = static_cast<OperatorToken *> (d);
+
+            Str &js = jop->get_val ();
+
+            if (js == '(' || js == '[' || js == '{')
+              gb++;
+
+            if (js == ')' || js == ']' || js == '}')
+              gb--;
+          }
+          break;
+
+        case TokenType::Newline:
+          {
+            if (!gb)
+              {
+                if (i + 1 < data.get_size ())
+                  {
+                    Token *nd = data[i + 1];
+
+                    if (nd->get_type () == TokenType::Tabspace)
+                      {
+                        if (i + 2 < data.get_size ()
+                            && data[i + 2]->get_type () == TokenType::Newline)
+                          continue;
+
+                        if (static_cast<TabspaceToken *> (nd)->get_val ()
+                            <= tb)
+                          {
+                            return i;
+                          }
+                      }
+                    else
+                      {
+                        return i;
+                      }
+                  }
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+    }
+
+  return data.get_size ();
 }
 } // namespace sf

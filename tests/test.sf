@@ -1,18 +1,11 @@
-import dove
-
-class Window extends dove.Window
-    
-    fun _init(self)
-        super(dove.Window, dove.WIN_TYPE.Windowed, (800, 600), 'Hello, World!')
-
-        btn = dove.Button (
-            title = 'Click me!',
-            location = (200, 100),
-            id = 101,
-            onClick = obj \ putln ("Button with id %d clicked" % obj.id)
-        )
-
-        self.show()
-        
-
-win = Window()
+if 1
+    putln (1)
+    if 0
+        putln (3)
+    else
+        if 0
+            putln (4)
+        else
+            putln (5)
+else
+    putln (2)
