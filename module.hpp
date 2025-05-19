@@ -3,6 +3,7 @@
 #include "expr.hpp"
 #include "header.hpp"
 #include "object.hpp"
+#include "sfarray.hpp"
 #include "stmt.hpp"
 #include "str.hpp"
 #include "tokenize.hpp"
@@ -79,7 +80,6 @@ public:
   }
 
   Object *get_variable (std::string);
-  void set_variable (std::string, Object);
   void set_variable (std::string, Object *);
 
   friend void mod_exec (Module &);

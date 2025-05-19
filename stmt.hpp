@@ -9,6 +9,7 @@ enum class StatementType
   VarDecl = 0,
   FuncCall = 1,
   IfConstruct = 2,
+  ForConstruct = 3,
   NoStmt,
 };
 
@@ -210,5 +211,43 @@ public:
     for (auto &&i : else_body)
       i->print ();
   }
+};
+
+class ForConstruct : public Statement
+{
+private:
+  Vec<Expr *> var_list;
+  Expr *iterable;
+  Vec<Statement *> body;
+
+public:
+  ForConstruct () : Statement (StatementType::ForConstruct), iterable (nullptr)
+  {
+  }
+  ForConstruct (Vec<Expr *> _VarList, Expr *_Iterable, Vec<Statement *> _Body)
+      : Statement (StatementType::ForConstruct), var_list (_VarList),
+        iterable (_Iterable), body (_Body)
+  {
+  }
+
+  inline Vec<Expr *> &
+  get_var_list ()
+  {
+    return var_list;
+  }
+
+  inline Expr *&
+  get_iterable ()
+  {
+    return iterable;
+  }
+
+  inline Vec<Statement *> &
+  get_body ()
+  {
+    return body;
+  }
+
+  ~ForConstruct () {}
 };
 } // namespace sf

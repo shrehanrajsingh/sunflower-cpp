@@ -12,14 +12,13 @@ Module::get_variable (std::string s)
 }
 
 void
-Module::set_variable (std::string n, Object v)
-{
-  vtable[n] = new Object (v);
-}
-
-void
 Module::set_variable (std::string n, Object *v)
 {
+  if (vtable.find (n) != vtable.end ())
+    {
+      DR (vtable[n]);
+    }
+
   I (v);
   vtable[n] = v;
 }
@@ -228,6 +227,63 @@ mod_exec (Module &mod)
           }
           break;
 
+        case StatementType::ForConstruct:
+          {
+            ForConstruct *fc = static_cast<ForConstruct *> (st);
+
+            Vec<Expr *> &var_list = fc->get_var_list ();
+            Vec<Statement *> &for_body = fc->get_body ();
+            Vec<Statement *> mod_body_pres = mod.get_stmts ();
+
+            mod.get_stmts () = fc->get_body ();
+
+            Object *it_eval = expr_eval (mod, fc->get_iterable ());
+
+            switch (it_eval->get_type ())
+              {
+              case ObjectType::ArrayObj:
+                {
+                  ArrayObject *ao = static_cast<ArrayObject *> (it_eval);
+                  Vec<Object *> ao_vals = ao->get_vals ();
+
+                  for (Object *&av : ao_vals)
+                    {
+                      if (var_list.get_size () == 1)
+                        {
+                          Expr *v = var_list[0];
+
+                          switch (v->get_type ())
+                            {
+                            case ExprType::Variable:
+                              {
+                                char *p = static_cast<VariableExpr *> (v)
+                                              ->get_name ()
+                                              .c_str ();
+                                mod.set_variable (p, av);
+
+                                delete p;
+                              }
+                              break;
+
+                            default:
+                              break;
+                            }
+
+                          mod_exec (mod);
+                        }
+                    }
+                }
+                break;
+
+              default:
+                break;
+              }
+
+            mod.get_stmts () = mod_body_pres;
+            DR (it_eval);
+          }
+          break;
+
         default:
           std::cerr << "invalid type: " << (int)st->get_type () << std::endl;
           break;
@@ -365,6 +421,86 @@ expr_eval (Module &mod, Expr *e)
 
         DR (lobj);
         DR (robj);
+      }
+      break;
+
+    case ExprType::ArrayExp:
+      {
+        ArrayExpr *ae = static_cast<ArrayExpr *> (e);
+        Vec<Object *> ev_idcs;
+
+        for (Expr *&i : ae->get_vals ())
+          {
+            /**
+             * expr_eval returns an object that with one
+             * extra incremented ref_count which
+             * we can use for index in an array
+             */
+            ev_idcs.push_back (expr_eval (mod, i));
+          }
+
+        if (res != nullptr)
+          DR (res);
+
+        res = new ArrayObject (ev_idcs);
+        I (res);
+      }
+      break;
+
+    case ExprType::ArrayAccess:
+      {
+        ArrayAccess *ac = static_cast<ArrayAccess *> (e);
+
+        Object *arr_eval = expr_eval (mod, ac->get_arr ());
+        Object *idx_eval = expr_eval (mod, ac->get_idx ());
+
+        switch (arr_eval->get_type ())
+          {
+          case ObjectType::ArrayObj:
+            {
+              ArrayObject *ao = static_cast<ArrayObject *> (arr_eval);
+              if (OBJ_IS_NUMBER (idx_eval))
+                {
+                  Constant *ci = static_cast<Constant *> (
+                      static_cast<ConstantObject *> (idx_eval)
+                          ->get_c ()
+                          .get ());
+
+                  assert (ci->get_type () == ConstantType::Integer
+                          && "Array index must be an integer.");
+
+                  if (res != nullptr)
+                    DR (res);
+
+                  int idx = static_cast<IntegerConstant *> (ci)->get_value ();
+
+                  if (idx < 0)
+                    idx = idx % ao->get_vals ().get_size ();
+
+                  assert (idx < ao->get_vals ().get_size ()
+                          && "Array index out of bounds.");
+
+                  res = ao->get_vals ()[idx];
+                  I (res);
+                }
+              else
+                {
+                  std::cerr << "Invalid array access. Exiting..." << std::endl;
+                  exit (EXIT_FAILURE);
+                }
+            }
+            break;
+
+          default:
+            std::cerr << "Cannot overload [] on type "
+                      << (int)arr_eval->get_type () << ". Exiting..."
+                      << std::endl;
+            exit (EXIT_FAILURE);
+            break;
+          }
+
+        DR (arr_eval);
+        DR (idx_eval);
       }
       break;
 

@@ -33,6 +33,7 @@ enum class ObjectType
 {
   Constant = 0,
   FuncObject = 1,
+  ArrayObj = 2,
   NoObject,
 };
 

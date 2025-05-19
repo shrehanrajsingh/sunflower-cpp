@@ -1,4 +1,6 @@
 #include "ast.hpp"
+#include "expr.hpp"
+#include "sfarray.hpp"
 
 namespace sf
 {
@@ -86,6 +88,117 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                     ConditionalType::Ge, res, expr_gen (toks, i + 1, ed)));
 
                 goto ret;
+              }
+            else if (opv == "[")
+              {
+                if (res != nullptr)
+                  {
+                    /**
+                     * Index access
+                     * Example,
+                     * a [21]
+                     * ^
+                     * |
+                     * `a` is a VariableExpr, stored in res by the time
+                     * interpreter reaches '['
+                     */
+                    int gb = 0;
+                    size_t j = i + 1;
+                    size_t end_idx = i;
+
+                    while (j < ed)
+                      {
+                        Token *d = toks[j];
+
+                        switch (d->get_type ())
+                          {
+                          case TokenType::Operator:
+                            {
+                              OperatorToken *t
+                                  = static_cast<OperatorToken *> (d);
+                              Str &tv = t->get_val ();
+                              if (tv == "]" && !gb)
+                                {
+                                  end_idx = j;
+                                  goto l1;
+                                }
+
+                              if (tv == "(" || tv == "[" || tv == "{")
+                                gb++;
+                              else if (tv == ")" || tv == "]" || tv == "}")
+                                gb--;
+                            }
+                            break;
+
+                          default:
+                            break;
+                          }
+
+                        j++;
+                      }
+
+                  l1:
+                    Expr *arr = res;
+                    Expr *idx = expr_gen (toks, i + 1, end_idx);
+
+                    res = static_cast<Expr *> (new ArrayAccess (arr, idx));
+                    i = end_idx;
+                  }
+                else
+                  {
+                    int gb = 0;
+                    Vec<Expr *> arr_args;
+                    size_t j = i + 1;
+                    size_t last_arg_idx = i + 1;
+
+                    while (j < ed)
+                      {
+                        Token *d = toks[j];
+
+                        switch (d->get_type ())
+                          {
+                          case TokenType::Operator:
+                            {
+                              OperatorToken *t
+                                  = static_cast<OperatorToken *> (d);
+                              Str &tv = t->get_val ();
+
+                              if (tv == "," && !gb)
+                                {
+                                  arr_args.push_back (
+                                      expr_gen (toks, last_arg_idx, j));
+
+                                  last_arg_idx = j;
+                                }
+                              else if (tv == "]" && !gb)
+                                {
+                                  if (last_arg_idx != j)
+                                    {
+                                      /* non-empty array */
+                                      arr_args.push_back (
+                                          expr_gen (toks, last_arg_idx, j));
+
+                                      last_arg_idx = j;
+                                    }
+                                }
+
+                              if (tv == "(" || tv == "[" || tv == "{")
+                                gb++;
+                              else if (tv == ")" || tv == "]" || tv == "}")
+                                gb--;
+                            }
+                            break;
+
+                          default:
+                            break;
+                          }
+
+                        j++;
+                      }
+
+                    res = static_cast<Expr *> (new ArrayExpr (arr_args));
+                    i = last_arg_idx;
+                  }
               }
           }
           break;
@@ -337,6 +450,121 @@ stmt_gen (Vec<Token *> &toks)
                   }
 
                 res.push_back (ifst);
+                i = block_end_idx;
+              }
+            else if (kw == "for")
+              {
+                int gb = 0;
+                size_t last_arg_idx = i + 1;
+                size_t j = i + 1;
+                size_t in_idx = i;
+                size_t body_start_idx = i;
+                Vec<Expr *> arg_list;
+                Expr *iterable = nullptr;
+
+                while (j < toks.get_size ())
+                  {
+                    Token *d = toks[j];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *jop
+                              = static_cast<OperatorToken *> (d);
+
+                          Str &js = jop->get_val ();
+
+                          if (js == ',' && !gb)
+                            {
+                              arg_list.push_back (
+                                  expr_gen (toks, last_arg_idx, j));
+                              last_arg_idx = j;
+                            }
+
+                          if (js == '(' || js == '[' || js == '{')
+                            gb++;
+
+                          if (js == ')' || js == ']' || js == '}')
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Keyword:
+                        {
+                          KeywordToken *kwt = static_cast<KeywordToken *> (d);
+
+                          Str &kw = kwt->get_val ();
+
+                          if (kw == "in")
+                            {
+                              arg_list.push_back (
+                                  expr_gen (toks, last_arg_idx, j));
+                              in_idx = j;
+                              goto l2;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+
+                    j++;
+                  }
+              l2:;
+
+                gb = 0;
+                while (body_start_idx < toks.get_size ())
+                  {
+                    Token *d = toks[body_start_idx];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *jop
+                              = static_cast<OperatorToken *> (d);
+
+                          Str &js = jop->get_val ();
+
+                          if (js == '(' || js == '[' || js == '{')
+                            gb++;
+
+                          if (js == ')' || js == ']' || js == '}')
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Newline:
+                        {
+                          if (!gb)
+                            goto l3;
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+
+                    body_start_idx++;
+                  }
+              l3:;
+                iterable = expr_gen (toks, in_idx + 1, body_start_idx);
+
+                size_t block_end_idx = _sf_ast_getblock_idx (
+                    toks, body_start_idx, _sf_ast_gettabspace (toks, i));
+
+                Vec<Token *> body_toks;
+                for (size_t j = body_start_idx + 1; j < block_end_idx; j++)
+                  {
+                    body_toks.push_back (toks[j]);
+                  }
+
+                ForConstruct *fc = new ForConstruct (arg_list, iterable,
+                                                     stmt_gen (body_toks));
+
+                res.push_back (fc);
                 i = block_end_idx;
               }
           }

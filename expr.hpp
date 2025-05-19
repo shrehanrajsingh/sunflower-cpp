@@ -11,6 +11,8 @@ enum class ExprType
   VarDecl = 2,
   Function = 3,
   Conditional = 4,
+  ArrayExp = 5,
+  ArrayAccess = 6,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -270,5 +272,34 @@ public:
   }
 
   ~ConditionalExpr () {}
+};
+
+class ArrayAccess : public Expr
+{
+private:
+  /* type arr[idx] */
+  Expr *arr;
+  Expr *idx;
+
+public:
+  ArrayAccess () : Expr (ExprType::ArrayAccess) { arr = idx = nullptr; }
+  ArrayAccess (Expr *_Arr, Expr *_Idx)
+      : Expr (ExprType::ArrayAccess), arr (_Arr), idx (_Idx)
+  {
+  }
+
+  inline Expr *&
+  get_arr ()
+  {
+    return arr;
+  }
+
+  inline Expr *&
+  get_idx ()
+  {
+    return idx;
+  }
+
+  ~ArrayAccess () {}
 };
 } // namespace sf

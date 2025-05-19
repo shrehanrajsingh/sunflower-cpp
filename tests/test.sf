@@ -1,11 +1,4 @@
-if 1
-    putln (1)
-    if 0
-        putln (3)
-    else
-        if 0
-            putln (4)
-        else
-            putln (5)
-else
-    putln (2)
+a = [1, 2, 3, 4, 5]
+
+for i in a
+    putln (i)

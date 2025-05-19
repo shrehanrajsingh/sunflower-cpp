@@ -99,10 +99,25 @@ test3 ()
       static_cast<Expr *> (new ConstantExpr (
           static_cast<Constant *> (new IntegerConstant (20)))))));
 
+  /* b = 30 */
+  sts.push_back (static_cast<Statement *> (new VarDeclStatement (
+      static_cast<Expr *> (new VariableExpr ("b")),
+      static_cast<Expr *> (new ConstantExpr (
+          static_cast<Constant *> (new IntegerConstant (30)))))));
+
   /* c = a */
   sts.push_back (static_cast<Statement *> (
       new VarDeclStatement (static_cast<Expr *> (new VariableExpr ("c")),
                             static_cast<Expr *> (new VariableExpr ("a")))));
+
+  /* d = [10] */
+  // sts.push_back (static_cast<Statement *> (new VarDeclStatement (
+  //     static_cast<Expr *> (new VariableExpr ("d")),
+  //     static_cast<Expr *> (new ArrayExpr (
+  //         { static_cast<Expr *> (new ConstantExpr (
+  //               static_cast<Constant *> (new IntegerConstant (10)))),
+  //           static_cast<Expr *> (new ConstantExpr (
+  //               static_cast<Constant *> (new FloatConstant (4.5)))) })))));
 
   /* putln ("Hello, World!") */
   sts.push_back (static_cast<Statement *> (new FuncCallStatement (
@@ -133,29 +148,30 @@ test3 ()
   //     {
   //       std::cout << (int)sts[i]->get_type () << '\n';
   //     }
-  while (1)
-    {
-      Module *m = new Module (ModuleType::File, sts);
+  // while (1)
+  {
+    Module *m = new Module (ModuleType::File, sts);
 
-      mod_exec (*m);
+    mod_exec (*m);
 
-      //   for (auto i : m->get_vtable ())
-      //     {
-      //       std::cout << i.first << '\t' << i.second->get_ref_count () <<
-      //       '\t'; i.second->print (); std::cout << std::endl;
-      //     }
+    for (auto i : m->get_vtable ())
+      {
+        std::cout << i.first << '\t' << i.second->get_ref_count () << '\t';
+        i.second->print ();
+        std::cout << std::endl;
+      }
 
-      delete m;
+    delete m;
 
-      // for (auto i : vt)
-      //   {
-      //     // std::cout << i.first << '\t' << i.second->get_ref_count () <<
-      //     '\t';
-      //     // i.second->print ();
-      //     std::cout << i.first << '\t' << (i.second == nullptr);
-      //     std::cout << std::endl;
-      //   }
-    }
+    // for (auto i : vt)
+    //   {
+    //     // std::cout << i.first << '\t' << i.second->get_ref_count () <<
+    //     '\t';
+    //     // i.second->print ();
+    //     std::cout << i.first << '\t' << (i.second == nullptr);
+    //     std::cout << std::endl;
+    //   }
+  }
 
   for (auto i : sts)
     delete i;
