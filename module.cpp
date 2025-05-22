@@ -5,8 +5,16 @@ namespace sf
 Object *
 Module::get_variable (std::string s)
 {
-  if (!vtable.count (s))               /* not found */
-    throw "module_var_does_not_exist"; /* temp fix */
+  if (!vtable.count (s)) /* not found */
+    {
+      if (parent == nullptr)
+        {
+          std::cout << s << ": ";
+          throw "module_var_does_not_exist"; /* temp fix */
+        }
+      else
+        return parent->get_variable (s);
+    }
 
   return vtable.at (s);
 }
@@ -20,6 +28,7 @@ Module::set_variable (std::string n, Object *v)
     }
 
   I (v);
+
   vtable[n] = v;
 }
 
@@ -29,7 +38,7 @@ mod_exec (Module &mod)
   Vec<Statement *> &stmts = mod.get_stmts ();
   size_t i = 0;
 
-  while (i < stmts.get_size ())
+  while (mod.get_continue_exec () && i < stmts.get_size ())
     {
       Statement *st = stmts[i];
 
@@ -74,7 +83,7 @@ mod_exec (Module &mod)
                   mod.set_variable (p, val_eval); /* set_variable will handle
                                                      obj_count increment */
 
-                  delete p;
+                  delete[] p;
                 }
                 break;
 
@@ -144,7 +153,7 @@ mod_exec (Module &mod)
                             char *p = a.c_str ();
                             fmod->set_variable (p, args_eval[j++]);
 
-                            delete p;
+                            delete[] p;
                           }
 
                         Object *ret;
@@ -158,14 +167,53 @@ mod_exec (Module &mod)
 
                     case FuncType::Coded:
                       {
+                        CodedFunction *cf = static_cast<CodedFunction *> (fv);
+
+                        // printf ("%d %d\n", cf->get_args ().get_size (),
+                        //         args_eval.get_size ());
+                        assert (cf->get_args ().get_size ()
+                                == args_eval.get_size ());
+
+                        Module *fmod = new Module (ModuleType::Function,
+                                                   cf->get_body ());
+                        fmod->set_parent (&mod);
+
+                        size_t j = 0;
+                        for (Expr *&a : cf->get_args ())
+                          {
+                            switch (a->get_type ())
+                              {
+                              case ExprType::Variable:
+                                {
+                                  char *p = static_cast<VariableExpr *> (a)
+                                                ->get_name ()
+                                                .c_str ();
+                                  fmod->set_variable (p, args_eval[j++]);
+
+                                  delete[] p;
+                                }
+                                break;
+
+                              default:
+                                break;
+                              }
+                          }
+
+                        mod_exec (*fmod);
+
                         /**
-                         * TODO: Implement this sh*t
+                         * In statement side we
+                         * do not really care about
+                         * the return value of the function
                          */
+
+                        delete fmod;
                       }
                       break;
 
                     default:
                       /* unreachable */
+                      here;
                       exit (__LINE__);
                       break;
                     }
@@ -191,7 +239,8 @@ mod_exec (Module &mod)
             IfConstruct *ic = static_cast<IfConstruct *> (st);
             assert (ic->get_cond () != nullptr);
 
-            Object *cond_eval = expr_eval (mod, ic->get_cond ());
+            Object *cond_eval;
+            TC (cond_eval = expr_eval (mod, ic->get_cond ()));
             /*
               Since expr_eval already returns an object with an incremented
               reference count, we do not need to manually increase ourselves.
@@ -206,7 +255,24 @@ mod_exec (Module &mod)
               {
                 if (ic->get_elifconstructs ().get_size ())
                   {
-                    /* eval elifs */
+                    eval_else = true;
+                    for (IfConstruct *&ifc : ic->get_elifconstructs ())
+                      {
+                        Object *iv;
+                        TC (iv = expr_eval (mod, ifc->get_cond ()));
+
+                        if (!_sfobj_isfalse (mod, iv))
+                          {
+                            mod.get_stmts () = ifc->get_body ();
+                            mod_exec (mod);
+
+                            eval_else = false;
+                            DR (iv);
+                            break;
+                          }
+
+                        DR (iv);
+                      }
                   }
                 else
                   eval_else = true;
@@ -214,14 +280,15 @@ mod_exec (Module &mod)
             else
               {
                 mod.get_stmts () = ic->get_body ();
+                mod_exec (mod);
               }
 
             if (eval_else)
               {
                 mod.get_stmts () = ic->get_else_body ();
+                mod_exec (mod);
               }
 
-            mod_exec (mod);
             mod.get_stmts () = pres_st;
             DR (cond_eval); /* reclaim object */
           }
@@ -237,7 +304,8 @@ mod_exec (Module &mod)
 
             mod.get_stmts () = fc->get_body ();
 
-            Object *it_eval = expr_eval (mod, fc->get_iterable ());
+            Object *it_eval;
+            TC (it_eval = expr_eval (mod, fc->get_iterable ()));
 
             switch (it_eval->get_type ())
               {
@@ -261,16 +329,69 @@ mod_exec (Module &mod)
                                               .c_str ();
                                 mod.set_variable (p, av);
 
-                                delete p;
+                                delete[] p;
                               }
                               break;
 
                             default:
                               break;
                             }
-
-                          mod_exec (mod);
                         }
+                      else
+                        {
+                          switch (av->get_type ())
+                            {
+                            case ObjectType::ArrayObj:
+                              {
+                                ArrayObject *avo
+                                    = static_cast<ArrayObject *> (av);
+
+                                assert (avo->get_vals ().get_size ()
+                                        >= var_list.get_size ());
+
+                                if (avo->get_vals ().get_size ()
+                                    == var_list.get_size ())
+                                  {
+                                    /* == */
+
+                                    size_t vi = 0;
+                                    for (Expr *&vv : var_list)
+                                      {
+                                        switch (vv->get_type ())
+                                          {
+                                          case ExprType::Variable:
+                                            {
+                                              char *p
+                                                  = static_cast<
+                                                        VariableExpr *> (vv)
+                                                        ->get_name ()
+                                                        .c_str ();
+
+                                              mod.set_variable (
+                                                  p, avo->get_vals ()[vi++]);
+
+                                              delete[] p;
+                                            }
+                                            break;
+
+                                          default:
+                                            break;
+                                          }
+                                      }
+                                  }
+                                else
+                                  {
+                                    /* > */
+                                  }
+                              }
+                              break;
+
+                            default:
+                              break;
+                            }
+                        }
+
+                      mod_exec (mod);
                     }
                 }
                 break;
@@ -284,6 +405,63 @@ mod_exec (Module &mod)
           }
           break;
 
+        case StatementType::FuncDecl:
+          {
+            FuncDeclStatement *fds = static_cast<FuncDeclStatement *> (st);
+
+            CodedFunction *cd
+                = new CodedFunction (fds->get_body (), fds->get_args ());
+
+            FunctionObject *fo = new FunctionObject (cd);
+
+            char *p = fds->get_name ().c_str ();
+            mod.set_variable (p, fo);
+
+            delete[] p;
+          }
+          break;
+
+        case StatementType::ReturnStmt:
+          {
+            ReturnStatement *rt = static_cast<ReturnStatement *> (st);
+
+            if (mod.get_type () == ModuleType::Function)
+              {
+                mod.get_ret () = expr_eval (mod, rt->get_val ());
+                mod.get_continue_exec () = false;
+              }
+            else
+              {
+                Module *mref = mod.parent;
+
+                while (mref != nullptr
+                       && mref->get_type () != ModuleType::Function)
+                  mref = mref->get_parent ();
+
+                if (mref != nullptr)
+                  {
+                    mref->get_ret () = expr_eval (mod, rt->get_val ());
+                    mref->get_continue_exec () = false;
+
+                    mref = mod.parent;
+
+                    while (mref != nullptr
+                           && mref->get_type () != ModuleType::Function)
+                      {
+                        mref->get_continue_exec () = false;
+                        mref = mref->get_parent ();
+                      }
+                  }
+                else
+                  {
+                    throw "return_used_outside_function";
+                  }
+
+                goto func_end;
+              }
+          }
+          break;
+
         default:
           std::cerr << "invalid type: " << (int)st->get_type () << std::endl;
           break;
@@ -292,6 +470,8 @@ mod_exec (Module &mod)
     end:
       i++;
     }
+
+func_end:;
 }
 
 Object *
@@ -338,7 +518,7 @@ expr_eval (Module &mod, Expr *e)
               res = static_cast<Object *> (new ConstantObject (
                   static_cast<Constant *> (new StringConstant (p))));
 
-              delete p;
+              delete[] p;
             }
             break;
 
@@ -379,13 +559,13 @@ expr_eval (Module &mod, Expr *e)
 
             I (res);
 
-            delete p;
+            delete[] p;
           }
         catch (const char *&e)
           {
             std::cerr << e << '\n';
 
-            delete p;
+            delete[] p;
             exit (EXIT_FAILURE);
           }
       }
@@ -406,8 +586,10 @@ expr_eval (Module &mod, Expr *e)
     case ExprType::Conditional:
       {
         ConditionalExpr *ce = static_cast<ConditionalExpr *> (e);
-        Object *lobj = expr_eval (mod, ce->get_lval ());
-        Object *robj = expr_eval (mod, ce->get_rval ());
+        Object *lobj;
+        TC (lobj = expr_eval (mod, ce->get_lval ()));
+        Object *robj;
+        TC (robj = expr_eval (mod, ce->get_rval ()));
 
         bool cnd = _sfobj_cmp (lobj, robj, ce->get_cond_type ());
 
@@ -451,8 +633,10 @@ expr_eval (Module &mod, Expr *e)
       {
         ArrayAccess *ac = static_cast<ArrayAccess *> (e);
 
-        Object *arr_eval = expr_eval (mod, ac->get_arr ());
-        Object *idx_eval = expr_eval (mod, ac->get_idx ());
+        Object *arr_eval;
+        TC (arr_eval = expr_eval (mod, ac->get_arr ()));
+        Object *idx_eval;
+        TC (idx_eval = expr_eval (mod, ac->get_idx ()));
 
         switch (arr_eval->get_type ())
           {
@@ -501,6 +685,70 @@ expr_eval (Module &mod, Expr *e)
 
         DR (arr_eval);
         DR (idx_eval);
+      }
+      break;
+
+    case ExprType::ExprToStep:
+      {
+        ToStepClause *tsc = static_cast<ToStepClause *> (e);
+
+        Object *lv_eval;
+        TC (lv_eval = expr_eval (mod, tsc->get_lval ()));
+        Object *rv_eval;
+        TC (rv_eval = expr_eval (mod, tsc->get_rval ()));
+        Object *step_eval;
+        TC (step_eval = tsc->get_step () != nullptr
+                            ? expr_eval (mod, tsc->get_step ())
+                            : nullptr);
+
+        assert (OBJ_IS_INT (lv_eval) && OBJ_IS_INT (rv_eval));
+        if (step_eval != nullptr)
+          assert (OBJ_IS_INT (step_eval));
+
+        int lvi = static_cast<IntegerConstant *> (
+                      static_cast<ConstantObject *> (lv_eval)->get_c ().get ())
+                      ->get_value ();
+
+        int rvi = static_cast<IntegerConstant *> (
+                      static_cast<ConstantObject *> (rv_eval)->get_c ().get ())
+                      ->get_value ();
+
+        int stepi = step_eval != nullptr
+                        ? static_cast<IntegerConstant *> (
+                              static_cast<ConstantObject *> (step_eval)
+                                  ->get_c ()
+                                  .get ())
+                              ->get_value ()
+                        : 1;
+
+        Vec<Object *> arr;
+
+        for (int j = lvi; j < rvi; j += stepi)
+          {
+            Object *v = static_cast<Object *> (new ConstantObject (
+                static_cast<Constant *> (new IntegerConstant (j))));
+
+            /**
+             * Since we are not using expr_eval
+             * we need to manually increase ref_count
+             * of v
+             */
+            I (v);
+
+            arr.push_back (v);
+          }
+
+        if (res != nullptr)
+          DR (res);
+
+        res = new ArrayObject (arr);
+        I (res);
+
+        DR (lv_eval);
+        DR (rv_eval);
+
+        if (step_eval != nullptr)
+          DR (step_eval);
       }
       break;
 

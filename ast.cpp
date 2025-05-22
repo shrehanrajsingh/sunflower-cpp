@@ -24,6 +24,93 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
   Expr *res = nullptr;
 
   size_t i = st;
+
+  // to..step has more precedence than ==, != etc.
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "to")
+              {
+                Expr *lval = expr_gen (toks, st, i);
+                Expr *rval = nullptr;
+                Expr *step = nullptr;
+                int gb = 0;
+                size_t step_idx = i;
+
+                while (step_idx < ed)
+                  {
+                    Token *d = toks[step_idx];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *t = static_cast<OperatorToken *> (d);
+                          Str &tv = t->get_val ();
+
+                          if (tv == "(" || tv == "[" || tv == "{")
+                            gb++;
+                          else if (tv == ")" || tv == "]" || tv == "}")
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Keyword:
+                        {
+                          KeywordToken *kt = static_cast<KeywordToken *> (d);
+                          Str &ktv = kt->get_val ();
+
+                          if (ktv == "step" && !gb)
+                            {
+                              rval = expr_gen (toks, i + 1, step_idx);
+                              step = expr_gen (toks, step_idx + 1, ed);
+                              goto l2;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+
+                    step_idx++;
+                  }
+              l2:;
+
+                if (rval == nullptr)
+                  {
+                    /* no step in to..step clause */
+                    rval = expr_gen (toks, i + 1, ed);
+                  }
+
+                if (res != nullptr)
+                  delete res;
+
+                res = static_cast<Expr *> (
+                    new ToStepClause (lval, rval, step));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+    end1:
+      i++;
+    }
+
+  i = st;
   while (i < ed)
     {
       Token *c = toks[i];
@@ -196,6 +283,8 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                         j++;
                       }
 
+                    /* do not add if (res != nullptr) clause, check the
+                     * condition of the if statement */
                     res = static_cast<Expr *> (new ArrayExpr (arr_args));
                     i = last_arg_idx;
                   }
@@ -417,8 +506,9 @@ stmt_gen (Vec<Token *> &toks)
 
                 IfConstruct *ifst = new IfConstruct (cond, body, {}, {});
 
-                // std::cout << block_end_idx << '\t' << toks.get_size () <<
-                // '\n';
+              // std::cout << block_end_idx << '\t' << toks.get_size () <<
+              // '\n';
+              l5:
                 while (block_end_idx < toks.get_size ()
                            && toks[block_end_idx]->get_type ()
                                   == TokenType::Newline
@@ -434,19 +524,94 @@ stmt_gen (Vec<Token *> &toks)
                     /**
                      * TODO: check for `else if`
                      */
+                    if (block_end_idx < toks.get_size ()
+                        && toks[block_end_idx + 1]->get_type ()
+                               == TokenType::Keyword
+                        && static_cast<KeywordToken *> (
+                               toks[block_end_idx + 1])
+                                   ->get_val ()
+                               == "if")
+                      {
+                        int gb = 0;
+                        size_t elseif_cond_start = block_end_idx + 2;
+                        size_t elseif_cond_end = elseif_cond_start;
 
-                    size_t else_bei = _sf_ast_getblock_idx (
-                        toks, block_end_idx,
-                        _sf_ast_gettabspace (toks, block_end_idx));
+                        for (size_t j = elseif_cond_start;
+                             j < toks.get_size (); j++)
+                          {
+                            Token *d = toks[j];
 
-                    Vec<Token *> else_body_toks;
-                    for (size_t j = block_end_idx + 1; j < else_bei; j++)
-                      else_body_toks.push_back (toks[j]);
+                            switch (d->get_type ())
+                              {
+                              case TokenType::Operator:
+                                {
+                                  OperatorToken *jop
+                                      = static_cast<OperatorToken *> (d);
+                                  Str &js = jop->get_val ();
 
-                    Vec<Statement *> else_body = stmt_gen (else_body_toks);
-                    ifst->get_else_body () = else_body;
+                                  if (js == '(' || js == '[' || js == '{')
+                                    gb++;
+                                  if (js == ')' || js == ']' || js == '}')
+                                    gb--;
+                                }
+                                break;
 
-                    block_end_idx = else_bei;
+                              case TokenType::Newline:
+                                {
+                                  if (!gb)
+                                    {
+                                      elseif_cond_end = j;
+                                      goto l4;
+                                    }
+                                }
+                                break;
+
+                              default:
+                                break;
+                              }
+                          }
+                      l4:
+
+                        Expr *elseif_cond = expr_gen (toks, elseif_cond_start,
+                                                      elseif_cond_end);
+
+                        size_t elseif_block_end = _sf_ast_getblock_idx (
+                            toks, block_end_idx + 2,
+                            _sf_ast_gettabspace (toks, block_end_idx + 2));
+
+                        Vec<Token *> elseif_body_toks;
+                        for (size_t j = elseif_cond_end + 1;
+                             j < elseif_block_end; j++)
+                          {
+                            elseif_body_toks.push_back (toks[j]);
+                          }
+
+                        Vec<Statement *> elseif_body
+                            = stmt_gen (elseif_body_toks);
+
+                        ifst->get_elifconstructs ().push_back (
+                            new IfConstruct (elseif_cond, elseif_body, {},
+                                             {}));
+
+                        block_end_idx = elseif_block_end;
+
+                        goto l5;
+                      }
+                    else
+                      {
+                        size_t else_bei = _sf_ast_getblock_idx (
+                            toks, block_end_idx,
+                            _sf_ast_gettabspace (toks, block_end_idx));
+
+                        Vec<Token *> else_body_toks;
+                        for (size_t j = block_end_idx + 1; j < else_bei; j++)
+                          else_body_toks.push_back (toks[j]);
+
+                        Vec<Statement *> else_body = stmt_gen (else_body_toks);
+                        ifst->get_else_body () = else_body;
+
+                        block_end_idx = else_bei;
+                      }
                   }
 
                 res.push_back (ifst);
@@ -566,6 +731,162 @@ stmt_gen (Vec<Token *> &toks)
 
                 res.push_back (fc);
                 i = block_end_idx;
+              }
+            else if (kw == "fun")
+              {
+                bool is_simple = false;
+                /**
+                 * There can be two types of function definitions
+                 * Simple: functions with a name
+                 * Example:
+                 * fun name (args)
+                 *    ...body
+                 * The other type is Overloads
+                 * Example:
+                 * fun ''.replace(self, other)
+                 *    ...body
+                 */
+
+                if (i + 2 < toks.get_size ()
+                    && (toks[i + 2]->get_type () == TokenType::Operator)
+                    && static_cast<OperatorToken *> (toks[i + 2])->get_val ()
+                           == '(')
+                  is_simple = true;
+
+                // other logic (none thought of yet)
+
+                if (is_simple)
+                  {
+                    Token *name_tok = toks[i + 1];
+                    assert (name_tok->get_type () == TokenType::Identifier);
+
+                    Str name = static_cast<IdentifierToken *> (name_tok)
+                                   ->get_val ();
+
+                    int gb = 0;
+                    size_t last_arg_idx = i + 3;
+                    size_t j = i + 3;
+
+                    Vec<Expr *> arg_list;
+
+                    while (j < toks.get_size ())
+                      {
+                        Token *d = toks[j];
+
+                        switch (d->get_type ())
+                          {
+                          case TokenType::Operator:
+                            {
+                              OperatorToken *t
+                                  = static_cast<OperatorToken *> (d);
+                              Str &tv = t->get_val ();
+
+                              if (tv == ',' && !gb)
+                                {
+                                  arg_list.push_back (
+                                      expr_gen (toks, last_arg_idx, j));
+                                  last_arg_idx = j;
+                                }
+
+                              if (tv == ')' && !gb)
+                                {
+                                  if (j != last_arg_idx)
+                                    {
+                                      arg_list.push_back (
+                                          expr_gen (toks, last_arg_idx, j));
+                                    }
+                                  last_arg_idx = j;
+                                  goto l6;
+                                }
+
+                              if (tv == "(" || tv == "[" || tv == "{")
+                                gb++;
+                              else if (tv == ")" || tv == "]" || tv == "}")
+                                gb--;
+                            }
+                            break;
+
+                          default:
+                            break;
+                          }
+
+                        j++;
+                      }
+                  l6:;
+
+                    size_t body_start_idx = last_arg_idx + 1;
+                    size_t body_block_end = _sf_ast_getblock_idx (
+                        toks, i, _sf_ast_gettabspace (toks, i));
+
+                    Vec<Token *> body_block;
+
+                    for (size_t j = body_start_idx; j < body_block_end; j++)
+                      body_block.push_back (toks[j]);
+
+                    Vec<Statement *> body = stmt_gen (body_block);
+
+                    FuncDeclStatement *fds
+                        = new FuncDeclStatement (arg_list, body, name);
+
+                    res.push_back (static_cast<Statement *> (fds));
+                    i = body_block_end;
+                  }
+                else
+                  {
+                    /**
+                     * TODO: implement this sh*t
+                     */
+                  }
+              }
+            else if (kw == "return")
+              {
+                int gb = 0;
+                size_t j = i + 1;
+
+                while (j < toks.get_size ())
+                  {
+                    Token *d = toks[j];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *t = static_cast<OperatorToken *> (d);
+                          Str &tv = t->get_val ();
+
+                          if (tv == "(" || tv == "[" || tv == "{")
+                            gb++;
+                          else if (tv == ")" || tv == "]" || tv == "}")
+                            gb--;
+                        }
+                        break;
+                      case TokenType::Newline:
+                        {
+                          if (!gb)
+                            {
+                              goto l7;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+
+                    j++;
+                  }
+              l7:;
+
+                Expr *r = nullptr;
+                if (j != i + 1)
+                  {
+                    r = expr_gen (toks, i + 1, j);
+                  }
+                else /* nothing to return */
+                  ;
+
+                res.push_back (new ReturnStatement (r));
+                i = j;
               }
           }
           break;
@@ -878,6 +1199,8 @@ _sf_ast_getblock_idx (Vec<Token *> &data, size_t st, size_t tb)
                             return i;
                           }
                       }
+                    else if (nd->get_type () == TokenType::Newline)
+                      continue;
                     else
                       {
                         return i;

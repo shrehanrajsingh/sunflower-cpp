@@ -10,6 +10,8 @@ enum class StatementType
   FuncCall = 1,
   IfConstruct = 2,
   ForConstruct = 3,
+  FuncDecl = 4,
+  ReturnStmt = 5,
   NoStmt,
 };
 
@@ -201,6 +203,10 @@ public:
     else
       std::cout << "(Null)" << std::endl;
 
+    std::cout << "Body: " << get_body ().get_size () << std::endl;
+    for (auto &&i : body)
+      i->print ();
+
     std::cout << "Elifs: (" << elif_constructs.get_size () << ')' << std::endl;
     for (auto &&i : elif_constructs)
       i->print ();
@@ -248,6 +254,120 @@ public:
     return body;
   }
 
+  void
+  print () override
+  {
+    std::cout << "ForConstruct\nVars (" << var_list.get_size () << ')'
+              << std::endl;
+
+    for (Expr *&i : var_list)
+      if (i != nullptr)
+        i->print ();
+      else
+        std::cout << "(nullptr)" << std::endl;
+
+    std::cout << "Iterable: " << std::endl;
+
+    if (iterable != nullptr)
+      iterable->print ();
+    else
+      std::cout << "(nullptr)" << std::endl;
+
+    std::cout << "Body (" << body.get_size () << ')' << std::endl;
+
+    for (Statement *&i : body)
+      i->print ();
+  }
+
   ~ForConstruct () {}
+};
+
+class FuncDeclStatement : public Statement
+{
+private:
+  Vec<Expr *> args;
+  Vec<Statement *> body;
+  Str name;
+
+public:
+  FuncDeclStatement () : Statement (StatementType::FuncDecl) {}
+  FuncDeclStatement (Vec<Expr *> _Args, Vec<Statement *> _Body, Str _Name)
+      : Statement (StatementType::FuncDecl), args (_Args), body (_Body),
+        name (_Name)
+  {
+  }
+
+  inline Vec<Expr *> &
+  get_args ()
+  {
+    return args;
+  }
+
+  inline Vec<Statement *> &
+  get_body ()
+  {
+    return body;
+  }
+
+  inline Str &
+  get_name ()
+  {
+    return name;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "FuncDeclStatement\nArgs (" << args.get_size () << ')'
+              << std::endl;
+
+    for (Expr *&i : args)
+      if (i != nullptr)
+        i->print ();
+      else
+        std::cout << "(nullptr)" << std::endl;
+
+    std::cout << "Body (" << body.get_size () << ')' << std::endl;
+
+    for (Statement *&i : body)
+      if (i != nullptr)
+        i->print ();
+      else
+        std::cout << "(nullptr)" << std::endl;
+  }
+
+  ~FuncDeclStatement () {}
+};
+
+class ReturnStatement : public Statement
+{
+private:
+  Expr *val;
+
+public:
+  ReturnStatement () : Statement (StatementType::ReturnStmt) {}
+  ReturnStatement (Expr *_Val)
+      : Statement (StatementType::ReturnStmt), val (_Val)
+  {
+  }
+
+  inline Expr *&
+  get_val ()
+  {
+    return val;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "ReturnStatement" << std::endl;
+
+    if (val != nullptr)
+      val->print ();
+    else
+      std::cout << "(nullptr)" << std::endl;
+  }
+
+  ~ReturnStatement () {}
 };
 } // namespace sf

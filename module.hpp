@@ -26,21 +26,41 @@ private:
   Vec<Statement *> stmts;
   Module *parent;
   std::map<std::string, Object *> vtable;
+  Object *ret;
+  bool continue_exec;
 
 public:
-  Module () : type (ModuleType::File) { parent = nullptr; }
-  Module (ModuleType t) : type (t) { parent = nullptr; }
+  Module () : type (ModuleType::File)
+  {
+    parent = nullptr;
+    ret = nullptr;
+    continue_exec = true;
+  }
+
+  Module (ModuleType t) : type (t)
+  {
+    parent = nullptr;
+    ret = nullptr;
+    continue_exec = true;
+  }
+
   Module (ModuleType t, Vec<Statement *> &st)
-      : type (t), stmts (st), parent (nullptr)
+      : type (t), stmts (st), parent (nullptr), ret (nullptr),
+        continue_exec (true)
   {
   }
+
   Module (ModuleType t, Vec<Statement *> &&st)
-      : type (t), stmts (std::move (st)), parent (nullptr)
+      : type (t), stmts (std::move (st)), parent (nullptr),
+        continue_exec (true)
   {
   }
 
   ~Module ()
   {
+    if (ret != nullptr)
+      DR (ret);
+
     for (auto i : vtable)
       {
         // std::cout << i.second->get_ref_count () << '\n';
@@ -64,6 +84,18 @@ public:
   get_vtable ()
   {
     return vtable;
+  }
+
+  inline Object *&
+  get_ret ()
+  {
+    return ret;
+  }
+
+  inline bool &
+  get_continue_exec ()
+  {
+    return continue_exec;
   }
 
   Module *

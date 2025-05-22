@@ -13,6 +13,7 @@ enum class ExprType
   Conditional = 4,
   ArrayExp = 5,
   ArrayAccess = 6,
+  ExprToStep = 7,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -301,5 +302,43 @@ public:
   }
 
   ~ArrayAccess () {}
+};
+
+class ToStepClause : public Expr
+{
+private:
+  Expr *lval;
+  Expr *rval;
+  Expr *step;
+
+public:
+  ToStepClause ()
+      : Expr (ExprType::ExprToStep), lval (nullptr), rval (nullptr),
+        step (nullptr)
+  {
+  }
+
+  ToStepClause (Expr *_Lval, Expr *_Rval, Expr *_Step)
+      : Expr (ExprType::ExprToStep), lval (_Lval), rval (_Rval), step (_Step)
+  {
+  }
+
+  inline Expr *&
+  get_lval ()
+  {
+    return lval;
+  }
+  inline Expr *&
+  get_rval ()
+  {
+    return rval;
+  }
+  inline Expr *&
+  get_step ()
+  {
+    return step;
+  }
+
+  ~ToStepClause () {}
 };
 } // namespace sf

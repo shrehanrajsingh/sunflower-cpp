@@ -10,6 +10,7 @@
 
 /* check */
 #define R(X) sf::_sfobj_refcheck ((X))
+#define R__func(X) sf::_sffunc_refcheck ((X))
 
 /* increase and check */
 #define IR(X)                                                                 \
@@ -26,6 +27,22 @@
     {                                                                         \
       D (X);                                                                  \
       R (X);                                                                  \
+    }                                                                         \
+  while (0);
+
+#define IR__func(X)                                                           \
+  do                                                                          \
+    {                                                                         \
+      I (X);                                                                  \
+      R__func (X);                                                            \
+    }                                                                         \
+  while (0);
+
+#define DR__func(X)                                                           \
+  do                                                                          \
+    {                                                                         \
+      D (X);                                                                  \
+      R__func (X);                                                            \
     }                                                                         \
   while (0);
 
@@ -112,9 +129,8 @@ private:
   Function *v;
 
 public:
-  FunctionObject () : Object (ObjectType::FuncObject) {}
+  FunctionObject () : Object (ObjectType::FuncObject), v (nullptr) {}
   FunctionObject (Function *V) : Object (ObjectType::FuncObject), v (V) {}
-  ~FunctionObject () {}
 
   void
   print () override
@@ -127,7 +143,19 @@ public:
   {
     return v;
   }
+
+  ~FunctionObject () {}
 };
+
+#define OBJ_IS_INT(X)                                                         \
+  ((X)->get_type () == ObjectType::Constant                                   \
+   && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
+          == ConstantType::Integer)
+
+#define OBJ_IS_FLOAT(X)                                                       \
+  ((X)->get_type () == ObjectType::Constant                                   \
+   && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
+          == ConstantType::Float)
 
 #define OBJ_IS_NUMBER(X)                                                      \
   ((X)->get_type () == ObjectType::Constant                                   \

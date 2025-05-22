@@ -10,6 +10,7 @@
  */
 
 #include "header.hpp"
+#include "memutil.hpp"
 #include "str.hpp"
 #include "vec.hpp"
 
@@ -52,9 +53,12 @@ private:
 
 public:
   NativeFunction () : Function (FuncType::Native) {}
-  NativeFunction (std::function<Object *(Module *)> F) : f (F) {}
+  NativeFunction (std::function<Object *(Module *)> F)
+      : Function (FuncType::Native), f (F)
+  {
+  }
   NativeFunction (std::function<Object *(Module *)> F, Vec<Str> a)
-      : f (F), args (a)
+      : Function (FuncType::Native), f (F), args (a)
   {
   }
   ~NativeFunction () {};
@@ -77,17 +81,26 @@ public:
   {
     return args;
   }
+
+  inline std::function<Object *(Module *)>
+  get_f ()
+  {
+    return f;
+  }
 };
 
 class CodedFunction : public Function
 {
 private:
   Vec<Statement *> body;
-  Vec<Str> args;
+  Vec<Expr *> args;
 
 public:
   CodedFunction () : Function (FuncType::Coded) {}
-  CodedFunction (Vec<Statement *> B, Vec<Str> a) : body (B), args (a) {}
+  CodedFunction (Vec<Statement *> B, Vec<Expr *> a)
+      : Function (FuncType::Coded), body (B), args (a)
+  {
+  }
   ~CodedFunction () {}
 
   inline Vec<Statement *> &
@@ -102,16 +115,18 @@ public:
     return body;
   }
 
-  inline Vec<Str> &
+  inline Vec<Expr *> &
   get_args ()
   {
     return args;
   }
 
-  inline Vec<Str>
+  inline Vec<Expr *>
   get_args () const
   {
     return args;
   }
 };
+
+void _sffunc_refcheck (Function *&);
 } // namespace sf
