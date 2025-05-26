@@ -23,5 +23,6 @@ add_library(sunflower
     func.hpp func.cpp
     ast.hpp ast.cpp
     sfarray.hpp sfarray.cpp
+    sr.hpp sr.cpp
     sunflower.hpp sunflower.cpp)
 

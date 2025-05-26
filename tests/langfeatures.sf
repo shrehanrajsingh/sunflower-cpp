@@ -7,14 +7,13 @@ f = false
 putln (a)
 putln (b)
 putln (c)
-print (d, e, f)
 
 a = [1, [2, 3], 4, 5]
 putln (a[0])
 putln (a[1])
 putln (a[1][1])
 
-if false
+if true
     putln ("Inside if")
 else if true
     putln ("Inside else if")
@@ -22,7 +21,7 @@ else
     putln ("Inside else")
 
 fun test(a)
-    print ("Received argument:", a)
+    print ("Received argument: ", a)
     return a
 
 test(10)

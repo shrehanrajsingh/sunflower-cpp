@@ -63,7 +63,7 @@ public:
 
     for (auto i : vtable)
       {
-        // std::cout << i.second->get_ref_count () << '\n';
+        // std::cout << i.first << '\t' << i.second->get_ref_count () << '\n';
         DR (i.second);
       }
   }

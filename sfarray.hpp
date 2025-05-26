@@ -17,6 +17,14 @@ public:
   ArrayObject (Vec<Object *> &);
   ArrayObject (Vec<Object *> &&);
 
+  std::string get_stdout_repr () override;
+
+  std::string
+  get_stdout_repr_in_container () override
+  {
+    return get_stdout_repr ();
+  }
+
   void
   print () override
   {

@@ -7,10 +7,18 @@
 
 #include "header.hpp"
 
-/* increase */
+/**
+ * increase ref_count
+ * WARN: Do not use I(X) anywhere, use IR(X) as it provides checks.
+ * I(X) is only meant to be used inside IR(X) and not anywhere else
+ */
 #define I(X) ++(*(X))
 
-/* decrease */
+/**
+ * decrease ref_count
+ * WARN: Do not use D(X) anywhere, use DR(X) as it provides checks.
+ * D(X) is only meant to be used inside DR(X) and not anywhere else
+ */
 #define D(X) --(*(X))
 
 #define TC(X)                                                                 \

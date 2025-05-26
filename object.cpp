@@ -512,4 +512,138 @@ _sfobj_cmp (Object *&lval, Object *&rval, ConditionalType t)
 
   return res;
 }
+
+void
+_sfobj_passownership (Object *&obj)
+{
+  switch (obj->get_type ())
+    {
+    case ObjectType::FuncObject:
+      {
+        FunctionObject *fobj = static_cast<FunctionObject *> (obj);
+        Function *&f = fobj->get_v ();
+
+        I (f);
+        // std::cout << f->get_ref_count () << '\n';
+      }
+      break;
+
+    default:
+      break;
+    }
+}
+
+void
+_sfobj_removeownership (Object *&obj)
+{
+  switch (obj->get_type ())
+    {
+    case ObjectType::FuncObject:
+      {
+        FunctionObject *fobj = static_cast<FunctionObject *> (obj);
+        Function *&f = fobj->get_v ();
+
+        // std::cout << f->get_ref_count () << '\n';
+
+        DR__func (f);
+      }
+      break;
+
+    default:
+      break;
+    }
+}
+
+std::string
+ConstantObject::get_stdout_repr ()
+{
+  Constant *cp = c.get ();
+  std::string res;
+
+  switch (cp->get_type ())
+    {
+    case ConstantType::Boolean:
+      res = static_cast<BooleanConstant *> (cp)->get_value () ? "true"
+                                                              : "false";
+      break;
+
+    case ConstantType::Float:
+      res = std::to_string (static_cast<FloatConstant *> (cp)->get_value ());
+      break;
+
+    case ConstantType::Integer:
+      res = std::to_string (static_cast<IntegerConstant *> (cp)->get_value ());
+      break;
+
+    case ConstantType::NoneType:
+      res = "none";
+      break;
+
+    case ConstantType::String:
+      res = static_cast<StringConstant *> (cp)
+                ->get_value ()
+                .get_internal_buffer ();
+      break;
+
+    default:
+      break;
+    }
+
+  return res;
+}
+
+std::string
+ConstantObject::get_stdout_repr_in_container ()
+{
+  Constant *cp = c.get ();
+  std::string res;
+
+  switch (cp->get_type ())
+    {
+    case ConstantType::Boolean:
+      res = static_cast<BooleanConstant *> (cp)->get_value () ? "true"
+                                                              : "false";
+      break;
+
+    case ConstantType::Float:
+      res = std::to_string (static_cast<FloatConstant *> (cp)->get_value ());
+      break;
+
+    case ConstantType::Integer:
+      res = std::to_string (static_cast<IntegerConstant *> (cp)->get_value ());
+      break;
+
+    case ConstantType::NoneType:
+      res = "none";
+      break;
+
+    case ConstantType::String:
+      res = std::string{ "\"" }
+            + static_cast<StringConstant *> (cp)
+                  ->get_value ()
+                  .get_internal_buffer ()
+            + "\"";
+      break;
+
+    default:
+      break;
+    }
+
+  return res;
+}
+
+std::string
+NoObj::get_stdout_repr ()
+{
+  return "<class internal::NoObj>";
+}
+
+std::string
+FunctionObject::get_stdout_repr ()
+{
+  std::stringstream s;
+  s << "<function " << v << ">";
+
+  return s.str ();
+}
 } // namespace sf

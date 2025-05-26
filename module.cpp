@@ -27,7 +27,7 @@ Module::set_variable (std::string n, Object *v)
       DR (vtable[n]);
     }
 
-  I (v);
+  IR (v);
 
   vtable[n] = v;
 }
@@ -69,7 +69,8 @@ mod_exec (Module &mod)
               decrease its ref_count.
               This practice will be used throughout the library.
              */
-            D (val_eval);
+            // D (val_eval);
+            // _sfobj_removeownership (val_eval);
 
             // std::cout << val_eval->get_ref_count () << '\n';
 
@@ -102,7 +103,8 @@ mod_exec (Module &mod)
               If ref_count after these steps is 0, we can safely
               free the object as our work with it is done.
             */
-            R (val_eval);
+            // R (val_eval);
+            DR (val_eval);
             // std::cout << val_eval->get_ref_count () << '\n';
           }
           break;
@@ -112,7 +114,6 @@ mod_exec (Module &mod)
             Object *name_eval;
 
             TC (name_eval = expr_eval (mod, fst->get_name ()));
-            D (name_eval);
 
             Vec<Object *> args_eval;
             for (auto j : fst->get_args ())
@@ -120,6 +121,7 @@ mod_exec (Module &mod)
                 Object *t = nullptr;
                 TC (t = expr_eval (mod, j));
                 D (t);
+                _sfobj_removeownership (t);
 
                 args_eval.push_back (t);
               }
@@ -140,20 +142,45 @@ mod_exec (Module &mod)
                         NativeFunction *nf
                             = static_cast<NativeFunction *> (fv);
 
-                        assert (nf->get_args ().get_size ()
-                                == args_eval.get_size ());
+                        if (!nf->get_va_args ())
+                          assert (nf->get_args ().get_size ()
+                                  == args_eval.get_size ());
+                        else
+                          assert (nf->get_args ().get_size ()
+                                  > 0); /* at least one arg */
 
                         Module *fmod = new Module (ModuleType::Function,
                                                    Vec<Statement *> ());
                         fmod->set_parent (&mod);
 
-                        size_t j = 0;
-                        for (Str &a : nf->get_args ())
+                        if (nf->get_va_args ())
                           {
-                            char *p = a.c_str ();
-                            fmod->set_variable (p, args_eval[j++]);
+                            /**
+                             * Function uses variable arguments
+                             */
+                            Str arg_a = nf->get_args ()[0];
+
+                            /* convert args_eval to ArrayObject */
+                            for (Object *&i : args_eval)
+                              IR (i); /* transfer back ownership */
+
+                            ArrayObject *ao = new ArrayObject (args_eval);
+
+                            char *p = arg_a.c_str ();
+                            fmod->set_variable (p, ao);
 
                             delete[] p;
+                          }
+                        else
+                          {
+                            size_t j = 0;
+                            for (Str &a : nf->get_args ())
+                              {
+                                char *p = a.c_str ();
+                                fmod->set_variable (p, args_eval[j++]);
+
+                                delete[] p;
+                              }
                           }
 
                         Object *ret;
@@ -230,7 +257,7 @@ mod_exec (Module &mod)
             //   {
             //     R (o);
             //   }
-            R (name_eval);
+            DR (name_eval);
           }
           break;
 
@@ -541,7 +568,7 @@ expr_eval (Module &mod, Expr *e)
             break;
           }
 
-        I (res);
+        IR (res);
       }
       break;
 
@@ -557,7 +584,7 @@ expr_eval (Module &mod, Expr *e)
               DR (res);
             res = o;
 
-            I (res);
+            IR (res);
 
             delete[] p;
           }
@@ -579,7 +606,7 @@ expr_eval (Module &mod, Expr *e)
           DR (res);
 
         res = static_cast<Object *> (new FunctionObject (fe->get_v ().get ()));
-        I (res);
+        IR (res);
       }
       break;
 
@@ -599,7 +626,7 @@ expr_eval (Module &mod, Expr *e)
         res = static_cast<Object *> (new ConstantObject (
             static_cast<Constant *> (new BooleanConstant (cnd))));
 
-        I (res);
+        IR (res);
 
         DR (lobj);
         DR (robj);
@@ -625,7 +652,7 @@ expr_eval (Module &mod, Expr *e)
           DR (res);
 
         res = new ArrayObject (ev_idcs);
-        I (res);
+        IR (res);
       }
       break;
 
@@ -665,7 +692,7 @@ expr_eval (Module &mod, Expr *e)
                           && "Array index out of bounds.");
 
                   res = ao->get_vals ()[idx];
-                  I (res);
+                  IR (res);
                 }
               else
                 {
@@ -733,7 +760,7 @@ expr_eval (Module &mod, Expr *e)
              * we need to manually increase ref_count
              * of v
              */
-            I (v);
+            IR (v);
 
             arr.push_back (v);
           }
@@ -742,7 +769,7 @@ expr_eval (Module &mod, Expr *e)
           DR (res);
 
         res = new ArrayObject (arr);
-        I (res);
+        IR (res);
 
         DR (lv_eval);
         DR (rv_eval);

@@ -27,14 +27,28 @@ class Module;
 class Expr;
 class Statement;
 
-class Function
+class Function : public memnode_t
 {
 private:
   FuncType type;
 
+  bool use_va_args = false;
+
 public:
   Function () : type (FuncType::Native) {}
   Function (FuncType t) : type (t) {}
+
+  void
+  set_va_args (bool _T)
+  {
+    use_va_args = _T;
+  }
+
+  inline bool
+  get_va_args ()
+  {
+    return use_va_args;
+  }
 
   inline FuncType
   get_type () const

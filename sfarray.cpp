@@ -12,6 +12,24 @@ ArrayObject::ArrayObject (Vec<Object *> &&v)
 {
 }
 
+std::string
+ArrayObject::get_stdout_repr ()
+{
+  std::stringstream s;
+
+  s << "[";
+  for (size_t i = 0; i < vals.get_size (); i++)
+    {
+      s << vals[i]->get_stdout_repr ();
+      if (i != vals.get_size () - 1)
+        s << ", ";
+      else
+        s << ']';
+    }
+
+  return s.str ();
+}
+
 ArrayObject::~ArrayObject ()
 {
   for (Object *&i : vals)

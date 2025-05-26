@@ -60,14 +60,39 @@ native_putln (sf::Module *m)
   sf::Object *a;
   TC (a = m->get_variable ("a"));
 
-  std::cout << "Inside native_putln!\n";
-  a->print ();
-  std::cout << std::endl;
+  // std::cout << "Inside native_putln!\n";
+  std::cout << a->get_stdout_repr () << std::endl;
 
   sf::Object *r = static_cast<sf::Object *> (new sf::ConstantObject (
       static_cast<sf::Constant *> (new sf::NoneConstant ())));
 
-  I (r);
+  IR (r);
+  //   std::cout << r->get_ref_count () << '\n';
+  return r;
+}
+
+sf::Object *
+native_print (sf::Module *m)
+{
+  sf::Object *a;
+  TC (a = m->get_variable ("a"));
+
+  sf::ArrayObject *ao = static_cast<sf::ArrayObject *> (a);
+
+  for (size_t i = 0; i < ao->get_vals ().get_size (); i++)
+    {
+      std::cout << ao->get_vals ()[i]->get_stdout_repr ();
+
+      if (i != ao->get_vals ().get_size () - 1)
+        std::cout << ' ';
+      else
+        std::cout << std::endl;
+    }
+
+  sf::Object *r = static_cast<sf::Object *> (new sf::ConstantObject (
+      static_cast<sf::Constant *> (new sf::NoneConstant ())));
+
+  IR (r);
   //   std::cout << r->get_ref_count () << '\n';
   return r;
 }
@@ -204,13 +229,42 @@ test4 ()
 
   Vec<Statement *> ast = stmt_gen (r);
 
-  NativeFunction *nv = new NativeFunction (native_putln, { "a" });
+  NativeFunction *nv_putln = new NativeFunction (native_putln, { "a" });
+
+  /**
+   * When testing for memory leaks
+   * by looping mod_exec routine
+   * infinite times, we preserve
+   * the Function * in AST by increasing
+   * its ref_count by 1 exactly so that
+   * after each mod_exec the reference count
+   * falls back to 1 and we do not free the object.
+   * Freeing the object would result in SEG_FAULT in the
+   * next iteration because the Function* is used in AST
+   * (see the next statement)
+   * and we would be storing a nullptr.
+   * NOTE: In actual definition of I(X), I recommend
+   * not using I(X) anywhere (use IR(X) instead), however
+   * it is absolutely fine to use I(X) in this context since we are
+   * using it with Function* and not Object*
+   */
+  I (nv_putln);
 
   /* putln = <function...> */
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("putln")),
-                     static_cast<Expr *> (
-                         new FunctionExpr (static_cast<Function *> (nv))))));
+                     static_cast<Expr *> (new FunctionExpr (
+                         static_cast<Function *> (nv_putln))))));
+
+  NativeFunction *nv_print = new NativeFunction (native_print, { "a" });
+  nv_print->set_va_args (true); /* any number of arguments */
+
+  I (nv_print);
+
+  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
+                     static_cast<Expr *> (new VariableExpr ("print")),
+                     static_cast<Expr *> (new FunctionExpr (
+                         static_cast<Function *> (nv_print))))));
 
   std::cout << ast.get_size () << std::endl;
   for (auto &&i : ast)
@@ -222,20 +276,124 @@ test4 ()
 
   try
     {
+      while (1)
+        {
+          Module *m = new Module (ModuleType::File, ast);
+
+          mod_exec (*m);
+
+          std::cout << "--------------" << std::endl;
+
+          for (auto i : m->get_vtable ())
+            {
+              std::cout << i.first << std::endl;
+              i.second->print ();
+              std::cout << std::endl;
+            }
+
+          delete m;
+        }
+    }
+  catch (const char *e)
+    {
+      std::cerr << e << std::endl;
+    }
+
+  for (auto &&i : ast)
+    delete i;
+
+  fl.close ();
+}
+
+void
+test5 ()
+{
+  /* only reads file and prints output, no debug information */
+  using namespace sf;
+
+  std::ifstream fl ("../../tests/test.sf");
+
+  if (!fl)
+    {
+      ERRMSG ("Invalid file path");
+    }
+
+  std::string s, p;
+  while (std::getline (fl, p))
+    s += p + '\n';
+
+  // std::cout << s << std::endl;
+  Vec<Token *> r = tokenize ((char *)s.c_str ());
+
+  // std::cout << r.get_size () << '\n';
+  // for (auto &&i : r)
+  //   {
+  //     i->print ();
+  //   }
+
+  Vec<Statement *> ast = stmt_gen (r);
+
+  NativeFunction *nv_putln = new NativeFunction (native_putln, { "a" });
+
+  /**
+   * When testing for memory leaks
+   * by looping mod_exec routine
+   * infinite times, we preserve
+   * the Function * in AST by increasing
+   * its ref_count by 1 exactly so that
+   * after each mod_exec the reference count
+   * falls back to 1 and we do not free the object.
+   * Freeing the object would result in SEG_FAULT in the
+   * next iteration because the Function* is used in AST
+   * (see the next statement)
+   * and we would be storing a nullptr.
+   * NOTE: In actual definition of I(X), I recommend
+   * not using I(X) anywhere (use IR(X) instead), however
+   * it is absolutely fine to use I(X) in this context since we are
+   * using it with Function* and not Object*
+   */
+  I (nv_putln);
+
+  /* putln = <function...> */
+  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
+                     static_cast<Expr *> (new VariableExpr ("putln")),
+                     static_cast<Expr *> (new FunctionExpr (
+                         static_cast<Function *> (nv_putln))))));
+
+  NativeFunction *nv_print = new NativeFunction (native_print, { "a" });
+  nv_print->set_va_args (true); /* any number of arguments */
+
+  I (nv_print);
+
+  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
+                     static_cast<Expr *> (new VariableExpr ("print")),
+                     static_cast<Expr *> (new FunctionExpr (
+                         static_cast<Function *> (nv_print))))));
+
+  // std::cout << ast.get_size () << std::endl;
+  // for (auto &&i : ast)
+  //   {
+  //     i->print ();
+  //   }
+
+  // std::cout << "--------------" << std::endl;
+
+  try
+    {
       // while (1)
       {
         Module *m = new Module (ModuleType::File, ast);
 
         mod_exec (*m);
 
-        std::cout << "--------------" << std::endl;
+        // std::cout << "--------------" << std::endl;
 
-        for (auto i : m->get_vtable ())
-          {
-            std::cout << i.first << std::endl;
-            i.second->print ();
-            std::cout << std::endl;
-          }
+        // for (auto i : m->get_vtable ())
+        //   {
+        //     std::cout << i.first << std::endl;
+        //     i.second->print ();
+        //     std::cout << std::endl;
+        //   }
 
         delete m;
       }
@@ -254,7 +412,7 @@ test4 ()
 int
 main (int argc, char const *argv[])
 {
-  TEST (4);
-  std::cout << "Program ended." << std::endl;
+  TEST (5);
+  // std::cout << "Program ended." << std::endl;
   return 0;
 }

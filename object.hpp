@@ -5,6 +5,7 @@
 #include "func.hpp"
 #include "header.hpp"
 #include "memutil.hpp"
+#include "sr.hpp"
 #include "str.hpp"
 #include "vec.hpp"
 
@@ -16,6 +17,7 @@
 #define IR(X)                                                                 \
   do                                                                          \
     {                                                                         \
+      _sfobj_passownership (X);                                               \
       I (X);                                                                  \
       R (X);                                                                  \
     }                                                                         \
@@ -25,6 +27,7 @@
 #define DR(X)                                                                 \
   do                                                                          \
     {                                                                         \
+      _sfobj_removeownership (X);                                             \
       D (X);                                                                  \
       R (X);                                                                  \
     }                                                                         \
@@ -56,7 +59,7 @@ enum class ObjectType
 
 namespace sf
 {
-class Object : public memnode_t
+class Object : public memnode_t, public StdoutRepr
 {
 private:
   ObjectType type;
@@ -65,6 +68,18 @@ public:
   Object () : type (ObjectType::NoObject), memnode_t () {};
   Object (ObjectType t) : type (t), memnode_t () {}
   virtual ~Object () {};
+
+  virtual std::string
+  get_stdout_repr ()
+  {
+    return "<class internal::Object>";
+  }
+
+  virtual std::string
+  get_stdout_repr_in_container ()
+  {
+    return get_stdout_repr ();
+  }
 
   inline ObjectType
   get_type () const
@@ -89,6 +104,9 @@ public:
   }
 
   ~ConstantObject () = default;
+
+  std::string get_stdout_repr () override;
+  std::string get_stdout_repr_in_container () override;
 
   void
   print () override
@@ -116,6 +134,13 @@ public:
   NoObj () : Object (ObjectType::NoObject) {};
   ~NoObj () = default;
 
+  std::string get_stdout_repr () override;
+  std::string
+  get_stdout_repr_in_container () override
+  {
+    return get_stdout_repr ();
+  }
+
   void
   print () override
   {
@@ -132,13 +157,20 @@ public:
   FunctionObject () : Object (ObjectType::FuncObject), v (nullptr) {}
   FunctionObject (Function *V) : Object (ObjectType::FuncObject), v (V) {}
 
+  std::string get_stdout_repr () override;
+  std::string
+  get_stdout_repr_in_container () override
+  {
+    return get_stdout_repr ();
+  }
+
   void
   print () override
   {
     std::cout << "FunctionObject" << std::endl;
   }
 
-  Function *
+  Function *&
   get_v ()
   {
     return v;
@@ -167,5 +199,7 @@ public:
 void _sfobj_refcheck (Object *&);
 bool _sfobj_isfalse (Module &, Object *&);
 bool _sfobj_cmp (Object *&, Object *&, ConditionalType);
+void _sfobj_passownership (Object *&);
+void _sfobj_removeownership (Object *&);
 
 } // namespace sf
