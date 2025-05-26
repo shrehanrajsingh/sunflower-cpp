@@ -112,6 +112,7 @@ test3 ()
 
   //   std::cout << (int)sts[0]->get_type ();
   NativeFunction *nv = new NativeFunction (native_putln, { "a" });
+  I (nv);
 
   /* putln = <function...> */
   sts.push_back (static_cast<Statement *> (new VarDeclStatement (
