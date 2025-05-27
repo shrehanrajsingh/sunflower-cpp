@@ -422,6 +422,45 @@ mod_exec (Module &mod)
                     }
                 }
                 break;
+              case ObjectType::DictObj:
+                {
+                  DictObject *dobj = static_cast<DictObject *> (it_eval);
+                  std::map<std::string, Object *> dobj_vals
+                      = dobj->get_vals ();
+
+                  for (auto &&i : dobj_vals)
+                    {
+                      Object *kobj = static_cast<Object *> (
+                          new ConstantObject (static_cast<Constant *> (
+                              new StringConstant (i.first.c_str ()))));
+
+                      IR (kobj);
+
+                      assert (var_list.get_size () == 1);
+                      Expr *v = var_list[0];
+
+                      switch (v->get_type ())
+                        {
+                        case ExprType::Variable:
+                          {
+                            char *p = static_cast<VariableExpr *> (v)
+                                          ->get_name ()
+                                          .c_str ();
+                            mod.set_variable (p, kobj);
+
+                            delete[] p;
+                          }
+                          break;
+
+                        default:
+                          break;
+                        }
+
+                      mod_exec (mod);
+                      DR (kobj);
+                    }
+                }
+                break;
 
               default:
                 break;
@@ -645,13 +684,53 @@ expr_eval (Module &mod, Expr *e)
              * extra incremented ref_count which
              * we can use for index in an array
              */
-            ev_idcs.push_back (expr_eval (mod, i));
+            TC (ev_idcs.push_back (expr_eval (mod, i)));
           }
 
         if (res != nullptr)
           DR (res);
 
         res = new ArrayObject (ev_idcs);
+        IR (res);
+      }
+      break;
+
+    case ExprType::ExprDict:
+      {
+        DictExpr *de = static_cast<DictExpr *> (e);
+        std::map<std::string, Object *> ev_idcs;
+
+        for (auto &&i : de->get_vals ())
+          {
+            /**
+             * expr_eval returns an object that with one
+             * extra incremented ref_count which
+             * we can use for value in dictionary
+             * (see rule for arrays)
+             */
+
+            Object *keval;
+            TC (keval = expr_eval (mod, i.first));
+
+            assert (OBJ_IS_STR (keval)
+                    && "Dictionaries only support string keys.");
+
+            char *k
+                = static_cast<StringConstant *> (
+                      static_cast<ConstantObject *> (keval)->get_c ().get ())
+                      ->get_value ()
+                      .c_str ();
+
+            TC (ev_idcs[std::string (k)] = expr_eval (mod, i.second));
+
+            delete[] k;
+            DR (keval);
+          }
+
+        if (res != nullptr)
+          DR (res);
+
+        res = new DictObject (ev_idcs);
         IR (res);
       }
       break;
@@ -670,18 +749,12 @@ expr_eval (Module &mod, Expr *e)
           case ObjectType::ArrayObj:
             {
               ArrayObject *ao = static_cast<ArrayObject *> (arr_eval);
-              if (OBJ_IS_NUMBER (idx_eval))
+              if (OBJ_IS_INT (idx_eval))
                 {
                   Constant *ci = static_cast<Constant *> (
                       static_cast<ConstantObject *> (idx_eval)
                           ->get_c ()
                           .get ());
-
-                  assert (ci->get_type () == ConstantType::Integer
-                          && "Array index must be an integer.");
-
-                  if (res != nullptr)
-                    DR (res);
 
                   int idx = static_cast<IntegerConstant *> (ci)->get_value ();
 
@@ -691,6 +764,9 @@ expr_eval (Module &mod, Expr *e)
                   assert (idx < ao->get_vals ().get_size ()
                           && "Array index out of bounds.");
 
+                  if (res != nullptr)
+                    DR (res);
+
                   res = ao->get_vals ()[idx];
                   IR (res);
                 }
@@ -699,6 +775,27 @@ expr_eval (Module &mod, Expr *e)
                   std::cerr << "Invalid array access. Exiting..." << std::endl;
                   exit (EXIT_FAILURE);
                 }
+            }
+            break;
+          case ObjectType::DictObj:
+            {
+              DictObject *dobj = static_cast<DictObject *> (arr_eval);
+              assert (OBJ_IS_STR (idx_eval));
+
+              std::string k (static_cast<StringConstant *> (
+                                 static_cast<ConstantObject *> (idx_eval)
+                                     ->get_c ()
+                                     .get ())
+                                 ->get_value ()
+                                 .get_internal_buffer ());
+
+              assert (dobj->get_vals ().find (k) != dobj->get_vals ().end ());
+
+              if (res != nullptr)
+                DR (res);
+
+              res = dobj->get_vals ()[k];
+              IR (res);
             }
             break;
 

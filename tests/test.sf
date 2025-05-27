@@ -1,28 +1,17 @@
-a = 10
-b = "Hello, World!"
-c = a
-d = none
-e = true
-f = false
-putln (a)
-putln (b)
-putln (c)
-print (d, e, f)
+details = [
+    {
+        "name": "Shrehan",
+        "age": 19,
+        "dob": 190706
+    },
+    {
+        "name": "John",
+        "age": 19,
+        "dob": 999999
+    }
+]
 
-a = [1, [2, 3], 4, 5]
-putln (a[0])
-putln (a[1])
-putln (a[1][1])
-
-if false
-    putln ("Inside if")
-else if true
-    putln ("Inside else if")
-else
-    putln ("Inside else")
-
-fun test(a)
-    print ("Received argument:", a)
-    return a
-
-test(10)
+for i in details
+    print (i)
+    for j in i
+        print(j, i[j])

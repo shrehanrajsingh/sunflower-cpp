@@ -61,7 +61,17 @@ public:
   get_vals ()
   {
     return vals;
-  };
+  }
+
+  void
+  print () override
+  {
+    std::cout << "ArrayExpr" << std::endl;
+
+    for (Expr *&i : vals)
+      i->print ();
+  }
+
   ~ArrayExpr ();
 };
 } // namespace sf

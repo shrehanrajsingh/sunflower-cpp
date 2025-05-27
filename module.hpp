@@ -4,6 +4,7 @@
 #include "header.hpp"
 #include "object.hpp"
 #include "sfarray.hpp"
+#include "sfdict.hpp"
 #include "stmt.hpp"
 #include "str.hpp"
 #include "tokenize.hpp"

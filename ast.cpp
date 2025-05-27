@@ -1,6 +1,7 @@
 #include "ast.hpp"
 #include "expr.hpp"
 #include "sfarray.hpp"
+#include "sfdict.hpp"
 
 namespace sf
 {
@@ -288,6 +289,74 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                     res = static_cast<Expr *> (new ArrayExpr (arr_args));
                     i = last_arg_idx;
                   }
+              }
+            else if (opv == "{")
+              {
+                int gb = 0;
+                Vec<Expr *> dict_keys;
+                Vec<Expr *> dict_values;
+                size_t j = i + 1;
+                size_t key_idx = i + 1;
+                size_t val_idx = 0;
+                bool parsing_key = true;
+
+                while (j < ed)
+                  {
+                    Token *d = toks[j];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *t = static_cast<OperatorToken *> (d);
+                          Str &tv = t->get_val ();
+
+                          if (tv == ":" && !gb && parsing_key)
+                            {
+                              dict_keys.push_back (
+                                  expr_gen (toks, key_idx, j));
+                              val_idx = j + 1;
+                              parsing_key = false;
+                            }
+                          else if (tv == "," && !gb && !parsing_key)
+                            {
+                              dict_values.push_back (
+                                  expr_gen (toks, val_idx, j));
+                              key_idx = j + 1;
+                              parsing_key = true;
+                            }
+                          else if (tv == "}" && !gb)
+                            {
+                              if (!parsing_key && val_idx < j)
+                                {
+                                  dict_values.push_back (
+                                      expr_gen (toks, val_idx, j));
+                                }
+                              goto dict_done;
+                            }
+
+                          if (tv == "(" || tv == "[" || tv == "{")
+                            gb++;
+                          else if (tv == ")" || tv == "]" || tv == "}")
+                            gb--;
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+
+                    j++;
+                  }
+
+              dict_done:
+                std::map<Expr *, Expr *> r;
+
+                for (size_t j = 0; j < dict_keys.get_size (); j++)
+                  r[dict_keys[j]] = dict_values[j];
+
+                res = static_cast<Expr *> (new DictExpr (r));
+                i = j;
               }
           }
           break;

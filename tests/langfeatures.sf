@@ -25,3 +25,14 @@ fun test(a)
     return a
 
 test(10)
+
+a = {
+    "hello": "hi",
+    "a": {
+        "a": 1,
+        "b": 2
+    }
+}
+
+for i in a
+    print (i, a[i])

@@ -54,6 +54,7 @@ enum class ObjectType
   Constant = 0,
   FuncObject = 1,
   ArrayObj = 2,
+  DictObj = 3,
   NoObject,
 };
 
@@ -191,10 +192,15 @@ public:
 
 #define OBJ_IS_NUMBER(X)                                                      \
   ((X)->get_type () == ObjectType::Constant                                   \
-       && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()   \
-              == ConstantType::Float                                          \
-   || static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
-          == ConstantType::Integer)
+   && (static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()      \
+           == ConstantType::Float                                             \
+       || static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()   \
+              == ConstantType::Integer))
+
+#define OBJ_IS_STR(X)                                                         \
+  ((X)->get_type () == ObjectType::Constant                                   \
+   && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
+          == ConstantType::String)
 
 void _sfobj_refcheck (Object *&);
 bool _sfobj_isfalse (Module &, Object *&);
