@@ -10,6 +10,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <cassert>

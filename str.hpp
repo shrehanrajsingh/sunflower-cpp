@@ -27,7 +27,7 @@ public:
   }
 
   Str &
-  operator= (const Str &&rhs)
+  operator= (Str &&rhs) noexcept
   {
     v = std::move (rhs.v);
     return *this;

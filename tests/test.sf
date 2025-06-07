@@ -1,17 +1,1 @@
-details = [
-    {
-        "name": "Shrehan",
-        "age": 19,
-        "dob": 190706
-    },
-    {
-        "name": "John",
-        "age": 19,
-        "dob": 999999
-    }
-]
-
-for i in details
-    print (i)
-    for j in i
-        print(j, i[j])
+a = 1 + 2 * 3 - 4 / 5

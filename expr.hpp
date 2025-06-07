@@ -15,6 +15,7 @@ enum class ExprType
   ArrayAccess = 6,
   ExprToStep = 7,
   ExprDict = 8,
+  ExprArith = 9,
   NoExpr, /* fallback type for default expr inits */
 };
 

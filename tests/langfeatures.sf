@@ -36,3 +36,21 @@ a = {
 
 for i in a
     print (i, a[i])
+
+details = [
+    {
+        "name": "Shrehan",
+        "age": 19,
+        "dob": 190706
+    },
+    {
+        "name": "John",
+        "age": 19,
+        "dob": 999999
+    }
+]
+
+for i in details
+    print (i)
+    for j in i
+        print(j, i[j])
