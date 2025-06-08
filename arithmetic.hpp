@@ -4,7 +4,7 @@
 #include "header.hpp"
 #include "vec.hpp"
 
-enum class ArithValTypeEnum
+enum class AVTypeEnum
 {
   Operator = 0,
   Val = 1,
@@ -12,31 +12,31 @@ enum class ArithValTypeEnum
 
 namespace sf
 {
-class ArithValBase
+class AVBase
 {
 protected:
-  ArithValTypeEnum type;
+  AVTypeEnum type;
 
 public:
-  ArithValBase () : type (ArithValTypeEnum::Val) {}
-  ArithValBase (ArithValTypeEnum _Type) : type (_Type) {}
+  AVBase () : type (AVTypeEnum::Val) {}
+  AVBase (AVTypeEnum _Type) : type (_Type) {}
 
-  ArithValTypeEnum
+  AVTypeEnum
   get_type ()
   {
     return type;
   }
 
-  ~ArithValBase () {}
+  ~AVBase () {}
 };
 
-class ArithValOp : public ArithValBase
+class AVOperator : public AVBase
 {
   char op[4];
 
 public:
-  ArithValOp () : ArithValBase (ArithValTypeEnum::Operator) {}
-  ArithValOp (char *_Op)
+  AVOperator () : AVBase (AVTypeEnum::Operator) {}
+  AVOperator (char *_Op)
   {
     strncpy (op, _Op, sizeof (op) - 1);
     op[sizeof (op) - 1] = '\0';
@@ -48,19 +48,16 @@ public:
     return (char *)op;
   }
 
-  ~ArithValOp () {}
+  ~AVOperator () {}
 };
 
-class ArithValOperand : public ArithValBase
+class AVOperand : public AVBase
 {
   Expr *val;
 
 public:
-  ArithValOperand () : ArithValBase (ArithValTypeEnum::Val) {}
-  ArithValOperand (Expr *_Val)
-      : ArithValBase (ArithValTypeEnum::Val), val (_Val)
-  {
-  }
+  AVOperand () : AVBase (AVTypeEnum::Val) {}
+  AVOperand (Expr *_Val) : AVBase (AVTypeEnum::Val), val (_Val) {}
 
   inline Expr *&
   get_val ()
@@ -74,12 +71,12 @@ public:
     return val;
   }
 
-  ~ArithValOperand () {}
+  ~AVOperand () {}
 };
 
 class Arithmetic : public Expr
 {
-  Vec<ArithValBase *> vals;
+  Vec<AVBase *> vals;
 
 public:
   Arithmetic () : Expr (ExprType::ExprArith) {}
@@ -87,12 +84,11 @@ public:
   /**
    * _Vals must be in postfix form
    */
-  Arithmetic (Vec<ArithValBase *> _Vals)
-      : Expr (ExprType::ExprArith), vals (_Vals)
+  Arithmetic (Vec<AVBase *> _Vals) : Expr (ExprType::ExprArith), vals (_Vals)
   {
   }
 
-  inline Vec<ArithValBase *> &
+  inline Vec<AVBase *> &
   get_vals ()
   {
     return vals;
@@ -107,18 +103,18 @@ public:
       {
         switch (i->get_type ())
           {
-          case ArithValTypeEnum::Operator:
+          case AVTypeEnum::Operator:
             {
               std::cout << "Operator: "
-                        << static_cast<ArithValOp *> (i)->get_op ()
+                        << static_cast<AVOperator *> (i)->get_op ()
                         << std::endl;
             }
             break;
 
-          case ArithValTypeEnum::Val:
+          case AVTypeEnum::Val:
             {
               std::cout << "Value: ";
-              static_cast<ArithValOperand *> (i)->get_val ()->print ();
+              static_cast<AVOperand *> (i)->get_val ()->print ();
             }
             break;
 
@@ -127,6 +123,8 @@ public:
           }
       }
   }
+
+  static Arithmetic from_infix (Vec<AVBase *> &);
 
   ~Arithmetic () {}
 };
