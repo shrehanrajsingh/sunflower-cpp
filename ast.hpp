@@ -1,5 +1,6 @@
 #pragma once
 
+#include "arithmetic.hpp"
 #include "expr.hpp"
 #include "header.hpp"
 #include "stmt.hpp"

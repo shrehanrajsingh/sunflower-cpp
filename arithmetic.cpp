@@ -1,4 +1,5 @@
 #include "arithmetic.hpp"
+#include "object.hpp"
 
 namespace sf
 {
@@ -84,9 +85,8 @@ Arithmetic::from_infix (Vec<AVBase *> &vals)
   /**
    * We will start with creating a precedence table
    */
-  std::map<const char *, int> precedence_table
-      = { { "-", 10 }, { "+", 20 }, { "*", 30 },
-          { "/", 30 }, { "(", 40 }, { ")", 40 } };
+  std::map<Str, int> precedence_table
+      = { { "-", 10 }, { "+", 10 }, { "*", 20 }, { "/", 20 } };
 
   Vec<AVBase *> op_stack;
   Vec<AVBase *> val_stack;
@@ -101,6 +101,20 @@ Arithmetic::from_infix (Vec<AVBase *> &vals)
               op_stack.push_back (i);
             else
               {
+                // if (op_stack.get_size ())
+                //   std::cout << static_cast<AVOperator *> (i)->get_op () <<
+                //   '\t'
+                //             << precedence_table[static_cast<AVOperator *>
+                //             (i)
+                //                                     ->get_op ()]
+                //             << '\t'
+                //             << static_cast<AVOperator *> (op_stack.back ())
+                //                    ->get_op ()
+                //             << '\t'
+                //             << precedence_table[static_cast<AVOperator *> (
+                //                                     op_stack.back ())
+                //                                     ->get_op ()];
+
                 while (op_stack.get_size ()
                        && precedence_table[static_cast<AVOperator *> (i)
                                                ->get_op ()]
@@ -108,6 +122,7 @@ Arithmetic::from_infix (Vec<AVBase *> &vals)
                                                       op_stack.back ())
                                                       ->get_op ()])
                   val_stack.push_back (op_stack.pop_back ());
+                op_stack.push_back (i);
               }
           }
           break;

@@ -59,4 +59,16 @@ operator== (const Str &lhs, char rhs)
   return lhs[0] == rhs;
 }
 
+bool
+operator< (const Str &lhs, const Str &rhs)
+{
+  size_t min_size = lhs.size () < rhs.size () ? lhs.size () : rhs.size ();
+
+  for (size_t i = 0; i < min_size; i++)
+    if (lhs[i] != rhs[i])
+      return lhs[i] < rhs[i];
+
+  return lhs.size () < rhs.size ();
+}
+
 } // namespace sf

@@ -134,6 +134,7 @@ public:
   friend bool operator== (const Str &, const Str &);
   friend bool operator== (const Str &, char *);
   friend bool operator== (const Str &, char);
+  friend bool operator< (const Str &, const Str &);
 };
 
 // std::ostream &

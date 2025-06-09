@@ -36,7 +36,7 @@ class AVOperator : public AVBase
 
 public:
   AVOperator () : AVBase (AVTypeEnum::Operator) {}
-  AVOperator (char *_Op)
+  AVOperator (char *_Op) : AVBase (AVTypeEnum::Operator)
   {
     strncpy (op, _Op, sizeof (op) - 1);
     op[sizeof (op) - 1] = '\0';
@@ -114,7 +114,11 @@ public:
           case AVTypeEnum::Val:
             {
               std::cout << "Value: ";
-              static_cast<AVOperand *> (i)->get_val ()->print ();
+              Expr *e = static_cast<AVOperand *> (i)->get_val ();
+              if (e == nullptr)
+                std::cout << "nullptr" << std::endl;
+              else
+                e->print ();
             }
             break;
 

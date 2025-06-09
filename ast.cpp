@@ -358,6 +358,90 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 res = static_cast<Expr *> (new DictExpr (r));
                 i = j;
               }
+            else if (opv == '+' || opv == '-' || opv == '*' || opv == '/')
+              {
+                Vec<AVBase *> a;
+
+                if (res == nullptr)
+                  {
+                    /**
+                     * TODO
+                     * Could be a unary operator (like +, -)
+                     */
+                    a.push_back (new AVOperand (static_cast<Expr *> (
+                        new ConstantExpr (static_cast<Constant *> (
+                            new IntegerConstant (0))))));
+                  }
+                else
+                  {
+                    a.push_back (new AVOperand (res));
+                  }
+
+                size_t last_op_idx = i + 1;
+                a.push_back (new AVOperator (opv.get_internal_buffer ()));
+                int gb = 0;
+                bool all_const = static_cast<AVOperand *> (a.front ())
+                                     ->get_val ()
+                                     ->get_type ()
+                                 == ExprType::Constant;
+
+                for (size_t j = last_op_idx; j < ed; j++)
+                  {
+                    Token *d = toks[j];
+
+                    if (d->get_type () == TokenType::Operator)
+                      {
+                        Str &dop
+                            = static_cast<OperatorToken *> (d)->get_val ();
+
+                        if (dop == "(" || dop == "[" || dop == "{")
+                          gb++;
+                        else if (dop == ")" || dop == "]" || dop == "}")
+                          gb--;
+
+                        if ((dop == '+' || dop == '-' || dop == '*'
+                             || dop == '/')
+                            && !gb)
+                          {
+                            Expr *e = expr_gen (toks, last_op_idx, j);
+                            all_const &= e->get_type () == ExprType::Constant;
+
+                            // e->print ();
+                            a.push_back (
+                                static_cast<AVBase *> (new AVOperand (e)));
+                            a.push_back (static_cast<AVBase *> (
+                                new AVOperator (dop.get_internal_buffer ())));
+
+                            last_op_idx = j + 1;
+                          }
+                      }
+
+                    if (j == ed - 1)
+                      {
+                        Expr *e = expr_gen (toks, last_op_idx, j + 1);
+                        all_const &= e->get_type () == ExprType::Constant;
+
+                        // e->print ();
+                        a.push_back (
+                            static_cast<AVBase *> (new AVOperand (e)));
+                      }
+                  }
+
+                // if (all_const)
+                //   {
+                //     /* evaluate in place */
+                //   }
+                // else
+                //   {
+                Arithmetic *arp = new Arithmetic;
+                *arp = Arithmetic::from_infix (a);
+                res = static_cast<Expr *> (arp);
+                // }
+
+                // res->print ();
+
+                goto ret;
+              }
           }
           break;
 

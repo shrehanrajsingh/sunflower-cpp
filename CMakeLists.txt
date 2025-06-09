@@ -25,5 +25,6 @@ add_library(sunflower
     sfarray.hpp sfarray.cpp
     sr.hpp sr.cpp
     sfdict.hpp sfdict.cpp
+    arithmetic.hpp arithmetic.cpp
     sunflower.hpp sunflower.cpp)
 

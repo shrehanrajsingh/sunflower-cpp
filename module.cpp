@@ -875,6 +875,124 @@ expr_eval (Module &mod, Expr *e)
           DR (step_eval);
       }
       break;
+    case ExprType::ExprArith:
+      {
+        Arithmetic *a = static_cast<Arithmetic *> (e);
+        Vec<AVBase *> &vals = a->get_vals ();
+        Vec<Object *> st;
+
+        for (AVBase *&j : vals)
+          {
+            if (j->get_type () == AVTypeEnum::Operator)
+              {
+                assert (st.get_size () > 1);
+
+                /* l1 op l2 */
+                Object *l2 = st.pop_back ();
+                Object *l1 = st.pop_back ();
+
+                AVOperator *op = static_cast<AVOperator *> (j);
+                Object *res_op = nullptr;
+
+                if (OBJ_IS_NUMBER (l1) && OBJ_IS_NUMBER (l2))
+                  {
+                    ConstantObject *l1co = static_cast<ConstantObject *> (l1);
+                    ConstantObject *l2co = static_cast<ConstantObject *> (l2);
+
+                    float val1 = l1co->get_c ().get ()->get_type ()
+                                         == ConstantType::Float
+                                     ? static_cast<FloatConstant *> (
+                                           l1co->get_c ().get ())
+                                           ->get_value ()
+                                     : static_cast<IntegerConstant *> (
+                                           l1co->get_c ().get ())
+                                           ->get_value ();
+
+                    float val2 = l2co->get_c ().get ()->get_type ()
+                                         == ConstantType::Float
+                                     ? static_cast<FloatConstant *> (
+                                           l2co->get_c ().get ())
+                                           ->get_value ()
+                                     : static_cast<IntegerConstant *> (
+                                           l2co->get_c ().get ())
+                                           ->get_value ();
+
+                    float result = 0.0f;
+                    switch (op->get_op ()[0])
+                      {
+                      case '+':
+                        result = val1 + val2;
+                        break;
+                      case '-':
+                        result = val1 - val2;
+                        break;
+                      case '*':
+                        result = val1 * val2;
+                        break;
+                      case '/':
+                        if (val2 == 0)
+                          throw "division_by_zero";
+                        result = val1 / val2;
+                        break;
+                      default:
+                        std::cout << op->get_op () << '\n';
+                        throw "unsupported_float_operation";
+                      }
+
+                    res_op = static_cast<Object *> (new ConstantObject (
+                        static_cast<Constant *> (new FloatConstant (result))));
+                  }
+                else if (OBJ_IS_STR (l1) && OBJ_IS_STR (l2)
+                         && op->get_op ()[0] == '+')
+                  {
+                    std::string val1 = static_cast<StringConstant *> (
+                                           static_cast<ConstantObject *> (l1)
+                                               ->get_c ()
+                                               .get ())
+                                           ->get_value ()
+                                           .get_internal_buffer ();
+                    std::string val2 = static_cast<StringConstant *> (
+                                           static_cast<ConstantObject *> (l2)
+                                               ->get_c ()
+                                               .get ())
+                                           ->get_value ()
+                                           .get_internal_buffer ();
+
+                    res_op = static_cast<Object *> (
+                        new ConstantObject (static_cast<Constant *> (
+                            new StringConstant ((val1 + val2).c_str ()))));
+                  }
+                else
+                  {
+                    l1->print ();
+                    std::cout << '\n';
+                    l2->print ();
+                    std::cout << '\n';
+
+                    throw "unsupported_arithmetic_operation";
+                  }
+
+                IR (res_op);
+                DR (l1);
+                DR (l2);
+
+                st.push_back (res_op);
+              }
+            else
+              {
+                st.push_back (
+                    expr_eval (mod, static_cast<AVOperand *> (j)->get_val ()));
+              }
+          }
+
+        res = st.pop_back ();
+        /**
+         * DO NOT DO IR(res)
+         * st already has done it once.
+         * we will use that reference.
+         */
+      }
+      break;
 
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
