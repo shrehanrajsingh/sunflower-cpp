@@ -120,6 +120,14 @@ mod_exec (Module &mod)
               {
                 Object *t = nullptr;
                 TC (t = expr_eval (mod, j));
+
+                /**
+                 * We could use DR here
+                 * but we do not need
+                 * to deallocate the object
+                 * so we only do 2 out of 3
+                 * steps of DR
+                 */
                 D (t);
                 _sfobj_removeownership (t);
 
@@ -1027,6 +1035,193 @@ expr_eval (Module &mod, Expr *e)
          * st already has done it once.
          * we will use that reference.
          */
+      }
+      break;
+
+    case ExprType::FuncCall:
+      {
+        FuncCallExpr *fce = static_cast<FuncCallExpr *> (e);
+
+        Object *name_eval;
+
+        TC (name_eval = expr_eval (mod, fce->get_name ()));
+
+        Vec<Object *> args_eval;
+        for (auto j : fce->get_args ())
+          {
+            Object *t = nullptr;
+            TC (t = expr_eval (mod, j));
+
+            /**
+             * We could use DR here
+             * but we do not need
+             * to deallocate the object
+             * so we only do 2 out of 3
+             * steps of DR
+             */
+            D (t);
+            _sfobj_removeownership (t);
+
+            args_eval.push_back (t);
+          }
+
+        switch (name_eval->get_type ())
+          {
+          case ObjectType::FuncObject:
+            {
+              FunctionObject *fo = static_cast<FunctionObject *> (name_eval);
+
+              Function *fv = fo->get_v ();
+
+              switch (fv->get_type ())
+                {
+                case FuncType::Native:
+                  {
+                    NativeFunction *nf = static_cast<NativeFunction *> (fv);
+
+                    if (!nf->get_va_args ())
+                      assert (nf->get_args ().get_size ()
+                              == args_eval.get_size ());
+                    else
+                      assert (nf->get_args ().get_size ()
+                              > 0); /* at least one arg */
+
+                    Module *fmod = new Module (ModuleType::Function,
+                                               Vec<Statement *> ());
+                    fmod->set_parent (&mod);
+
+                    if (nf->get_va_args ())
+                      {
+                        /**
+                         * Function uses variable arguments
+                         */
+                        Str arg_a = nf->get_args ()[0];
+
+                        /* convert args_eval to ArrayObject */
+                        for (Object *&i : args_eval)
+                          IR (i); /* transfer back ownership */
+
+                        ArrayObject *ao = new ArrayObject (args_eval);
+
+                        char *p = arg_a.c_str ();
+                        fmod->set_variable (p, ao);
+
+                        delete[] p;
+                      }
+                    else
+                      {
+                        size_t j = 0;
+                        for (Str &a : nf->get_args ())
+                          {
+                            char *p = a.c_str ();
+                            fmod->set_variable (p, args_eval[j++]);
+
+                            delete[] p;
+                          }
+                      }
+
+                    Object *ret;
+
+                    TC (ret = nf->call (fmod));
+                    // DR (ret);
+
+                    res = ret;
+
+                    /**
+                     * nf->call returns an object with
+                     * an increased refcount (to save ownership
+                     * transfer during return)
+                     * we will use that refcount for res.
+                     * So we will not call an IR(X)/I(X) here
+                     */
+
+                    delete fmod;
+                  }
+                  break;
+
+                case FuncType::Coded:
+                  {
+                    CodedFunction *cf = static_cast<CodedFunction *> (fv);
+
+                    // printf ("%d %d\n", cf->get_args ().get_size (),
+                    //         args_eval.get_size ());
+                    assert (cf->get_args ().get_size ()
+                            == args_eval.get_size ());
+
+                    Module *fmod
+                        = new Module (ModuleType::Function, cf->get_body ());
+                    fmod->set_parent (&mod);
+
+                    size_t j = 0;
+                    for (Expr *&a : cf->get_args ())
+                      {
+                        switch (a->get_type ())
+                          {
+                          case ExprType::Variable:
+                            {
+                              char *p = static_cast<VariableExpr *> (a)
+                                            ->get_name ()
+                                            .c_str ();
+                              fmod->set_variable (p, args_eval[j++]);
+
+                              delete[] p;
+                            }
+                            break;
+
+                          default:
+                            break;
+                          }
+                      }
+
+                    mod_exec (*fmod);
+
+                    res = fmod->get_ret ();
+
+                    /**
+                     * TODO: check whether coded functions
+                     * return an increased refcount which
+                     * we could possibly use.
+                     *
+                     * ? Check:
+                     * ?  So I checked the code for ReturnStmt rule
+                     * ?  and it uses expr_eval to evaluate return
+                     * ?  object, so we can use that extra RCI
+                     * ?  here.
+                     *
+                     * ! But:
+                     * !  when we delete fmod the RCI is lost
+                     * !  so we need proper ownership for res
+                     * !  in this scope
+                     *
+                     * * Conclusion:
+                     * *  Do call IR(res)/I(res) here
+                     */
+                    IR (res);
+
+                    delete fmod;
+                  }
+                  break;
+
+                default:
+                  /* unreachable */
+                  here;
+                  exit (__LINE__);
+                  break;
+                }
+            }
+            break;
+
+          default:
+            ERRMSG ("Entity with type" << (int)name_eval->get_type ()
+                                       << "is not callable");
+            break;
+          }
+
+        // for (auto o : args_eval)
+        //   {
+        //     R (o);
+        //   }
+        DR (name_eval);
       }
       break;
 

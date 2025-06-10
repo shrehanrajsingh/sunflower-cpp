@@ -71,4 +71,20 @@ fun nth_fib (n)
     
     print ('nth fibonacci is:', f1)
 
-nth_fib (10)
+for i in 1 to 30
+    nth_fib (i)
+
+fun nth_fib (n)
+    f1 = 0
+    f2 = 1
+
+    while n - 1 > 0
+        t = f2
+        f2 = f1 + f2
+        f1 = t
+        n = n - 1
+    
+    return f1
+
+a = nth_fib(20)
+print (a)

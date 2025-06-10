@@ -8,6 +8,7 @@ fun nth_fib (n)
         f1 = t
         n = n - 1
     
-    print ('nth fibonacci is:', f1)
+    return f1
 
-nth_fib (10)
+a = nth_fib(20)
+print (a)

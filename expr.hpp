@@ -16,6 +16,7 @@ enum class ExprType
   ExprToStep = 7,
   ExprDict = 8,
   ExprArith = 9,
+  FuncCall = 10,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -342,5 +343,56 @@ public:
   }
 
   ~ToStepClause () {}
+};
+
+class FuncCallExpr : public Expr
+{
+private:
+  Expr *name;
+  Vec<Expr *> args;
+
+public:
+  FuncCallExpr () : Expr (ExprType::FuncCall) { name = nullptr; }
+
+  FuncCallExpr (Expr *n, Vec<Expr *> a)
+      : Expr (ExprType::FuncCall), name (n), args (a)
+  {
+  }
+
+  ~FuncCallExpr () = default;
+
+  void
+  print () override
+  {
+    std::cout << "FuncCallExpr:\nName: ";
+    name->print ();
+    std::cout << "Args (" << args.get_size () << ")\n";
+
+    for (size_t i = 0; i < args.get_size (); i++)
+      {
+        std::cout << i << '\t';
+        args[i]->print ();
+      }
+
+    std::cout << std::endl;
+  }
+
+  Expr *
+  get_name ()
+  {
+    return name;
+  }
+
+  Vec<Expr *> &
+  get_args ()
+  {
+    return args;
+  }
+
+  void
+  set_name (Expr *p)
+  {
+    name = p;
+  }
 };
 } // namespace sf

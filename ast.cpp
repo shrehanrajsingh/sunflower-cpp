@@ -388,6 +388,60 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 res = static_cast<Expr *> (new DictExpr (r));
                 i = j;
               }
+            else if (opv == '(')
+              {
+                if (res != nullptr)
+                  {
+                    /* function call */
+                    int gb = 0;
+                    size_t last_arg_idx = i + 1;
+                    Vec<Expr *> args;
+
+                    size_t j;
+                    for (j = last_arg_idx; j < ed; j++)
+                      {
+                        Token *d = toks[j];
+
+                        if (d->get_type () == TokenType::Operator)
+                          {
+                            Str &dop
+                                = static_cast<OperatorToken *> (d)->get_val ();
+
+                            if (dop == ',')
+                              {
+                                args.push_back (
+                                    expr_gen (toks, last_arg_idx, j));
+                                last_arg_idx = j + 1;
+                              }
+
+                            if (dop == ')' && !gb)
+                              {
+                                if (j == i + 1)
+                                  {
+                                    /* no args */
+                                  }
+                                else
+                                  {
+                                    args.push_back (
+                                        expr_gen (toks, last_arg_idx, j));
+                                  }
+                              }
+
+                            if (dop == "(" || dop == "[" || dop == "{")
+                              gb++;
+                            else if (dop == ")" || dop == "]" || dop == "}")
+                              gb--;
+                          }
+                      }
+
+                    res = static_cast<Expr *> (new FuncCallExpr (res, args));
+                    i = j;
+                  }
+                else
+                  {
+                    /* normal brackets / tuple */
+                  }
+              }
             else if (opv == '+' || opv == '-' || opv == '*' || opv == '/')
               {
                 Vec<AVBase *> a;
