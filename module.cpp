@@ -528,6 +528,30 @@ mod_exec (Module &mod)
           }
           break;
 
+        case StatementType::WhileStmt:
+          {
+            WhileStatement *ws = static_cast<WhileStatement *> (st);
+            Vec<Statement *> &body = ws->get_body ();
+            Expr *cond = ws->get_cond ();
+
+            Vec<Statement *> st_pres = mod.get_stmts ();
+            mod.get_stmts () = body;
+
+            Object *cond_eval;
+            TC (cond_eval = expr_eval (mod, cond));
+
+            while (!_sfobj_isfalse (mod, cond_eval))
+              {
+                mod_exec (mod);
+                DR (cond_eval);
+                TC (cond_eval = expr_eval (mod, cond));
+              }
+
+            DR (cond_eval);
+            mod.get_stmts () = st_pres;
+          }
+          break;
+
         default:
           std::cerr << "invalid type: " << (int)st->get_type () << std::endl;
           break;
@@ -918,6 +942,8 @@ expr_eval (Module &mod, Expr *e)
                                            ->get_value ();
 
                     float result = 0.0f;
+                    bool cast_int = OBJ_IS_INT (l1) && OBJ_IS_INT (l2);
+
                     switch (op->get_op ()[0])
                       {
                       case '+':
@@ -930,6 +956,7 @@ expr_eval (Module &mod, Expr *e)
                         result = val1 * val2;
                         break;
                       case '/':
+                        cast_int = false;
                         if (val2 == 0)
                           throw "division_by_zero";
                         result = val1 / val2;
@@ -939,8 +966,17 @@ expr_eval (Module &mod, Expr *e)
                         throw "unsupported_float_operation";
                       }
 
-                    res_op = static_cast<Object *> (new ConstantObject (
-                        static_cast<Constant *> (new FloatConstant (result))));
+                    if (cast_int && result != int (result)) /* no data loss */
+                      cast_int = false;
+
+                    if (cast_int)
+                      res_op = static_cast<Object *> (
+                          new ConstantObject (static_cast<Constant *> (
+                              new IntegerConstant (int (result)))));
+                    else
+                      res_op = static_cast<Object *> (
+                          new ConstantObject (static_cast<Constant *> (
+                              new FloatConstant (result))));
                   }
                 else if (OBJ_IS_STR (l1) && OBJ_IS_STR (l2)
                          && op->get_op ()[0] == '+')

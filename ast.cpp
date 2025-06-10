@@ -112,6 +112,78 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
     }
 
   i = st;
+
+  /* for comparison operators */
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            OperatorToken *opt = static_cast<OperatorToken *> (c);
+            Str &opv = opt->get_val ();
+
+            if (opv == "==")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::EqEq, expr_gen (toks, 0, i),
+                    expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == "!=")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::NEq, expr_gen (toks, 0, i),
+                    expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == "<=")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::LEq, expr_gen (toks, 0, i),
+                    expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == ">=")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::GEq, expr_gen (toks, 0, i),
+                    expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == "<")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::Le, expr_gen (toks, 0, i),
+                    expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+            else if (opv == ">")
+              {
+                res = static_cast<Expr *> (new ConditionalExpr (
+                    ConditionalType::Ge, expr_gen (toks, 0, i),
+                    expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+
+  i = st;
   while (i < ed)
     {
       Token *c = toks[i];
@@ -134,48 +206,6 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 res = static_cast<Expr *> (new VarDeclExpr (e_name, e_val));
 
                 i = vv_idx;
-              }
-            else if (opv == "==")
-              {
-                res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::EqEq, res, expr_gen (toks, i + 1, ed)));
-
-                goto ret;
-              }
-            else if (opv == "!=")
-              {
-                res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::NEq, res, expr_gen (toks, i + 1, ed)));
-
-                goto ret;
-              }
-            else if (opv == "<=")
-              {
-                res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::LEq, res, expr_gen (toks, i + 1, ed)));
-
-                goto ret;
-              }
-            else if (opv == ">=")
-              {
-                res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::GEq, res, expr_gen (toks, i + 1, ed)));
-
-                goto ret;
-              }
-            else if (opv == "<")
-              {
-                res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::Le, res, expr_gen (toks, i + 1, ed)));
-
-                goto ret;
-              }
-            else if (opv == ">")
-              {
-                res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::Ge, res, expr_gen (toks, i + 1, ed)));
-
-                goto ret;
               }
             else if (opv == "[")
               {
@@ -1040,6 +1070,68 @@ stmt_gen (Vec<Token *> &toks)
 
                 res.push_back (new ReturnStatement (r));
                 i = j;
+              }
+            else if (kw == "while")
+              {
+                /* similar logic to 'if' */
+                int gb = 0;
+                size_t cond_end_idx = i;
+
+                for (size_t j = i + 1; j < toks.get_size (); j++)
+                  {
+                    Token *d = toks[j];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *jop
+                              = static_cast<OperatorToken *> (d);
+
+                          Str &js = jop->get_val ();
+
+                          if (js == '(' || js == '[' || js == '{')
+                            gb++;
+
+                          if (js == ')' || js == ']' || js == '}')
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Newline:
+                        {
+                          if (!gb)
+                            {
+                              cond_end_idx = j;
+                              goto l8;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+                  }
+              l8:;
+
+                Expr *cond = expr_gen (toks, i + 1, cond_end_idx);
+                size_t block_end_idx = _sf_ast_getblock_idx (
+                    toks, i, _sf_ast_gettabspace (toks, i));
+
+                Vec<Token *> body_toks;
+                // std::cout << "-----\n";
+                for (size_t j = cond_end_idx + 1; j < block_end_idx; j++)
+                  {
+                    // toks[j]->print ();
+                    body_toks.push_back (toks[j]);
+                  }
+                // std::cout << "-----end\n";
+
+                Vec<Statement *> body = stmt_gen (body_toks);
+
+                res.push_back (static_cast<Statement *> (
+                    new WhileStatement (cond, body)));
+                i = block_end_idx;
               }
           }
           break;

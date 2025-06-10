@@ -54,3 +54,21 @@ for i in details
     print (i)
     for j in i
         print(j, i[j])
+
+a = 1
+a = a + 1
+print(a)
+
+fun nth_fib (n)
+    f1 = 0
+    f2 = 1
+
+    while n - 1 > 0
+        t = f2
+        f2 = f1 + f2
+        f1 = t
+        n = n - 1
+    
+    print ('nth fibonacci is:', f1)
+
+nth_fib (10)

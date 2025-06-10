@@ -12,6 +12,7 @@ enum class StatementType
   ForConstruct = 3,
   FuncDecl = 4,
   ReturnStmt = 5,
+  WhileStmt = 6,
   NoStmt,
 };
 
@@ -369,5 +370,51 @@ public:
   }
 
   ~ReturnStatement () {}
+};
+
+class WhileStatement : public Statement
+{
+private:
+  Expr *cond;
+  Vec<Statement *> body;
+
+public:
+  WhileStatement () : Statement (StatementType::WhileStmt) {}
+  WhileStatement (Expr *_Cond)
+      : Statement (StatementType::WhileStmt), cond (_Cond)
+  {
+  }
+  WhileStatement (Expr *_Cond, Vec<Statement *> _Body)
+      : Statement (StatementType::WhileStmt), cond (_Cond), body (_Body)
+  {
+  }
+
+  inline Expr *&
+  get_cond ()
+  {
+    return cond;
+  }
+
+  inline Vec<Statement *> &
+  get_body ()
+  {
+    return body;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "While Statement:\nCondition: ";
+    if (cond)
+      cond->print ();
+    else
+      std::cout << "nullptr" << std::endl;
+
+    std::cout << "Body (" << body.get_size () << ')' << std::endl;
+    for (Statement *&i : body)
+      i->print ();
+  }
+
+  ~WhileStatement () {}
 };
 } // namespace sf
