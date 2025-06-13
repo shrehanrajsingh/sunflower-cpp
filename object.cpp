@@ -646,4 +646,11 @@ FunctionObject::get_stdout_repr ()
 
   return s.str ();
 }
+
+bool
+_sfobj_isiterable (Object *&obj)
+{
+  /* add all iterables here */
+  return (obj->get_type () == ObjectType::ArrayObj) || OBJ_IS_STR (obj);
+}
 } // namespace sf

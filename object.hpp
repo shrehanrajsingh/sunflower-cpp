@@ -207,5 +207,6 @@ bool _sfobj_isfalse (Module &, Object *&);
 bool _sfobj_cmp (Object *&, Object *&, ConditionalType);
 void _sfobj_passownership (Object *&);
 void _sfobj_removeownership (Object *&);
+bool _sfobj_isiterable (Object *&);
 
 } // namespace sf

@@ -78,7 +78,7 @@ fun nth_fib (n)
     f1 = 0
     f2 = 1
 
-    while n - 1 > 0
+    while n > 1
         t = f2
         f2 = f1 + f2
         f1 = t
@@ -89,10 +89,17 @@ fun nth_fib (n)
 fun fact (n)
     if n == 1
         return n
-
     return fact (n - 1) * n
 
 print(fact(5), nth_fib(5))
 
 a = nth_fib(20)
 print (a)
+
+fun nth_fib_short (n)
+    [f1, f2] = [0, 1]
+
+    while n > 1
+        [f1, f2, n] = [f2, f1 + f2, n - 1]
+    
+    return f1

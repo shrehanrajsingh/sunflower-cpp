@@ -634,6 +634,18 @@ stmt_gen (Vec<Token *> &toks)
                 nv_idx = _sf_ast_getline_idx (toks, i - 1, true);
                 vv_idx = _sf_ast_getline_idx (toks, i + 1);
 
+                // std::cout << "name_tokens\n";
+                // for (size_t j = nv_idx; j < i; j++)
+                //   {
+                //     toks[j]->print ();
+                //   }
+                // std::cout << "\nval_tokens\n";
+                // for (size_t j = i + 1; j < vv_idx; j++)
+                //   {
+                //     toks[j]->print ();
+                //   }
+                // std::cout << "\n---------\n";
+
                 Expr *e_name = expr_gen (toks, nv_idx, i);
                 Expr *e_val = expr_gen (toks, i + 1, vv_idx);
 
@@ -1295,7 +1307,7 @@ _sf_ast_getline_idx (Vec<Token *> &data, size_t st, bool rev)
 
   if (rev)
     {
-      for (int j = int (st) - 1; j >= 0; j--)
+      for (int j = int (st); j >= 0; j--)
         {
           switch (data[j]->get_type ())
             {
@@ -1367,6 +1379,8 @@ _sf_ast_getline_idx (Vec<Token *> &data, size_t st, bool rev)
 
       return data.get_size ();
     }
+
+  return -1; /* unreachable */
 }
 
 size_t

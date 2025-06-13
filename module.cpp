@@ -81,10 +81,77 @@ mod_exec (Module &mod)
                   VariableExpr *nv = static_cast<VariableExpr *> (ne);
 
                   char *p = (char *)nv->get_name ().c_str ();
-                  mod.set_variable (p, val_eval); /* set_variable will handle
-                                                     obj_count increment */
+                  mod.set_variable (p, val_eval); /* set_variable takes care of
+                                                     ref_count increment */
 
                   delete[] p;
+                }
+                break;
+
+              case ExprType::ArrayExp:
+                {
+                  /**
+                   * [a, b] = iterable
+                   * NOTE: For now, we assume size of
+                   * LHS array = size of RHS iterable
+                   */
+
+                  ArrayExpr *av = static_cast<ArrayExpr *> (ne);
+
+                  if (_sfobj_isiterable (val_eval))
+                    {
+                      switch (val_eval->get_type ())
+                        {
+                        case ObjectType::ArrayObj:
+                          {
+                            ArrayObject *vao
+                                = static_cast<ArrayObject *> (val_eval);
+
+                            /**
+                             * NOTE: for now
+                             */
+                            assert (av->get_vals ().get_size ()
+                                    == vao->get_vals ().get_size ());
+
+                            for (size_t i = 0;
+                                 i < vao->get_vals ().get_size (); i++)
+                              {
+                                Expr *&iv = av->get_vals ()[i];
+
+                                switch (iv->get_type ())
+                                  {
+                                  case ExprType::Variable:
+                                    {
+                                      VariableExpr *ive
+                                          = static_cast<VariableExpr *> (iv);
+
+                                      Object *&v = vao->get_vals ()[i];
+
+                                      char *p
+                                          = (char *)ive->get_name ().c_str ();
+                                      mod.set_variable (
+                                          p, v); /* set_variable takes
+                                                           care of ref_count
+                                                           increment */
+
+                                      delete[] p;
+                                    }
+                                    break;
+
+                                  default:
+                                    throw std::invalid_argument (
+                                        "[] = ... only supports variable "
+                                        "names in []");
+                                    break;
+                                  }
+                              }
+                          }
+                          break;
+
+                        default:
+                          break;
+                        }
+                    }
                 }
                 break;
 
