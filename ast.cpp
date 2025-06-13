@@ -425,6 +425,8 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                                     args.push_back (
                                         expr_gen (toks, last_arg_idx, j));
                                   }
+
+                                break;
                               }
 
                             if (dop == "(" || dop == "[" || dop == "{")
@@ -852,7 +854,7 @@ stmt_gen (Vec<Token *> &toks)
                   }
 
                 res.push_back (ifst);
-                i = block_end_idx;
+                i = block_end_idx - 1;
               }
             else if (kw == "for")
               {
@@ -967,7 +969,7 @@ stmt_gen (Vec<Token *> &toks)
                                                      stmt_gen (body_toks));
 
                 res.push_back (fc);
-                i = block_end_idx;
+                i = block_end_idx - 1;
               }
             else if (kw == "fun")
               {
@@ -1066,7 +1068,7 @@ stmt_gen (Vec<Token *> &toks)
                         = new FuncDeclStatement (arg_list, body, name);
 
                     res.push_back (static_cast<Statement *> (fds));
-                    i = body_block_end;
+                    i = body_block_end - 1;
                   }
                 else
                   {
@@ -1185,7 +1187,7 @@ stmt_gen (Vec<Token *> &toks)
 
                 res.push_back (static_cast<Statement *> (
                     new WhileStatement (cond, body)));
-                i = block_end_idx;
+                i = block_end_idx - 1;
               }
           }
           break;

@@ -86,5 +86,13 @@ fun nth_fib (n)
     
     return f1
 
+fun fact (n)
+    if n == 1
+        return n
+
+    return fact (n - 1) * n
+
+print(fact(5), nth_fib(5))
+
 a = nth_fib(20)
 print (a)
