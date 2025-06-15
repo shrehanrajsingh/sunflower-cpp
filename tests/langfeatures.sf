@@ -84,7 +84,7 @@ fun nth_fib (n)
         f1 = t
         n = n - 1
     
-    return f1
+    return f2
 
 fun fact (n)
     if n == 1
@@ -102,4 +102,12 @@ fun nth_fib_short (n)
     while n > 1
         [f1, f2, n] = [f2, f1 + f2, n - 1]
     
-    return f1
+    return f2
+
+fun nth_fib_r (n)
+    if n < 2
+        return n
+    return nth_fib_r(n - 1) + nth_fib_r(n - 2)
+
+for i in 1 to 20
+    print (nth_fib_short(i), nth_fib_r (i))

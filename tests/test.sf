@@ -4,6 +4,12 @@ fun nth_fib (n)
     while n > 1
         [f1, f2, n] = [f2, f1 + f2, n - 1]
     
-    return f1
+    return f2
 
-print(nth_fib(20))
+fun nth_fib_r (n)
+    if n < 2
+        return n
+    return nth_fib_r(n - 1) + nth_fib_r(n - 2)
+
+for i in 1 to 20
+    print (nth_fib(i), nth_fib_r (i))
