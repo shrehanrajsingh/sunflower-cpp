@@ -1242,7 +1242,19 @@ expr_eval (Module &mod, Expr *e)
 
                     mod_exec (*fmod);
 
-                    res = fmod->get_ret ();
+                    if (fmod->get_ret () != nullptr)
+                      res = fmod->get_ret ();
+                    else
+                      {
+                        Constant *p;
+                        Expr *t = static_cast<Expr *> (
+                            new ConstantExpr (static_cast<Constant *> (
+                                p = new NoneConstant ())));
+                        res = expr_eval (mod, t);
+
+                        delete p;
+                        delete t;
+                      }
 
                     /**
                      * TODO: check whether coded functions

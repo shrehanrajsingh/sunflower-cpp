@@ -1,15 +1,21 @@
-fun nth_fib (n)
-    [f1, f2] = [0, 1]
+fun fib (n)
+    f1 = 0
+    f2 = 1
 
     while n > 1
         [f1, f2, n] = [f2, f1 + f2, n - 1]
     
     return f2
 
-fun nth_fib_r (n)
-    if n < 2
-        return n
-    return nth_fib_r(n - 1) + nth_fib_r(n - 2)
+print (fib (20))
 
-for i in 1 to 20
-    print (nth_fib(i), nth_fib_r (i))
+fun hanoi (n, s, a, d)
+    if n == 1
+        print ('Move disk 1 from', s, 'to', d)
+        return
+    
+    hanoi (n - 1, s, d, a)
+    print ('Move disk', n, 'from', s, 'to', d)
+    hanoi (n - 1, a, s, d)
+
+hanoi (4, 'S', 'A', 'D')

@@ -1133,8 +1133,11 @@ stmt_gen (Vec<Token *> &toks)
                   {
                     r = expr_gen (toks, i + 1, j);
                   }
-                else /* nothing to return */
-                  ;
+                else /* nothing to return, so return None */
+                  {
+                    r = static_cast<Expr *> (new ConstantExpr (
+                        static_cast<Constant *> (new NoneConstant ())));
+                  }
 
                 res.push_back (new ReturnStatement (r));
                 i = j;
