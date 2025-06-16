@@ -263,7 +263,7 @@ test4 ()
   I (nv_print);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
-                     static_cast<Expr *> (new VariableExpr ("print")),
+                     static_cast<Expr *> (new VariableExpr ("write")),
                      static_cast<Expr *> (new FunctionExpr (
                          static_cast<Function *> (nv_print))))));
 
@@ -367,7 +367,7 @@ test5 ()
   I (nv_print);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
-                     static_cast<Expr *> (new VariableExpr ("print")),
+                     static_cast<Expr *> (new VariableExpr ("write")),
                      static_cast<Expr *> (new FunctionExpr (
                          static_cast<Function *> (nv_print))))));
 

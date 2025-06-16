@@ -21,7 +21,7 @@ else
     putln ("Inside else")
 
 fun test(a)
-    print ("Received argument: ", a)
+    write ("Received argument: ", a)
     return a
 
 test(10)
@@ -35,7 +35,7 @@ a = {
 }
 
 for i in a
-    print (i, a[i])
+    write (i, a[i])
 
 details = [
     {
@@ -51,13 +51,13 @@ details = [
 ]
 
 for i in details
-    print (i)
+    write (i)
     for j in i
-        print(j, i[j])
+        write(j, i[j])
 
 a = 1
 a = a + 1
-print(a)
+write(a)
 
 fun nth_fib (n)
     f1 = 0
@@ -69,7 +69,7 @@ fun nth_fib (n)
         f1 = t
         n = n - 1
     
-    print ('nth fibonacci is:', f1)
+    write ('nth fibonacci is:', f1)
 
 for i in 1 to 30
     nth_fib (i)
@@ -91,10 +91,10 @@ fun fact (n)
         return n
     return fact (n - 1) * n
 
-print(fact(5), nth_fib(5))
+write(fact(5), nth_fib(5))
 
 a = nth_fib(20)
-print (a)
+write (a)
 
 fun nth_fib_short (n)
     [f1, f2] = [0, 1]
@@ -110,4 +110,4 @@ fun nth_fib_r (n)
     return nth_fib_r(n - 1) + nth_fib_r(n - 2)
 
 for i in 1 to 20
-    print (nth_fib_short(i), nth_fib_r (i))
+    write (nth_fib_short(i), nth_fib_r (i))
