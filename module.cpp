@@ -154,6 +154,81 @@ mod_exec (Module &mod)
                     }
                 }
                 break;
+              case ExprType::ArrayAccess:
+                {
+                  ArrayAccess *ac = static_cast<ArrayAccess *> (ne);
+                  Expr *arr = ac->get_arr ();
+                  Expr *idx = ac->get_idx ();
+
+                  Object *oarr;
+                  Object *oidx;
+
+                  TC (oarr = expr_eval (mod, arr));
+                  TC (oidx = expr_eval (mod, idx));
+
+                  switch (oarr->get_type ())
+                    {
+                    case ObjectType::ArrayObj:
+                      {
+                        ArrayObject *ao = static_cast<ArrayObject *> (oarr);
+
+                        assert (OBJ_IS_INT (oidx)
+                                && "Index must be an integer");
+
+                        int iv = static_cast<IntegerConstant *> (
+                                     static_cast<ConstantObject *> (oidx)
+                                         ->get_c ()
+                                         .get ())
+                                     ->get_value ();
+
+                        assert (iv > -1 && iv < ao->get_vals ().get_size ()
+                                && "Index out of bounds");
+
+                        Object *prev = ao->get_vals ()[iv];
+                        DR (prev);
+
+                        ao->get_vals ()[iv] = val_eval;
+                        IR (val_eval);
+                      }
+                      break;
+                    case ObjectType::DictObj:
+                      {
+                        DictObject *dobj = static_cast<DictObject *> (oarr);
+
+                        assert (OBJ_IS_STR (oidx)
+                                && "Object key must be a string");
+
+                        Str &k = static_cast<StringConstant *> (
+                                     static_cast<ConstantObject *> (oidx)
+                                         ->get_c ()
+                                         .get ())
+                                     ->get_value ();
+
+                        char *p = k.c_str ();
+                        std::string sp = p;
+
+                        if (dobj->get_vals ().find (sp)
+                            != dobj->get_vals ().end ())
+                          {
+                            Object *prev = dobj->get_vals ()[sp];
+                            DR (prev);
+                          }
+
+                        dobj->get_vals ()[sp] = val_eval;
+                        IR (val_eval);
+
+                        delete[] p;
+                      }
+                      break;
+
+                    default:
+                      break;
+                    }
+
+                  DR (oarr);
+                  DR (oidx);
+                }
+                break;
 
               default:
                 std::cerr << "invalid expr type: " << (int)ne->get_type ()

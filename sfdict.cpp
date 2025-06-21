@@ -22,7 +22,8 @@ DictObject::get_stdout_repr ()
 
   s << "{";
   for (auto &&i : vals)
-    s << '\'' << i.first << "': " << i.second->get_stdout_repr () << ", ";
+    s << '\'' << i.first << "': " << i.second->get_stdout_repr_in_container ()
+      << ", ";
 
   std::string res = s.str ();
   res.pop_back ();

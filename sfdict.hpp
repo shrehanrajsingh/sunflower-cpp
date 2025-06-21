@@ -17,15 +17,27 @@ public:
   DictObject (std::map<std::string, Object *> &&);
 
   std::string get_stdout_repr () override;
+  std::string
+  get_stdout_repr_in_container () override
+  {
+    // return get_stdout_repr ();
+    std::stringstream ss;
+    ss << "<dict " << this << ">";
+    return ss.str ();
+  }
+
   void
   print () override
   {
-    std::cout << "Dict Object: " << std::endl;
+    std::cout << "Dict Object: " << this << std::endl;
 
     for (auto &&i : vals)
       {
         std::cout << i.first << ": ";
-        i.second->print ();
+        if (i.second->get_type () == ObjectType::DictObj)
+          std::cout << "<object " << i.second << '>' << std::endl;
+        else
+          i.second->print ();
         std::cout << std::endl;
       }
   }

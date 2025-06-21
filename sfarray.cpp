@@ -20,7 +20,7 @@ ArrayObject::get_stdout_repr ()
   s << "[";
   for (size_t i = 0; i < vals.get_size (); i++)
     {
-      s << vals[i]->get_stdout_repr ();
+      s << vals[i]->get_stdout_repr_in_container ();
       if (i != vals.get_size () - 1)
         s << ", ";
       else

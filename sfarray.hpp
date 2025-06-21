@@ -22,19 +22,26 @@ public:
   std::string
   get_stdout_repr_in_container () override
   {
-    return get_stdout_repr ();
+    // return get_stdout_repr ();
+    std::stringstream ss;
+    ss << "<array " << this << ">";
+    return ss.str ();
   }
 
   void
   print () override
   {
-    std::cout << "Array Object: ";
+    std::cout << "Array Object: " << this;
 
     size_t d = 0;
     for (Object *&i : vals)
       {
         std::cout << "\n\t[" << d++ << "]\t";
-        i->print ();
+
+        if (i->get_type () == ObjectType::ArrayObj)
+          std::cout << "<array " << i << ">";
+        else
+          i->print ();
       }
   }
 
@@ -66,10 +73,12 @@ public:
   void
   print () override
   {
-    std::cout << "ArrayExpr" << std::endl;
+    std::cout << "ArrayExpr: " << this << std::endl;
 
     for (Expr *&i : vals)
-      i->print ();
+      {
+        i->print ();
+      }
   }
 
   ~ArrayExpr ();
