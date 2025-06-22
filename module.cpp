@@ -396,6 +396,11 @@ mod_exec (Module &mod)
                     }
                 }
                 break;
+              case ObjectType::ClassObj:
+                {
+                  /* TODO */
+                }
+                break;
 
               default:
                 ERRMSG ("Entity with type" << (int)name_eval->get_type ()
@@ -699,6 +704,31 @@ mod_exec (Module &mod)
 
             DR (cond_eval);
             mod.get_stmts () = st_pres;
+          }
+          break;
+
+        case StatementType::ClassDeclStmt:
+          {
+            ClassDeclStatement *cds = static_cast<ClassDeclStatement *> (st);
+            Module *cmod = new Module (ModuleType::Class);
+
+            cmod->set_parent (&mod);
+            cmod->get_stmts () = cds->get_body ();
+
+            try
+              {
+                mod_exec (*cmod);
+              }
+            catch (const std::exception &e)
+              {
+                here;
+                std::cerr << e.what () << '\n';
+              }
+
+            SfClass *sfc = new SfClass (cds->get_name (), cmod);
+
+            mod.set_variable (sfc->get_name ().get_internal_buffer (),
+                              static_cast<Object *> (sfc));
           }
           break;
 
@@ -1387,5 +1417,14 @@ expr_eval (Module &mod, Expr *e)
   if (res == nullptr)
     throw "res_expr_is_null";
   return res;
+}
+
+bool
+Module::has_variable (std::string rhs)
+{
+  if (!vtable.count (rhs))
+    return parent == nullptr ? false : parent->has_variable (rhs);
+
+  return true;
 }
 } // namespace sf

@@ -17,6 +17,7 @@ enum class ExprType
   ExprDict = 8,
   ExprArith = 9,
   FuncCall = 10,
+
   NoExpr, /* fallback type for default expr inits */
 };
 

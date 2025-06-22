@@ -5,6 +5,7 @@
 #include "header.hpp"
 #include "object.hpp"
 #include "sfarray.hpp"
+#include "sfclass.hpp"
 #include "sfdict.hpp"
 #include "stmt.hpp"
 #include "str.hpp"
@@ -115,6 +116,8 @@ public:
 
   Object *get_variable (std::string);
   void set_variable (std::string, Object *);
+
+  bool has_variable (std::string);
 
   friend void mod_exec (Module &);
 };

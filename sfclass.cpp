@@ -1,0 +1,48 @@
+#include "sfclass.hpp"
+
+namespace sf
+{
+ClassDeclStatement::ClassDeclStatement ()
+    : Statement (StatementType::ClassDeclStmt)
+{
+}
+
+ClassDeclStatement::ClassDeclStatement (Str n, Vec<Statement *> &b)
+    : Statement (StatementType::ClassDeclStmt), body (b), name (n)
+{
+}
+
+ClassDeclStatement::ClassDeclStatement (Str n, Vec<Statement *> &&b)
+    : Statement (StatementType::ClassDeclStmt), body (std::move (b)), name (n)
+{
+}
+
+ClassDeclStatement::~ClassDeclStatement () {}
+
+ClassObject::ClassObject () : Object (ObjectType::SfClass), mod (nullptr) {}
+
+ClassObject::ClassObject (Module *m) : Object (ObjectType::SfClass), mod (m) {}
+
+std::string
+ClassObject::get_stdout_repr ()
+{
+  return (std::stringstream{} << "<class object " << this << ">").str ();
+}
+
+ClassObject::~ClassObject () {}
+
+SfClass::SfClass () : Object (ObjectType::ClassObj), mod (nullptr) {}
+
+std::string
+SfClass::get_stdout_repr ()
+{
+  return (std::stringstream{} << "<class " << this << ">").str ();
+}
+
+SfClass::SfClass (Str n, Module *m)
+    : Object (ObjectType::ClassObj), mod (m), name (n)
+{
+}
+
+SfClass::~SfClass () {}
+} // namespace sf

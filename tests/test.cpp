@@ -277,23 +277,23 @@ test4 ()
 
   try
     {
-      while (1)
-        {
-          Module *m = new Module (ModuleType::File, ast);
+      // while (1)
+      {
+        Module *m = new Module (ModuleType::File, ast);
 
-          mod_exec (*m);
+        mod_exec (*m);
 
-          std::cout << "--------------" << std::endl;
+        std::cout << "--------------" << std::endl;
 
-          for (auto i : m->get_vtable ())
-            {
-              std::cout << i.first << std::endl;
-              i.second->print ();
-              std::cout << std::endl;
-            }
+        for (auto i : m->get_vtable ())
+          {
+            std::cout << i.first << std::endl;
+            i.second->print ();
+            std::cout << std::endl;
+          }
 
-          delete m;
-        }
+        delete m;
+      }
     }
   catch (const char *e)
     {

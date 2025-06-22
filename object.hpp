@@ -55,6 +55,8 @@ enum class ObjectType
   FuncObject = 1,
   ArrayObj = 2,
   DictObj = 3,
+  SfClass = 4,
+  ClassObj = 5,
   NoObject,
 };
 
@@ -64,10 +66,11 @@ class Object : public memnode_t, public StdoutRepr
 {
 private:
   ObjectType type;
+  Object *self_arg;
 
 public:
-  Object () : type (ObjectType::NoObject), memnode_t () {};
-  Object (ObjectType t) : type (t), memnode_t () {}
+  Object () : type (ObjectType::NoObject), memnode_t (), self_arg (nullptr) {};
+  Object (ObjectType t) : type (t), memnode_t (), self_arg (nullptr) {}
   virtual ~Object () {};
 
   virtual std::string
@@ -86,6 +89,18 @@ public:
   get_type () const
   {
     return type;
+  }
+
+  inline Object *&
+  get_self_arg ()
+  {
+    return self_arg;
+  }
+
+  inline const Object *
+  get_self_arg () const
+  {
+    return self_arg;
   }
 
   virtual void print () {};
@@ -208,5 +223,6 @@ bool _sfobj_cmp (Object *&, Object *&, ConditionalType);
 void _sfobj_passownership (Object *&);
 void _sfobj_removeownership (Object *&);
 bool _sfobj_isiterable (Object *&);
+bool _sfobj_iscallable (Module &, Object *&);
 
 } // namespace sf

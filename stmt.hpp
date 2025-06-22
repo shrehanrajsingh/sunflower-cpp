@@ -13,6 +13,7 @@ enum class StatementType
   FuncDecl = 4,
   ReturnStmt = 5,
   WhileStmt = 6,
+  ClassDeclStmt = 7,
   NoStmt,
 };
 

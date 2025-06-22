@@ -1,6 +1,7 @@
 #include "ast.hpp"
 #include "expr.hpp"
 #include "sfarray.hpp"
+#include "sfclass.hpp"
 #include "sfdict.hpp"
 
 namespace sf
@@ -1202,6 +1203,36 @@ stmt_gen (Vec<Token *> &toks)
 
                 res.push_back (static_cast<Statement *> (
                     new WhileStatement (cond, body)));
+
+                i = block_end_idx - 1;
+              }
+            else if (kw == "class")
+              {
+                assert (i + 1 < toks.get_size ());
+                Token *name = toks[i + 1];
+
+                assert (name->get_type () == TokenType::Identifier);
+                Str name_str
+                    = static_cast<IdentifierToken *> (name)->get_val ();
+
+                assert (i + 2 < toks.get_size ()
+                        && toks[i + 2]->get_type () == TokenType::Newline);
+
+                size_t block_st_idx = i + 2;
+                size_t block_end_idx = _sf_ast_getblock_idx (
+                    toks, i, _sf_ast_gettabspace (toks, i));
+
+                Vec<Token *> body_toks;
+                for (size_t j = block_st_idx; j < block_end_idx; j++)
+                  {
+                    body_toks.push_back (toks[j]);
+                  }
+
+                Vec<Statement *> body = stmt_gen (body_toks);
+
+                res.push_back (static_cast<Statement *> (
+                    new ClassDeclStatement (name_str, body)));
+
                 i = block_end_idx - 1;
               }
           }
