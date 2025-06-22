@@ -1,4 +1,5 @@
 #include "sfclass.hpp"
+#include "module.hpp"
 
 namespace sf
 {
@@ -29,7 +30,11 @@ ClassObject::get_stdout_repr ()
   return (std::stringstream{} << "<class object " << this << ">").str ();
 }
 
-ClassObject::~ClassObject () {}
+ClassObject::~ClassObject ()
+{
+  if (mod != nullptr)
+    delete mod;
+}
 
 SfClass::SfClass () : Object (ObjectType::ClassObj), mod (nullptr) {}
 
@@ -44,5 +49,9 @@ SfClass::SfClass (Str n, Module *m)
 {
 }
 
-SfClass::~SfClass () {}
+SfClass::~SfClass ()
+{
+  if (mod != nullptr)
+    delete mod;
+}
 } // namespace sf

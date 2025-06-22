@@ -15,4 +15,5 @@ class Test
     fun _kill (self)
         write ("Killing Test")
 
-a = Test(10, 20)
+a = Test (10, 20)
+write (a, a.a, a.b)

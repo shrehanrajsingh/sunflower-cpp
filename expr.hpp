@@ -17,7 +17,7 @@ enum class ExprType
   ExprDict = 8,
   ExprArith = 9,
   FuncCall = 10,
-
+  DotAccess = 11,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -395,5 +395,62 @@ public:
   {
     name = p;
   }
+};
+
+class DotAccess : public Expr
+{
+private:
+  Expr *parent;
+  Expr *child;
+
+public:
+  DotAccess () : Expr (ExprType::DotAccess), parent (nullptr), child (nullptr)
+  {
+  }
+  DotAccess (Expr *_Parent, Expr *_Child)
+      : Expr (ExprType::DotAccess), parent (_Parent), child (_Child)
+  {
+  }
+
+  inline Expr *&
+  get_parent ()
+  {
+    return parent;
+  }
+  inline const Expr *
+  get_parent () const
+  {
+    return parent;
+  }
+
+  inline Expr *&
+  get_child ()
+  {
+    return child;
+  }
+  inline const Expr *
+  get_child () const
+  {
+    return child;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "DotAccess\nParent: ";
+
+    if (parent == nullptr)
+      std::cout << "nullptr\n";
+    else
+      parent->print ();
+
+    std::cout << "Child: ";
+    if (child == nullptr)
+      std::cout << "nullptr\n";
+    else
+      child->print ();
+  }
+
+  ~DotAccess () {}
 };
 } // namespace sf

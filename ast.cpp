@@ -529,6 +529,33 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                 goto ret;
               }
+            else if (opv == '.')
+              {
+                /**
+                 * For now, we assume dot accesses are simple and of
+                 * the form
+                 * <some_huge_expression>.<single_variable_name>
+                 */
+
+                assert (i + 1 < ed);
+                Token *n = toks[i + 1];
+
+                if (n->get_type () != TokenType::Identifier)
+                  {
+                    here;
+                    n->print ();
+                    throw std::runtime_error ("Syntax Error: DotAccess should "
+                                              "be of type expr.variable");
+                  }
+
+                res = static_cast<Expr *> (new DotAccess (
+                    res,
+                    static_cast<Expr *> (new VariableExpr (
+                        static_cast<IdentifierToken *> (n)->get_val ()))));
+
+                i++;
+                goto end;
+              }
           }
           break;
 
