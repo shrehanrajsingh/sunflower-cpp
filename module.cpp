@@ -347,6 +347,12 @@ mod_exec (Module &mod)
                           assert (nf->get_args ().get_size ()
                                   > 0); /* at least one arg */
 
+                        if (fv->get_self_arg ())
+                          {
+                            assert (name_eval->get_self_arg () != nullptr);
+                            args_eval.insert (0, name_eval->get_self_arg ());
+                          }
+
                         Module *fmod = new Module (ModuleType::Function,
                                                    Vec<Statement *> ());
                         fmod->set_parent (&mod);
@@ -396,8 +402,18 @@ mod_exec (Module &mod)
 
                         // printf ("%d %d\n", cf->get_args ().get_size (),
                         //         args_eval.get_size ());
-                        assert (cf->get_args ().get_size ()
-                                == args_eval.get_size ());
+                        if (!cf->get_va_args ())
+                          assert (cf->get_args ().get_size ()
+                                  == args_eval.get_size ());
+                        else
+                          assert (cf->get_args ().get_size ()
+                                  > 0); /* at least one arg */
+
+                        if (fv->get_self_arg ())
+                          {
+                            assert (name_eval->get_self_arg () != nullptr);
+                            args_eval.insert (0, name_eval->get_self_arg ());
+                          }
 
                         Module *fmod = new Module (ModuleType::Function,
                                                    cf->get_body ());
@@ -444,7 +460,7 @@ mod_exec (Module &mod)
                     }
                 }
                 break;
-              case ObjectType::ClassObj:
+              case ObjectType::SfClass:
                 {
                   SfClass *sfc = static_cast<SfClass *> (name_eval);
                   Module *&sm = sfc->get_mod ();
@@ -607,8 +623,8 @@ mod_exec (Module &mod)
                 break;
 
               default:
-                ERRMSG ("Entity with type" << (int)name_eval->get_type ()
-                                           << "is not callable");
+                ERRMSG ("Entity with type " << (int)name_eval->get_type ()
+                                            << " is not callable");
                 break;
               }
 
@@ -836,6 +852,9 @@ mod_exec (Module &mod)
 
             CodedFunction *cd
                 = new CodedFunction (fds->get_body (), fds->get_args ());
+
+            if (mod.get_type () == ModuleType::Class)
+              cd->set_self_arg (true);
 
             FunctionObject *fo = new FunctionObject (cd);
 
@@ -1421,6 +1440,7 @@ expr_eval (Module &mod, Expr *e)
         Object *name_eval;
 
         TC (name_eval = expr_eval (mod, fce->get_name ()));
+        // std::cout << (name_eval->get_self_arg () == nullptr) << '\n';
 
         Vec<Object *> args_eval;
 
@@ -1467,6 +1487,12 @@ expr_eval (Module &mod, Expr *e)
                     else
                       assert (nf->get_args ().get_size ()
                               > 0); /* at least one arg */
+
+                    if (fv->get_self_arg ())
+                      {
+                        assert (name_eval->get_self_arg () != nullptr);
+                        args_eval.insert (0, name_eval->get_self_arg ());
+                      }
 
                     Module *fmod = new Module (ModuleType::Function,
                                                Vec<Statement *> ());
@@ -1527,8 +1553,18 @@ expr_eval (Module &mod, Expr *e)
 
                     // printf ("%d %d\n", cf->get_args ().get_size (),
                     //         args_eval.get_size ());
-                    assert (cf->get_args ().get_size ()
-                            == args_eval.get_size ());
+                    if (!cf->get_va_args ())
+                      assert (cf->get_args ().get_size ()
+                              == args_eval.get_size ());
+                    else
+                      assert (cf->get_args ().get_size ()
+                              > 0); /* at least one arg */
+
+                    if (fv->get_self_arg ())
+                      {
+                        assert (name_eval->get_self_arg () != nullptr);
+                        args_eval.insert (0, name_eval->get_self_arg ());
+                      }
 
                     Module *fmod
                         = new Module (ModuleType::Function, cf->get_body ());
@@ -1604,7 +1640,7 @@ expr_eval (Module &mod, Expr *e)
                 }
             }
             break;
-          case ObjectType::ClassObj:
+          case ObjectType::SfClass:
             {
               SfClass *sfc = static_cast<SfClass *> (name_eval);
               Module *&sm = sfc->get_mod ();
@@ -1769,8 +1805,8 @@ expr_eval (Module &mod, Expr *e)
             break;
 
           default:
-            ERRMSG ("Entity with type" << (int)name_eval->get_type ()
-                                       << "is not callable");
+            ERRMSG ("Entity with type " << (int)name_eval->get_type ()
+                                        << " is not callable");
             break;
           }
 
@@ -1796,6 +1832,8 @@ expr_eval (Module &mod, Expr *e)
         Str &member = static_cast<VariableExpr *> (e_child)->get_name ();
 
         Object *o_parent = expr_eval (mod, e_parent);
+        // std::cout << "Parent type: " << int (o_parent->get_type ())
+        //           << std::endl;
 
         switch (o_parent->get_type ())
           {
@@ -1811,7 +1849,28 @@ expr_eval (Module &mod, Expr *e)
 
               res = co->get_mod ()->get_variable (
                   member.get_internal_buffer ());
+
               IR (res);
+              // std::cout << int (res->get_type ()) << '\t'
+              //           << static_cast<FunctionObject *> (res)
+              //                  ->get_v ()
+              //                  ->get_self_arg ()
+              //           << '\n';
+
+              if (res->get_type () == ObjectType::FuncObject
+                  && static_cast<FunctionObject *> (res)
+                         ->get_v ()
+                         ->get_self_arg ())
+                {
+                  if (res->get_self_arg () != nullptr)
+                    {
+                      DR (res->get_self_arg ());
+                      res->get_self_arg () = nullptr;
+                    }
+
+                  res->get_self_arg () = o_parent;
+                  IR (o_parent);
+                }
             }
             break;
 

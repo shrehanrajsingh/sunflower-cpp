@@ -20,9 +20,11 @@ ClassDeclStatement::ClassDeclStatement (Str n, Vec<Statement *> &&b)
 
 ClassDeclStatement::~ClassDeclStatement () {}
 
-ClassObject::ClassObject () : Object (ObjectType::SfClass), mod (nullptr) {}
+ClassObject::ClassObject () : Object (ObjectType::ClassObj), mod (nullptr) {}
 
-ClassObject::ClassObject (Module *m) : Object (ObjectType::SfClass), mod (m) {}
+ClassObject::ClassObject (Module *m) : Object (ObjectType::ClassObj), mod (m)
+{
+}
 
 std::string
 ClassObject::get_stdout_repr ()
@@ -36,7 +38,7 @@ ClassObject::~ClassObject ()
     delete mod;
 }
 
-SfClass::SfClass () : Object (ObjectType::ClassObj), mod (nullptr) {}
+SfClass::SfClass () : Object (ObjectType::SfClass), mod (nullptr) {}
 
 std::string
 SfClass::get_stdout_repr ()
@@ -45,7 +47,7 @@ SfClass::get_stdout_repr ()
 }
 
 SfClass::SfClass (Str n, Module *m)
-    : Object (ObjectType::ClassObj), mod (m), name (n)
+    : Object (ObjectType::SfClass), mod (m), name (n)
 {
 }
 

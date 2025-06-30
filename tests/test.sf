@@ -1,19 +1,16 @@
-class Test
-    a = none
-    b = none
+class List
+    n = none
+    v = none
 
-    fun _init (self, a, b)
-        self.a = a
-        self.b = b
+    fun _init (self, v, n)
+        self.n = n
+        self.v = v
     
-    fun get_a (self)
-        return self.a
-    
-    fun get_b (self)
-        return self.b
-    
-    fun _kill (self)
-        write ("Killing Test")
+    fun print (self)
+        b = self
+        while b
+            write(b.v)
+            b = b.n
 
-a = Test (10, 20)
-write (a, a.a, a.b)
+a = List(10, List(20, List(30, List(40, List(50, none)))))
+a.print()

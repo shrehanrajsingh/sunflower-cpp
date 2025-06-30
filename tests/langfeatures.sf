@@ -111,3 +111,20 @@ fun nth_fib_r (n)
 
 for i in 1 to 20
     write (nth_fib_short(i), nth_fib_r (i))
+
+class List
+    n = none
+    v = none
+
+    fun _init(self, v, n)
+        self.n = n
+        self.v = v
+    
+    fun print(self)
+        b = self
+        while b
+            write(b.v)
+            b = b.n
+
+a = List(10, List(20, List(30, List(40, List(50, none)))))
+a.print()

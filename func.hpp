@@ -33,6 +33,7 @@ private:
   FuncType type;
 
   bool use_va_args = false;
+  bool use_self_arg = false;
 
 public:
   Function () : type (FuncType::Native) {}
@@ -48,6 +49,18 @@ public:
   get_va_args ()
   {
     return use_va_args;
+  }
+
+  void
+  set_self_arg (bool _T)
+  {
+    use_self_arg = _T;
+  }
+
+  inline bool
+  get_self_arg ()
+  {
+    return use_self_arg;
   }
 
   inline FuncType

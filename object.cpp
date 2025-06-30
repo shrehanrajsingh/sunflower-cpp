@@ -5,6 +5,21 @@ namespace sf
 void
 _sfobj_refcheck (Object *&obj)
 {
+  if (obj->get_type () == ObjectType::FuncObject)
+    {
+      FunctionObject *fo = static_cast<FunctionObject *> (obj);
+
+      if (fo->get_v () != nullptr && fo->get_v ()->get_self_arg ())
+        {
+          if (obj->get_self_arg () != nullptr)
+            {
+              // std::cout << obj->get_self_arg ()->get_ref_count () << '\n';
+              DR (obj->get_self_arg ());
+              obj->get_self_arg () = nullptr;
+            }
+        }
+    }
+
   if (obj->get_ref_count () < 1)
     {
       delete obj;

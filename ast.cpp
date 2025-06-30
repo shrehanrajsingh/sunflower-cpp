@@ -408,7 +408,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                             Str &dop
                                 = static_cast<OperatorToken *> (d)->get_val ();
 
-                            if (dop == ',')
+                            if (dop == ',' && !gb)
                               {
                                 args.push_back (
                                     expr_gen (toks, last_arg_idx, j));

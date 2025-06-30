@@ -62,6 +62,14 @@ enum class ObjectType
 
 namespace sf
 {
+void _sfobj_refcheck (Object *&);
+bool _sfobj_isfalse (Module &, Object *&);
+bool _sfobj_cmp (Object *&, Object *&, ConditionalType);
+void _sfobj_passownership (Object *&);
+void _sfobj_removeownership (Object *&);
+bool _sfobj_isiterable (Object *&);
+bool _sfobj_iscallable (Module &, Object *&);
+
 class Object : public memnode_t, public StdoutRepr
 {
 private:
@@ -71,7 +79,15 @@ private:
 public:
   Object () : type (ObjectType::NoObject), memnode_t (), self_arg (nullptr) {};
   Object (ObjectType t) : type (t), memnode_t (), self_arg (nullptr) {}
-  virtual ~Object () {};
+  virtual ~Object ()
+  {
+    if (self_arg != nullptr)
+      {
+        here;
+        DR (self_arg);
+        self_arg = nullptr;
+      }
+  }
 
   virtual std::string
   get_stdout_repr ()
@@ -216,13 +232,5 @@ public:
   ((X)->get_type () == ObjectType::Constant                                   \
    && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
           == ConstantType::String)
-
-void _sfobj_refcheck (Object *&);
-bool _sfobj_isfalse (Module &, Object *&);
-bool _sfobj_cmp (Object *&, Object *&, ConditionalType);
-void _sfobj_passownership (Object *&);
-void _sfobj_removeownership (Object *&);
-bool _sfobj_isiterable (Object *&);
-bool _sfobj_iscallable (Module &, Object *&);
 
 } // namespace sf
