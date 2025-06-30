@@ -9,7 +9,7 @@ class List
     fun print (self)
         b = self
         while b
-            write(b.v)
+            write (b.v)
             b = b.n
 
 a = List(10, List(20, List(30, List(40, List(50, none)))))

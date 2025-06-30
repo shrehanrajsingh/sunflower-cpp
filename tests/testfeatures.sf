@@ -1,0 +1,23 @@
+# THE FEATURES USED HERE ARE NOT 
+# IMPLEMENTED AS OF JUNE 30, 2025
+# THESE ARE SPECULATIONS AND EXPERIMENTAL
+# FEATURES THAT COULD BE IMPLEMENTED IN THE
+# FUTURE
+
+a = [1, 2, 3, 4, 5]
+
+fun get (i)
+    if i < 0
+        return? "Invalid index"
+    
+    return a[i]
+
+# block syntax
+unsafe j = get(-2)
+    if j == "Invalid index"
+        j = 0
+
+# same thing
+# if get(i) returns ? then j becomes 0 otherwise it takes get(i)
+# get(-2)? returns none, and none or 0 is 0
+j = get(-2)? or 0
