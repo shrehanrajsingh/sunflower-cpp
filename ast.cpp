@@ -129,7 +129,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
             if (opv == "==")
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::EqEq, expr_gen (toks, 0, i),
+                    ConditionalType::EqEq, expr_gen (toks, st, i),
                     expr_gen (toks, i + 1, ed)));
 
                 goto ret;
@@ -137,7 +137,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
             else if (opv == "!=")
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::NEq, expr_gen (toks, 0, i),
+                    ConditionalType::NEq, expr_gen (toks, st, i),
                     expr_gen (toks, i + 1, ed)));
 
                 goto ret;
@@ -145,7 +145,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
             else if (opv == "<=")
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::LEq, expr_gen (toks, 0, i),
+                    ConditionalType::LEq, expr_gen (toks, st, i),
                     expr_gen (toks, i + 1, ed)));
 
                 goto ret;
@@ -153,7 +153,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
             else if (opv == ">=")
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::GEq, expr_gen (toks, 0, i),
+                    ConditionalType::GEq, expr_gen (toks, st, i),
                     expr_gen (toks, i + 1, ed)));
 
                 goto ret;
@@ -161,7 +161,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
             else if (opv == "<")
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::Le, expr_gen (toks, 0, i),
+                    ConditionalType::Le, expr_gen (toks, st, i),
                     expr_gen (toks, i + 1, ed)));
 
                 goto ret;
@@ -169,7 +169,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
             else if (opv == ">")
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
-                    ConditionalType::Ge, expr_gen (toks, 0, i),
+                    ConditionalType::Ge, expr_gen (toks, st, i),
                     expr_gen (toks, i + 1, ed)));
 
                 goto ret;
@@ -785,17 +785,17 @@ stmt_gen (Vec<Token *> &toks)
 
                 IfConstruct *ifst = new IfConstruct (cond, body, {}, {});
 
-              // std::cout << block_end_idx << '\t' << toks.get_size () <<
-              // '\n';
+                std::cout << block_end_idx << '\t' << toks.get_size () << '\n';
               l5:
-                while (block_end_idx < toks.get_size ()
-                           && toks[block_end_idx]->get_type ()
-                                  == TokenType::Newline
-                       || toks[block_end_idx]->get_type ()
-                              == TokenType::Tabspace)
+                while (
+                    block_end_idx < toks.get_size ()
+                    && (toks[block_end_idx]->get_type () == TokenType::Newline
+                        || toks[block_end_idx]->get_type ()
+                               == TokenType::Tabspace))
                   block_end_idx++;
 
-                if (toks[block_end_idx]->get_type () == TokenType::Keyword
+                if (block_end_idx < toks.get_size ()
+                    && toks[block_end_idx]->get_type () == TokenType::Keyword
                     && static_cast<KeywordToken *> (toks[block_end_idx])
                                ->get_val ()
                            == "else")

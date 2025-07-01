@@ -128,3 +128,74 @@ class List
 
 a = List(10, List(20, List(30, List(40, List(50, none)))))
 a.print()
+
+class TreeNode
+    value = none
+    left = none
+    right = none
+    
+    fun _init(self, value)
+        self.value = value
+        self.left = none
+        self.right = none
+    
+    fun insert(self, value)
+        if value < self.value
+            if self.left == none
+                self.left = TreeNode(value)
+            else
+                self.left.insert(value)
+        else
+            if self.right == none
+                self.right = TreeNode(value)
+            else
+                self.right.insert(value)
+    
+    fun inorder_traversal(self)
+        if self.left
+            self.left.inorder_traversal()
+        write(self.value)
+        if self.right
+            self.right.inorder_traversal()
+    
+    fun preorder_traversal(self)
+        write(self.value)
+        if self.left
+            self.left.preorder_traversal()
+        if self.right
+            self.right.preorder_traversal()
+    
+    fun postorder_traversal(self)
+        if self.left
+            self.left.postorder_traversal()
+        if self.right
+            self.right.postorder_traversal()
+        write(self.value)
+    
+    fun search(self, value)
+        if self.value == value
+            return true
+        if value < self.value
+            if self.left
+                return self.left.search(value)
+        if value >= self.value
+            if self.right
+                return self.right.search(value)
+        return false
+
+tree = TreeNode(25)
+tree.insert(15)
+tree.insert(50)
+tree.insert(10)
+tree.insert(22)
+tree.insert(35)
+tree.insert(70)
+
+write("In-order traversal:")
+tree.inorder_traversal()
+
+write("Post-order traversal")
+tree.postorder_traversal()
+
+write("Pre-order traversal")
+tree.preorder_traversal()

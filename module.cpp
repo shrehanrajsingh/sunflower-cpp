@@ -301,11 +301,6 @@ mod_exec (Module &mod)
 
             Vec<Object *> args_eval;
 
-            if (name_eval->get_self_arg () != nullptr)
-              {
-                args_eval.push_back (name_eval->get_self_arg ());
-              }
-
             for (auto j : fst->get_args ())
               {
                 Object *t = nullptr;
@@ -342,7 +337,8 @@ mod_exec (Module &mod)
 
                         if (!nf->get_va_args ())
                           assert (nf->get_args ().get_size ()
-                                  == args_eval.get_size ());
+                                  == args_eval.get_size ()
+                                         + fv->get_self_arg ());
                         else
                           assert (nf->get_args ().get_size ()
                                   > 0); /* at least one arg */
@@ -404,7 +400,8 @@ mod_exec (Module &mod)
                         //         args_eval.get_size ());
                         if (!cf->get_va_args ())
                           assert (cf->get_args ().get_size ()
-                                  == args_eval.get_size ());
+                                  == args_eval.get_size ()
+                                         + fv->get_self_arg ());
                         else
                           assert (cf->get_args ().get_size ()
                                   > 0); /* at least one arg */
@@ -1085,6 +1082,10 @@ expr_eval (Module &mod, Expr *e)
         TC (robj = expr_eval (mod, ce->get_rval ()));
 
         bool cnd = _sfobj_cmp (lobj, robj, ce->get_cond_type ());
+        // lobj->print ();
+        // std::cout << '\n';
+        // robj->print ();
+        // std::cout << '\n';
 
         if (res != nullptr)
           DR (res);
@@ -1444,11 +1445,6 @@ expr_eval (Module &mod, Expr *e)
 
         Vec<Object *> args_eval;
 
-        if (name_eval->get_self_arg () != nullptr)
-          {
-            args_eval.push_back (name_eval->get_self_arg ());
-          }
-
         for (auto j : fce->get_args ())
           {
             Object *t = nullptr;
@@ -1483,7 +1479,7 @@ expr_eval (Module &mod, Expr *e)
 
                     if (!nf->get_va_args ())
                       assert (nf->get_args ().get_size ()
-                              == args_eval.get_size ());
+                              == args_eval.get_size () + fv->get_self_arg ());
                     else
                       assert (nf->get_args ().get_size ()
                               > 0); /* at least one arg */
@@ -1555,7 +1551,7 @@ expr_eval (Module &mod, Expr *e)
                     //         args_eval.get_size ());
                     if (!cf->get_va_args ())
                       assert (cf->get_args ().get_size ()
-                              == args_eval.get_size ());
+                              == args_eval.get_size () + fv->get_self_arg ());
                     else
                       assert (cf->get_args ().get_size ()
                               > 0); /* at least one arg */
