@@ -18,6 +18,9 @@ enum class ExprType
   ExprArith = 9,
   FuncCall = 10,
   DotAccess = 11,
+  LogicalOr = 12,
+  LogicalAnd = 13,
+  LogicalNot = 14,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -452,5 +455,133 @@ public:
   }
 
   ~DotAccess () {}
+};
+
+class LogicalAndExpr : public Expr
+{
+  Expr *left;
+  Expr *right;
+
+public:
+  LogicalAndExpr () : Expr (ExprType::LogicalAnd) {}
+  LogicalAndExpr (Expr *_L, Expr *_R)
+      : Expr (ExprType::LogicalAnd), left{ _L }, right{ _R }
+  {
+  }
+
+  Expr *&
+  get_left ()
+  {
+    return left;
+  }
+
+  const Expr *const &
+  get_left () const
+  {
+    return left;
+  }
+
+  Expr *&
+  get_right ()
+  {
+    return right;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "LogicalAnd\nVal: ";
+    if (left != nullptr)
+      left->print ();
+    else
+      std::cout << "nullptr" << '\n';
+
+    std::cout << "Right: ";
+    if (right != nullptr)
+      right->print ();
+    else
+      std::cout << "nullptr" << '\n';
+  }
+
+  ~LogicalAndExpr () {}
+};
+
+class LogicalOrExpr : public Expr
+{
+  Expr *left;
+  Expr *right;
+
+public:
+  LogicalOrExpr () : Expr (ExprType::LogicalOr) {}
+  LogicalOrExpr (Expr *_L, Expr *_R)
+      : Expr (ExprType::LogicalOr), left{ _L }, right (_R)
+  {
+  }
+
+  Expr *&
+  get_left ()
+  {
+    return left;
+  }
+
+  const Expr *const &
+  get_left () const
+  {
+    return left;
+  }
+
+  Expr *&
+  get_right ()
+  {
+    return right;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "LogicalOr\nLeft: ";
+    if (left != nullptr)
+      left->print ();
+    else
+      std::cout << "nullptr" << '\n';
+
+    std::cout << "Right: ";
+    if (right != nullptr)
+      right->print ();
+    else
+      std::cout << "nullptr" << '\n';
+  }
+
+  ~LogicalOrExpr () {}
+};
+
+class LogicalNotExpr : public Expr
+{
+  Expr *val;
+
+public:
+  LogicalNotExpr () : Expr (ExprType::LogicalNot) {}
+  LogicalNotExpr (Expr *_V) : Expr (ExprType::LogicalNot), val{ _V } {}
+
+  Expr *&
+  get_val ()
+  {
+    return val;
+  }
+
+  const Expr *const &
+  get_val () const
+  {
+    return val;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "LogicalNot\nVal: ";
+    val->print ();
+  }
+
+  ~LogicalNotExpr () {}
 };
 } // namespace sf

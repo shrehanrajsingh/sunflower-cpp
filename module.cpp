@@ -1894,6 +1894,91 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::LogicalAnd:
+      {
+        LogicalAndExpr *lae = static_cast<LogicalAndExpr *> (e);
+
+        Expr *&left = lae->get_left ();
+        Expr *&right = lae->get_right ();
+
+        Object *o_left = nullptr;
+        Object *o_right = nullptr;
+
+        TC (o_left = expr_eval (mod, left));
+
+        if (res != nullptr)
+          DR (res);
+
+        if (_sfobj_isfalse (mod, o_left))
+          res = o_left;
+        else
+          {
+            TC (o_right = expr_eval (mod, right));
+            res = o_right;
+          }
+
+        IR (res);
+
+        if (o_right != nullptr)
+          DR (o_right);
+        if (o_left != nullptr)
+          DR (o_left);
+      }
+      break;
+
+    case ExprType::LogicalOr:
+      {
+        LogicalOrExpr *loe = static_cast<LogicalOrExpr *> (e);
+
+        Expr *&left = loe->get_left ();
+        Expr *&right = loe->get_right ();
+
+        Object *o_left = nullptr;
+        Object *o_right = nullptr;
+
+        TC (o_left = expr_eval (mod, left));
+
+        if (res != nullptr)
+          DR (res);
+
+        if (_sfobj_isfalse (mod, o_left))
+          {
+            TC (o_right = expr_eval (mod, right));
+            res = o_right;
+          }
+        else
+          res = o_left;
+
+        IR (res);
+
+        if (o_right != nullptr)
+          DR (o_right);
+        if (o_left != nullptr)
+          DR (o_left);
+      }
+      break;
+
+    case ExprType::LogicalNot:
+      {
+        LogicalNotExpr *lne = static_cast<LogicalNotExpr *> (e);
+
+        Expr *&val = lne->get_val ();
+        Object *o_val = nullptr;
+
+        TC (o_val = expr_eval (mod, val));
+
+        if (_sfobj_isfalse (mod, o_val))
+          res = static_cast<Object *> (new ConstantObject (
+              static_cast<Constant *> (new BooleanConstant (true))));
+        else
+          res = static_cast<Object *> (new ConstantObject (
+              static_cast<Constant *> (new BooleanConstant (false))));
+
+        IR (res);
+        DR (o_val);
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;

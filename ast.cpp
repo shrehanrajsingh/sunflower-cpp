@@ -26,6 +26,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
   Expr *res = nullptr;
 
   size_t i = st;
+  int gb = 0;
 
   // to..step has more precedence than ==, != etc.
   while (i < ed)
@@ -34,12 +35,23 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
         case TokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
 
-            if (ktv == "to")
+            if (ktv == "to" && !gb)
               {
                 Expr *lval = expr_gen (toks, st, i);
                 Expr *rval = nullptr;
@@ -112,7 +124,106 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
       i++;
     }
 
+  /* or clause */
   i = st;
+  gb = 0;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "or" && !gb)
+              {
+                Expr *lval = expr_gen (toks, st, i);
+                Expr *rval = expr_gen (toks, i + 1, ed);
+                int gb = 0;
+
+                if (res != nullptr)
+                  delete res;
+
+                res = static_cast<Expr *> (new LogicalOrExpr (lval, rval));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+  i = st;
+
+  /* and clause */
+  i = st;
+  gb = 0;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "and" && !gb)
+              {
+                Expr *lval = expr_gen (toks, st, i);
+                Expr *rval = expr_gen (toks, i + 1, ed);
+                int gb = 0;
+
+                if (res != nullptr)
+                  delete res;
+
+                res = static_cast<Expr *> (new LogicalAndExpr (lval, rval));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+  i = st;
+  gb = 0;
+
+  /* not clause is after comparison operators */
 
   /* for comparison operators */
   while (i < ed)
@@ -171,6 +282,41 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 res = static_cast<Expr *> (new ConditionalExpr (
                     ConditionalType::Ge, expr_gen (toks, st, i),
                     expr_gen (toks, i + 1, ed)));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+
+  /* not clause */
+  i = st;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "not")
+              {
+                Expr *val = expr_gen (toks, i + 1, ed);
+                int gb = 0;
+
+                if (res != nullptr)
+                  delete res;
+
+                res = static_cast<Expr *> (new LogicalNotExpr (val));
 
                 goto ret;
               }
@@ -443,6 +589,33 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 else
                   {
                     /* normal brackets / tuple */
+                    int gb = 0;
+                    size_t br_end_idx = i + 1;
+
+                    while (br_end_idx < ed)
+                      {
+                        Token *&d = toks[br_end_idx];
+
+                        if (d->get_type () == TokenType::Operator)
+                          {
+                            Str &dop
+                                = static_cast<OperatorToken *> (d)->get_val ();
+
+                            if (dop == ')' && !gb)
+                              break;
+
+                            if (dop == '(' || dop == '{' || dop == '[')
+                              gb++;
+                            if (dop == '}' || dop == ']')
+                              gb--;
+                          }
+
+                        br_end_idx++;
+                      }
+
+                    res = expr_gen (toks, i + 1, br_end_idx);
+                    i = br_end_idx;
+                    goto end;
                   }
               }
             else if (opv == '+' || opv == '-' || opv == '*' || opv == '/')
