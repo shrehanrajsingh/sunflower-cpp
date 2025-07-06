@@ -21,6 +21,10 @@ enum class ExprType
   LogicalOr = 12,
   LogicalAnd = 13,
   LogicalNot = 14,
+  BitLeftShift = 15,
+  BitRightShift = 16,
+  BitAnd = 17,
+  BitOr = 18,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -583,5 +587,187 @@ public:
   }
 
   ~LogicalNotExpr () {}
+};
+
+class BitLeftShiftExpr : public Expr
+{
+  Expr *left;
+  Expr *right;
+
+public:
+  BitLeftShiftExpr ()
+      : Expr (ExprType::BitLeftShift), left{ nullptr }, right{ nullptr }
+  {
+  }
+  BitLeftShiftExpr (Expr *_l, Expr *_r)
+      : Expr (ExprType::BitLeftShift), left{ _l }, right{ _r }
+  {
+  }
+
+  Expr *&
+  get_left ()
+  {
+    return left;
+  }
+
+  Expr *&
+  get_right ()
+  {
+    return right;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "BitLeftShiftExpr\nLeft: ";
+
+    if (left != nullptr)
+      left->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Right: ";
+    if (right != nullptr)
+      right->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
+  ~BitLeftShiftExpr () {}
+};
+
+class BitRightShiftExpr : public Expr
+{
+  Expr *left;
+  Expr *right;
+
+public:
+  BitRightShiftExpr ()
+      : Expr (ExprType::BitRightShift), left{ nullptr }, right{ nullptr }
+  {
+  }
+  BitRightShiftExpr (Expr *_l, Expr *_r)
+      : Expr (ExprType::BitRightShift), left{ _l }, right{ _r }
+  {
+  }
+
+  Expr *&
+  get_left ()
+  {
+    return left;
+  }
+
+  Expr *&
+  get_right ()
+  {
+    return right;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "BitRightShiftExpr\nLeft: ";
+
+    if (left != nullptr)
+      left->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Right: ";
+    if (right != nullptr)
+      right->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
+  ~BitRightShiftExpr () {}
+};
+
+class BitAndExpr : public Expr
+{
+  Expr *left;
+  Expr *right;
+
+public:
+  BitAndExpr () : Expr (ExprType::BitAnd), left{ nullptr }, right{ nullptr } {}
+  BitAndExpr (Expr *_l, Expr *_r)
+      : Expr (ExprType::BitAnd), left{ _l }, right{ _r }
+  {
+  }
+
+  Expr *&
+  get_left ()
+  {
+    return left;
+  }
+
+  Expr *&
+  get_right ()
+  {
+    return right;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "BitAndExpr\nLeft: ";
+
+    if (left != nullptr)
+      left->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Right: ";
+    if (right != nullptr)
+      right->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
+  ~BitAndExpr () {}
+};
+
+class BitOrExpr : public Expr
+{
+  Expr *left;
+  Expr *right;
+
+public:
+  BitOrExpr () : Expr (ExprType::BitOr), left{ nullptr }, right{ nullptr } {}
+  BitOrExpr (Expr *_l, Expr *_r)
+      : Expr (ExprType::BitOr), left{ _l }, right{ _r }
+  {
+  }
+
+  Expr *&
+  get_left ()
+  {
+    return left;
+  }
+
+  Expr *&
+  get_right ()
+  {
+    return right;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "BitOrExpr\nLeft: ";
+
+    if (left != nullptr)
+      left->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Right: ";
+    if (right != nullptr)
+      right->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
+  ~BitOrExpr () {}
 };
 } // namespace sf

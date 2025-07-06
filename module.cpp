@@ -1979,6 +1979,186 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::BitLeftShift:
+      {
+        BitLeftShiftExpr *blse = static_cast<BitLeftShiftExpr *> (e);
+
+        Expr *left = blse->get_left ();
+        Expr *right = blse->get_right ();
+
+        Object *o_left = nullptr;
+        Object *o_right = nullptr;
+
+        TC (o_left = expr_eval (mod, left));
+        TC (o_right = expr_eval (mod, right));
+
+        assert (o_left && OBJ_IS_INT (o_left));
+        assert (o_right && OBJ_IS_INT (o_right));
+
+        int lv = static_cast<IntegerConstant *> (
+                     static_cast<ConstantObject *> (o_left)->get_c ().get ())
+                     ->get_value ();
+
+        int rv = static_cast<IntegerConstant *> (
+                     static_cast<ConstantObject *> (o_right)->get_c ().get ())
+                     ->get_value ();
+
+        int rs = lv << rv;
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ConstantObject (
+            static_cast<Constant *> (new IntegerConstant (rs))));
+
+        IR (res);
+        DR (o_left);
+        DR (o_right);
+      }
+      break;
+
+    case ExprType::BitRightShift:
+      {
+        BitRightShiftExpr *blse = static_cast<BitRightShiftExpr *> (e);
+
+        Expr *left = blse->get_left ();
+        Expr *right = blse->get_right ();
+
+        Object *o_left = nullptr;
+        Object *o_right = nullptr;
+
+        TC (o_left = expr_eval (mod, left));
+        TC (o_right = expr_eval (mod, right));
+
+        assert (o_left && OBJ_IS_INT (o_left));
+        assert (o_right && OBJ_IS_INT (o_right));
+
+        int lv = static_cast<IntegerConstant *> (
+                     static_cast<ConstantObject *> (o_left)->get_c ().get ())
+                     ->get_value ();
+
+        int rv = static_cast<IntegerConstant *> (
+                     static_cast<ConstantObject *> (o_right)->get_c ().get ())
+                     ->get_value ();
+
+        int rs = lv >> rv;
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ConstantObject (
+            static_cast<Constant *> (new IntegerConstant (rs))));
+
+        IR (res);
+        DR (o_left);
+        DR (o_right);
+      }
+      break;
+
+    case ExprType::BitAnd:
+      {
+        BitAndExpr *blse = static_cast<BitAndExpr *> (e);
+
+        Expr *left = blse->get_left ();
+        Expr *right = blse->get_right ();
+
+        Object *o_left = nullptr;
+        Object *o_right = nullptr;
+
+        TC (o_left = expr_eval (mod, left));
+        TC (o_right = expr_eval (mod, right));
+
+        assert (o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)));
+        assert (o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)));
+
+        int lv = OBJ_IS_INT (o_left)
+                     ? static_cast<IntegerConstant *> (
+                           static_cast<ConstantObject *> (o_left)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ()
+                     : static_cast<BooleanConstant *> (
+                           static_cast<ConstantObject *> (o_left)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ();
+
+        int rv = OBJ_IS_INT (o_right)
+                     ? static_cast<IntegerConstant *> (
+                           static_cast<ConstantObject *> (o_right)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ()
+                     : static_cast<BooleanConstant *> (
+                           static_cast<ConstantObject *> (o_right)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ();
+
+        int rs = lv & rv;
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ConstantObject (
+            static_cast<Constant *> (new IntegerConstant (rs))));
+
+        IR (res);
+        DR (o_left);
+        DR (o_right);
+      }
+      break;
+
+    case ExprType::BitOr:
+      {
+        BitOrExpr *blse = static_cast<BitOrExpr *> (e);
+
+        Expr *left = blse->get_left ();
+        Expr *right = blse->get_right ();
+
+        Object *o_left = nullptr;
+        Object *o_right = nullptr;
+
+        TC (o_left = expr_eval (mod, left));
+        TC (o_right = expr_eval (mod, right));
+
+        assert (o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)));
+        assert (o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)));
+
+        int lv = OBJ_IS_INT (o_left)
+                     ? static_cast<IntegerConstant *> (
+                           static_cast<ConstantObject *> (o_left)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ()
+                     : static_cast<BooleanConstant *> (
+                           static_cast<ConstantObject *> (o_left)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ();
+
+        int rv = OBJ_IS_INT (o_right)
+                     ? static_cast<IntegerConstant *> (
+                           static_cast<ConstantObject *> (o_right)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ()
+                     : static_cast<BooleanConstant *> (
+                           static_cast<ConstantObject *> (o_right)
+                               ->get_c ()
+                               .get ())
+                           ->get_value ();
+
+        int rs = lv | rv;
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ConstantObject (
+            static_cast<Constant *> (new IntegerConstant (rs))));
+
+        IR (res);
+        DR (o_left);
+        DR (o_right);
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;
@@ -1986,6 +2166,13 @@ expr_eval (Module &mod, Expr *e)
 
   if (res == nullptr)
     throw "res_expr_is_null";
+
+  if (!res->get_ref_count ())
+    {
+      std::cout << "res->ref_count is 0, possible seg_fault. Did you call IR "
+                   "(res)?\n";
+    }
+
   return res;
 }
 

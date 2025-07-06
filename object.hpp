@@ -233,4 +233,9 @@ public:
    && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
           == ConstantType::String)
 
+#define OBJ_IS_BOOL(X)                                                        \
+  ((X)->get_type () == ObjectType::Constant                                   \
+   && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
+          == ConstantType::Boolean)
+
 } // namespace sf

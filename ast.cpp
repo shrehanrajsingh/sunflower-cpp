@@ -171,7 +171,6 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       i++;
     }
-  i = st;
 
   /* and clause */
   i = st;
@@ -237,7 +236,12 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
             OperatorToken *opt = static_cast<OperatorToken *> (c);
             Str &opv = opt->get_val ();
 
-            if (opv == "==")
+            if (opv == '(' || opv == '{' || opv == '[')
+              gb++;
+            if (opv == ')' || opv == '}' || opv == ']')
+              gb--;
+
+            if (opv == "==" && !gb)
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
                     ConditionalType::EqEq, expr_gen (toks, st, i),
@@ -245,7 +249,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                 goto ret;
               }
-            else if (opv == "!=")
+            else if (opv == "!=" && !gb)
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
                     ConditionalType::NEq, expr_gen (toks, st, i),
@@ -253,7 +257,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                 goto ret;
               }
-            else if (opv == "<=")
+            else if (opv == "<=" && !gb)
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
                     ConditionalType::LEq, expr_gen (toks, st, i),
@@ -261,7 +265,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                 goto ret;
               }
-            else if (opv == ">=")
+            else if (opv == ">=" && !gb)
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
                     ConditionalType::GEq, expr_gen (toks, st, i),
@@ -269,7 +273,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                 goto ret;
               }
-            else if (opv == "<")
+            else if (opv == "<" && !gb)
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
                     ConditionalType::Le, expr_gen (toks, st, i),
@@ -277,7 +281,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                 goto ret;
               }
-            else if (opv == ">")
+            else if (opv == ">" && !gb)
               {
                 res = static_cast<Expr *> (new ConditionalExpr (
                     ConditionalType::Ge, expr_gen (toks, st, i),
@@ -297,18 +301,30 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
   /* not clause */
   i = st;
+  gb = 0;
   while (i < ed)
     {
       Token *c = toks[i];
 
       switch (c->get_type ())
         {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
         case TokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
 
-            if (ktv == "not")
+            if (ktv == "not" && !gb)
               {
                 Expr *val = expr_gen (toks, i + 1, ed);
                 int gb = 0;
@@ -317,6 +333,127 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                   delete res;
 
                 res = static_cast<Expr *> (new LogicalNotExpr (val));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+
+  /* | */
+  i = st;
+  gb = 0;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+
+            if (cop == "|" && !gb)
+              {
+                Expr *l = expr_gen (toks, st, i);
+                Expr *r = expr_gen (toks, i + 1, ed);
+
+                res = static_cast<Expr *> (new BitOrExpr (l, r));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+
+  /* & */
+  i = st;
+  gb = 0;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+
+            if (cop == "&" && !gb)
+              {
+                Expr *l = expr_gen (toks, st, i);
+                Expr *r = expr_gen (toks, i + 1, ed);
+
+                res = static_cast<Expr *> (new BitAndExpr (l, r));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+
+  /* <<, >> */
+  i = st;
+  gb = 0;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+
+            if (cop == "<<" && !gb)
+              {
+                Expr *l = expr_gen (toks, st, i);
+                Expr *r = expr_gen (toks, i + 1, ed);
+
+                res = static_cast<Expr *> (new BitLeftShiftExpr (l, r));
+
+                goto ret;
+              }
+
+            if (cop == ">>" && !gb)
+              {
+                Expr *l = expr_gen (toks, st, i);
+                Expr *r = expr_gen (toks, i + 1, ed);
+
+                res = static_cast<Expr *> (new BitRightShiftExpr (l, r));
 
                 goto ret;
               }
@@ -535,7 +672,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 res = static_cast<Expr *> (new DictExpr (r));
                 i = j;
               }
-            else if (opv == '(')
+            else if (opv == "(")
               {
                 if (res != nullptr)
                   {
