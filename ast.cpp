@@ -467,6 +467,41 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
       i++;
     }
 
+  /* ~ */
+  i = st;
+  gb = 0;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+
+            if (cop == "~" && !gb)
+              {
+                Expr *v = expr_gen (toks, i + 1, ed);
+                res = static_cast<Expr *> (new BitNegateExpr (v));
+
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+
   i = st;
   while (i < ed)
     {

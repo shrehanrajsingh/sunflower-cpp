@@ -173,6 +173,7 @@ tokenize (char *p)
         case ':':
         case '&':
         case '|':
+        case '~':
           res.push_back (new OperatorToken (d));
           break;
           // case ' ':

@@ -25,6 +25,7 @@ enum class ExprType
   BitRightShift = 16,
   BitAnd = 17,
   BitOr = 18,
+  BitNegate = 19,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -769,5 +770,33 @@ public:
   }
 
   ~BitOrExpr () {}
+};
+
+class BitNegateExpr : public Expr
+{
+  Expr *val;
+
+public:
+  BitNegateExpr () : Expr (ExprType::BitNegate), val{ nullptr } {}
+  BitNegateExpr (Expr *_v) : Expr (ExprType::BitNegate), val{ _v } {}
+
+  Expr *&
+  get_val ()
+  {
+    return val;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "BitNegateExprVal: ";
+
+    if (val != nullptr)
+      val->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
+  ~BitNegateExpr () {}
 };
 } // namespace sf

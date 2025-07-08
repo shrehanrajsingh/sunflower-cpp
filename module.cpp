@@ -2159,6 +2159,32 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::BitNegate:
+      {
+        BitNegateExpr *bne = static_cast<BitNegateExpr *> (e);
+        Expr *v = bne->get_val ();
+        Object *o_v = nullptr;
+
+        TC (o_v = expr_eval (mod, v));
+
+        assert (o_v && OBJ_IS_INT (o_v));
+        int vv = static_cast<IntegerConstant *> (
+                     static_cast<ConstantObject *> (o_v)->get_c ().get ())
+                     ->get_value ();
+
+        int rv = ~vv;
+
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ConstantObject (
+            static_cast<Constant *> (new IntegerConstant (rv))));
+
+        IR (res);
+        DR (o_v);
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;
