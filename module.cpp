@@ -927,6 +927,37 @@ mod_exec (Module &mod)
           }
           break;
 
+        case StatementType::RepeatStmt:
+          {
+            RepeatStatement *rs = static_cast<RepeatStatement *> (st);
+
+            Expr *cond = rs->get_cond ();
+            Vec<Statement *> &body = rs->get_body ();
+
+            Object *o_cond = nullptr;
+
+            Vec<Statement *> st_pres = mod.get_stmts ();
+            mod.get_stmts () = body;
+
+            TC (o_cond = expr_eval (mod, cond));
+            assert (o_cond && OBJ_IS_INT (o_cond));
+
+            int ov
+                = static_cast<IntegerConstant *> (
+                      static_cast<ConstantObject *> (o_cond)->get_c ().get ())
+                      ->get_value ();
+
+            while (ov > 0)
+              {
+                mod_exec (mod);
+                ov--;
+              }
+
+            DR (o_cond);
+            mod.get_stmts () = st_pres;
+          }
+          break;
+
         case StatementType::ClassDeclStmt:
           {
             ClassDeclStatement *cds = static_cast<ClassDeclStatement *> (st);

@@ -30,9 +30,10 @@ add_library(sunflower
     arithmetic.hpp arithmetic.cpp
     sfclass.hpp sfclass.cpp
 
-    native/native.hpp native/native.cpp
-    native/putln.hpp native/putln.cpp
-    native/write.hpp native/write.cpp
+    # native/native.hpp native/native.cpp
+    # native/putln.hpp native/putln.cpp
+    # native/write.hpp native/write.cpp
+    ${NATIVE_SOURCES}
 
     sunflower.hpp sunflower.cpp)
 

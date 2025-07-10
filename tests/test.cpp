@@ -404,7 +404,7 @@ test6 ()
 int
 main (int argc, char const *argv[])
 {
-  TEST (6);
+  TEST (4);
   // std::cout << "Program ended." << std::endl;
   return 0;
 }

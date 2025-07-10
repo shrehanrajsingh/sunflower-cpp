@@ -5,6 +5,7 @@
 #include "../object.hpp"
 
 /* native functions */
+#include "put.hpp"
 #include "putln.hpp"
 #include "write.hpp"
 

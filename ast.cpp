@@ -1579,6 +1579,69 @@ stmt_gen (Vec<Token *> &toks)
 
                 i = block_end_idx - 1;
               }
+            else if (kw == "repeat")
+              {
+                /* similar logic to 'if' and 'while' */
+                int gb = 0;
+                size_t cond_end_idx = i;
+
+                for (size_t j = i + 1; j < toks.get_size (); j++)
+                  {
+                    Token *d = toks[j];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          OperatorToken *jop
+                              = static_cast<OperatorToken *> (d);
+
+                          Str &js = jop->get_val ();
+
+                          if (js == '(' || js == '[' || js == '{')
+                            gb++;
+
+                          if (js == ')' || js == ']' || js == '}')
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Newline:
+                        {
+                          if (!gb)
+                            {
+                              cond_end_idx = j;
+                              goto l9;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+                  }
+              l9:;
+
+                Expr *cond = expr_gen (toks, i + 1, cond_end_idx);
+                size_t block_end_idx = _sf_ast_getblock_idx (
+                    toks, i, _sf_ast_gettabspace (toks, i));
+
+                Vec<Token *> body_toks;
+                // std::cout << "-----\n";
+                for (size_t j = cond_end_idx + 1; j < block_end_idx; j++)
+                  {
+                    // toks[j]->print ();
+                    body_toks.push_back (toks[j]);
+                  }
+                // std::cout << "-----end\n";
+
+                Vec<Statement *> body = stmt_gen (body_toks);
+
+                res.push_back (static_cast<Statement *> (
+                    new RepeatStatement (cond, body)));
+
+                i = block_end_idx - 1;
+              }
             else if (kw == "class")
               {
                 assert (i + 1 < toks.get_size ());

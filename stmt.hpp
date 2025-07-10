@@ -14,6 +14,7 @@ enum class StatementType
   ReturnStmt = 5,
   WhileStmt = 6,
   ClassDeclStmt = 7,
+  RepeatStmt = 8,
   NoStmt,
 };
 
@@ -417,5 +418,51 @@ public:
   }
 
   ~WhileStatement () {}
+};
+
+class RepeatStatement : public Statement
+{
+  Expr *cond;
+  Vec<Statement *> body;
+
+public:
+  RepeatStatement () : Statement (StatementType::RepeatStmt), cond{ nullptr }
+  {
+  }
+  RepeatStatement (Expr *_Cond, Vec<Statement *> _Body)
+      : Statement (StatementType::RepeatStmt), cond{ _Cond }, body{ _Body }
+  {
+  }
+
+  inline Expr *&
+  get_cond ()
+  {
+    return cond;
+  }
+
+  Vec<Statement *> &
+  get_body ()
+  {
+    return body;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "ReturnStatement\nCond: ";
+
+    if (cond == nullptr)
+      std::cout << "nullptr\n";
+    else
+      cond->print ();
+
+    std::cout << "Body (" << body.get_size () << ")\n";
+    for (Statement *&i : body)
+      {
+        i->print ();
+      }
+  }
+
+  ~RepeatStatement () {}
 };
 } // namespace sf
