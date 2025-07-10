@@ -230,42 +230,42 @@ test4 ()
 
   Vec<Statement *> ast = stmt_gen (r);
 
-  NativeFunction *nv_putln = new NativeFunction (native_putln, { "a" });
+  // NativeFunction *nv_putln = new NativeFunction (native_putln, { "a" });
 
-  /**
-   * When testing for memory leaks
-   * by looping mod_exec routine
-   * infinite times, we preserve
-   * the Function * in AST by increasing
-   * its ref_count by 1 exactly so that
-   * after each mod_exec the reference count
-   * falls back to 1 and we do not free the object.
-   * Freeing the object would result in SEG_FAULT in the
-   * next iteration because the Function* is used in AST
-   * (see the next statement)
-   * and we would be storing a nullptr.
-   * NOTE: In actual definition of I(X), I recommend
-   * not using I(X) anywhere (use IR(X) instead), however
-   * it is absolutely fine to use I(X) in this context since we are
-   * using it with Function* and not Object*
-   */
-  I (nv_putln);
+  // /**
+  //  * When testing for memory leaks
+  //  * by looping mod_exec routine
+  //  * infinite times, we preserve
+  //  * the Function * in AST by increasing
+  //  * its ref_count by 1 exactly so that
+  //  * after each mod_exec the reference count
+  //  * falls back to 1 and we do not free the object.
+  //  * Freeing the object would result in SEG_FAULT in the
+  //  * next iteration because the Function* is used in AST
+  //  * (see the next statement)
+  //  * and we would be storing a nullptr.
+  //  * NOTE: In actual definition of I(X), I recommend
+  //  * not using I(X) anywhere (use IR(X) instead), however
+  //  * it is absolutely fine to use I(X) in this context since we are
+  //  * using it with Function* and not Object*
+  //  */
+  // I (nv_putln);
 
-  /* putln = <function...> */
-  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
-                     static_cast<Expr *> (new VariableExpr ("putln")),
-                     static_cast<Expr *> (new FunctionExpr (
-                         static_cast<Function *> (nv_putln))))));
+  // /* putln = <function...> */
+  // ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
+  //                    static_cast<Expr *> (new VariableExpr ("putln")),
+  //                    static_cast<Expr *> (new FunctionExpr (
+  //                        static_cast<Function *> (nv_putln))))));
 
-  NativeFunction *nv_print = new NativeFunction (native_print, { "a" });
-  nv_print->set_va_args (true); /* any number of arguments */
+  // NativeFunction *nv_print = new NativeFunction (native_print, { "a" });
+  // nv_print->set_va_args (true); /* any number of arguments */
 
-  I (nv_print);
+  // I (nv_print);
 
-  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
-                     static_cast<Expr *> (new VariableExpr ("write")),
-                     static_cast<Expr *> (new FunctionExpr (
-                         static_cast<Function *> (nv_print))))));
+  // ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
+  //                    static_cast<Expr *> (new VariableExpr ("write")),
+  //                    static_cast<Expr *> (new FunctionExpr (
+  //                        static_cast<Function *> (nv_print))))));
 
   std::cout << ast.get_size () << std::endl;
   for (auto &&i : ast)
@@ -275,6 +275,7 @@ test4 ()
 
   std::cout << "--------------" << std::endl;
 
+  native::add_natives (ast);
   try
     {
       // while (1)
@@ -334,42 +335,7 @@ test5 ()
 
   Vec<Statement *> ast = stmt_gen (r);
 
-  NativeFunction *nv_putln = new NativeFunction (native_putln, { "a" });
-
-  /**
-   * When testing for memory leaks
-   * by looping mod_exec routine
-   * infinite times, we preserve
-   * the Function * in AST by increasing
-   * its ref_count by 1 exactly so that
-   * after each mod_exec the reference count
-   * falls back to 1 and we do not free the object.
-   * Freeing the object would result in SEG_FAULT in the
-   * next iteration because the Function* is used in AST
-   * (see the next statement)
-   * and we would be storing a nullptr.
-   * NOTE: In actual definition of I(X), I recommend
-   * not using I(X) anywhere (use IR(X) instead), however
-   * it is absolutely fine to use I(X) in this context since we are
-   * using it with Function* and not Object*
-   */
-  I (nv_putln);
-
-  /* putln = <function...> */
-  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
-                     static_cast<Expr *> (new VariableExpr ("putln")),
-                     static_cast<Expr *> (new FunctionExpr (
-                         static_cast<Function *> (nv_putln))))));
-
-  NativeFunction *nv_print = new NativeFunction (native_print, { "a" });
-  nv_print->set_va_args (true); /* any number of arguments */
-
-  I (nv_print);
-
-  ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
-                     static_cast<Expr *> (new VariableExpr ("write")),
-                     static_cast<Expr *> (new FunctionExpr (
-                         static_cast<Function *> (nv_print))))));
+  native::add_natives (ast);
 
   // std::cout << ast.get_size () << std::endl;
   // for (auto &&i : ast)
@@ -410,10 +376,35 @@ test5 ()
   fl.close ();
 }
 
+/* detailed */
+void
+test6 ()
+{
+  using namespace sf;
+
+  std::ifstream ifs ("../../tests/test.sf");
+
+  std::string s, p;
+  while (std::getline (ifs, p))
+    s += p + '\n';
+
+  Vec<Token *> r = tokenize ((char *)s.c_str ());
+  Vec<Statement *> ast = stmt_gen (r);
+
+  native::add_natives (ast);
+
+  Module *mod = new Module (ModuleType::File, ast);
+  mod_exec (*mod);
+
+  delete mod;
+
+  ifs.close ();
+}
+
 int
 main (int argc, char const *argv[])
 {
-  TEST (4);
+  TEST (6);
   // std::cout << "Program ended." << std::endl;
   return 0;
 }

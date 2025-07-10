@@ -10,3 +10,5 @@
 #include "str.hpp"
 #include "tokenize.hpp"
 #include "vec.hpp"
+
+#include "native/native.hpp"

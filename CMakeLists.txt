@@ -9,6 +9,8 @@ enable_testing()
 
 add_subdirectory(tests)
 
+file(GLOB_RECURSE NATIVE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/native/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/native/*.hpp")
+
 add_library(sunflower
     header.hpp
     vec.hpp vec.cpp
@@ -27,5 +29,10 @@ add_library(sunflower
     sfdict.hpp sfdict.cpp
     arithmetic.hpp arithmetic.cpp
     sfclass.hpp sfclass.cpp
+
+    native/native.hpp native/native.cpp
+    native/putln.hpp native/putln.cpp
+    native/write.hpp native/write.cpp
+
     sunflower.hpp sunflower.cpp)
 

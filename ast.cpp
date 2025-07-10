@@ -1130,7 +1130,8 @@ stmt_gen (Vec<Token *> &toks)
 
                 IfConstruct *ifst = new IfConstruct (cond, body, {}, {});
 
-                std::cout << block_end_idx << '\t' << toks.get_size () << '\n';
+                // std::cout << block_end_idx << '\t' << toks.get_size () <<
+                // '\n';
               l5:
                 while (
                     block_end_idx < toks.get_size ()
