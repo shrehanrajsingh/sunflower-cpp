@@ -271,6 +271,18 @@ tokenize (char *p)
             res.push_back (new StringToken (v));
             continue;
           }
+          break;
+
+        case '#':
+          {
+            /* single-line comment */
+            do
+              p++;
+            while (*p != '\n');
+
+            continue;
+          }
+          break;
 
         case '\n':
           res.push_back (new NewlineToken ());

@@ -249,3 +249,6 @@ repeat i
         put ('*')
     i = i - 1
     putln ('')
+
+i = 10 repeat 5
+write (i)
