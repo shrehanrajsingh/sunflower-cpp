@@ -1,3 +1,5 @@
+# All the features in my language, with this one as well (a comment)
+
 a = 10
 b = "Hello, World!"
 c = a
