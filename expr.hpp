@@ -803,10 +803,55 @@ public:
 
 class RepeatExpr : public Expr
 {
-private:
-  /* data */
+  Expr *times;
+  Expr *body;
+
 public:
-  RepeatExpr (/* args */) {}
+  RepeatExpr () : Expr (ExprType::Repeat), times{ nullptr }, body{ nullptr } {}
+  RepeatExpr (Expr *_Times, Expr *_Body)
+      : Expr (ExprType::Repeat), times{ _Times }, body{ _Body }
+  {
+  }
+
+  inline Expr *&
+  get_times ()
+  {
+    return times;
+  }
+  inline const Expr *const &
+  get_times () const
+  {
+    return times;
+  }
+
+  inline Expr *&
+  get_body ()
+  {
+    return body;
+  }
+
+  inline const Expr *const &
+  get_body () const
+  {
+    return body;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "RepeatExpr: \nTimes: ";
+    if (times == nullptr)
+      std::cout << "nullptr\n";
+    else
+      times->print ();
+
+    std::cout << "Body: ";
+    if (body == nullptr)
+      std::cout << "nullptr\n";
+    else
+      body->print ();
+  }
+
   ~RepeatExpr () {}
 };
 } // namespace sf

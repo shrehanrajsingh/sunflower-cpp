@@ -28,6 +28,54 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
   size_t i = st;
   int gb = 0;
 
+  /* repeat expression */
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "repeat" && !gb)
+              {
+                Expr *times = expr_gen (toks, i + 1, ed);
+                Expr *body = expr_gen (toks, st, i);
+
+                if (res != nullptr)
+                  delete res;
+
+                res = static_cast<Expr *> (new RepeatExpr (times, body));
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+    end2:
+      i++;
+    }
+
+  i = st;
+  gb = 0;
+
   // to..step has more precedence than ==, != etc.
   while (i < ed)
     {

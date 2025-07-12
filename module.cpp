@@ -2216,6 +2216,43 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::Repeat:
+      {
+        RepeatExpr *re = static_cast<RepeatExpr *> (e);
+        Expr *times = re->get_times ();
+        Expr *body = re->get_body ();
+
+        Object *o_times = nullptr;
+        Object *o_body = nullptr;
+
+        TC (o_times = expr_eval (mod, times));
+        TC (o_body = expr_eval (mod, body));
+
+        assert (o_times && OBJ_IS_INT (o_times));
+
+        int t = static_cast<IntegerConstant *> (
+                    static_cast<ConstantObject *> (o_times)->get_c ().get ())
+                    ->get_value ();
+
+        Vec<Object *> vls;
+
+        for (int i = 0; i < t; i++)
+          {
+            IR (o_body);
+            vls.push_back (o_body);
+          }
+
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ArrayObject (vls));
+        IR (res);
+
+        DR (o_times);
+        DR (o_body);
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;
