@@ -242,3 +242,10 @@ if SHOPPING_CART & JUICE
     write ("Juice is in cart")
 else
     write ("Juice is not in cart")
+
+i = 10
+repeat i
+    repeat i
+        put ('*')
+    i = i - 1
+    putln ('')

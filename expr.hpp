@@ -26,6 +26,7 @@ enum class ExprType
   BitAnd = 17,
   BitOr = 18,
   BitNegate = 19,
+  Repeat = 20,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -798,5 +799,14 @@ public:
   }
 
   ~BitNegateExpr () {}
+};
+
+class RepeatExpr : public Expr
+{
+private:
+  /* data */
+public:
+  RepeatExpr (/* args */) {}
+  ~RepeatExpr () {}
 };
 } // namespace sf
