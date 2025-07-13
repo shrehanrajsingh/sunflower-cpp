@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fno-inline -fno-omit-frame-point
 enable_testing()
 
 add_subdirectory(tests)
+add_subdirectory(bin)
 
 file(GLOB_RECURSE NATIVE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/native/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/native/*.hpp")
 

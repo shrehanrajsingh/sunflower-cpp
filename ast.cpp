@@ -92,7 +92,6 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                           if (kw == "in" && !gb)
                             {
-                              here;
                               vars.push_back (expr_gen (toks, last_v_idx, j));
                               last_v_idx = j;
 
