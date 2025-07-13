@@ -28,7 +28,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
   size_t i = st;
   int gb = 0;
 
-  /* repeat expression */
+  /* repeat and inline for expression (precedence left to right) */
   while (i < ed)
     {
       Token *c = toks[i];

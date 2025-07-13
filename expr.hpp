@@ -27,6 +27,7 @@ enum class ExprType
   BitOr = 18,
   BitNegate = 19,
   Repeat = 20,
+  InlineFor = 21,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -853,5 +854,55 @@ public:
   }
 
   ~RepeatExpr () {}
+};
+
+class InlineForExpr : public Expr
+{
+  Expr **vars;
+  size_t var_count;
+  Expr *iterable;
+  Expr *body;
+
+public:
+  InlineForExpr ()
+      : Expr (ExprType::InlineFor), vars{ nullptr }, var_count{ 0 },
+        iterable{ nullptr }, body{ nullptr }
+  {
+  }
+
+  InlineForExpr (Expr **_Vars, size_t _VarCount, Expr *_Iterable, Expr *_Body)
+      : Expr (ExprType::InlineFor), vars{ _Vars }, var_count{ _VarCount },
+        iterable{ _Iterable }, body{ _Body }
+  {
+  }
+
+  void
+  print () override
+  {
+    std::cout << "InlineForExpr\n";
+    std::cout << "Variables (" << var_count << "): \n";
+    for (size_t i = 0; i < var_count; i++)
+      {
+        std::cout << "  Var " << i << ": ";
+        if (vars[i] == nullptr)
+          std::cout << "nullptr\n";
+        else
+          vars[i]->print ();
+      }
+
+    std::cout << "Iterable: ";
+    if (iterable == nullptr)
+      std::cout << "nullptr\n";
+    else
+      iterable->print ();
+
+    std::cout << "Body: ";
+    if (body == nullptr)
+      std::cout << "nullptr\n";
+    else
+      body->print ();
+  }
+
+  ~InlineForExpr () {}
 };
 } // namespace sf
