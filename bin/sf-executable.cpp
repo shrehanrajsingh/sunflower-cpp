@@ -72,7 +72,8 @@ main (int argc, char *argv[])
 
   for (const auto &fp : args.fpaths)
     {
-      std::cout << "Processing file: " << fp << std::endl;
+      if (args.fpaths.size () > 1)
+        std::cout << "Processing file: " << fp << std::endl;
 
       std::ifstream ifs (fp);
 
