@@ -2253,6 +2253,163 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::InlineFor:
+      {
+        InlineForExpr *ife = static_cast<InlineForExpr *> (e);
+        Expr *iterable = ife->get_iterable ();
+        Expr *body = ife->get_body ();
+        Vec<Expr *> &vars = ife->get_vars ();
+
+        Object *o_iterable = nullptr;
+
+        TC (o_iterable = expr_eval (mod, iterable));
+
+        Vec<Object *> res_objs;
+
+        switch (o_iterable->get_type ())
+          {
+          case ObjectType::ArrayObj:
+            {
+              ArrayObject *ao = static_cast<ArrayObject *> (o_iterable);
+              Vec<Object *> ao_vals = ao->get_vals ();
+
+              for (Object *&av : ao_vals)
+                {
+                  if (vars.get_size () == 1)
+                    {
+                      Expr *v = vars[0];
+
+                      switch (v->get_type ())
+                        {
+                        case ExprType::Variable:
+                          {
+                            char *p = static_cast<VariableExpr *> (v)
+                                          ->get_name ()
+                                          .c_str ();
+                            mod.set_variable (p, av);
+
+                            delete[] p;
+                          }
+                          break;
+
+                        default:
+                          break;
+                        }
+                    }
+                  else
+                    {
+                      switch (av->get_type ())
+                        {
+                        case ObjectType::ArrayObj:
+                          {
+                            ArrayObject *avo = static_cast<ArrayObject *> (av);
+
+                            assert (avo->get_vals ().get_size ()
+                                    >= vars.get_size ());
+
+                            if (avo->get_vals ().get_size ()
+                                == vars.get_size ())
+                              {
+                                /* == */
+
+                                size_t vi = 0;
+                                for (Expr *&vv : vars)
+                                  {
+                                    switch (vv->get_type ())
+                                      {
+                                      case ExprType::Variable:
+                                        {
+                                          char *p
+                                              = static_cast<VariableExpr *> (
+                                                    vv)
+                                                    ->get_name ()
+                                                    .c_str ();
+
+                                          mod.set_variable (
+                                              p, avo->get_vals ()[vi++]);
+
+                                          delete[] p;
+                                        }
+                                        break;
+
+                                      default:
+                                        break;
+                                      }
+                                  }
+                              }
+                            else
+                              {
+                                /* > */
+                              }
+                          }
+                          break;
+
+                        default:
+                          break;
+                        }
+                    }
+
+                  // mod_exec (mod);
+                  res_objs.push_back (expr_eval (
+                      mod, body)); /* consume obj_count given by expr_eval */
+                }
+            }
+            break;
+
+          case ObjectType::DictObj:
+            {
+              DictObject *dobj = static_cast<DictObject *> (o_iterable);
+              std::map<std::string, Object *> dobj_vals = dobj->get_vals ();
+
+              for (auto &&i : dobj_vals)
+                {
+                  Object *kobj = static_cast<Object *> (
+                      new ConstantObject (static_cast<Constant *> (
+                          new StringConstant (i.first.c_str ()))));
+
+                  IR (kobj);
+
+                  assert (vars.get_size () == 1);
+                  Expr *v = vars[0];
+
+                  switch (v->get_type ())
+                    {
+                    case ExprType::Variable:
+                      {
+                        char *p = static_cast<VariableExpr *> (v)
+                                      ->get_name ()
+                                      .c_str ();
+                        mod.set_variable (p, kobj);
+
+                        delete[] p;
+                      }
+                      break;
+
+                    default:
+                      break;
+                    }
+
+                  // mod_exec (mod);
+                  res_objs.push_back (expr_eval (mod, body));
+                  DR (kobj);
+                }
+            }
+            break;
+
+          default:
+            break;
+          }
+
+        DR (o_iterable);
+
+        if (res != nullptr)
+          DR (res);
+
+        res = static_cast<Object *> (new ArrayObject (res_objs));
+        IR (res);
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;

@@ -25,11 +25,116 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 {
   Expr *res = nullptr;
 
-  size_t i = st;
+  size_t i = ed - 1;
   int gb = 0;
 
-  /* repeat and inline for expression (precedence left to right) */
-  while (i < ed)
+  /* inline for */
+  while (i > st)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "for" && !gb)
+              {
+                int gb = 0;
+                Vec<Expr *> vars;
+                Expr *iterable;
+                Expr *body;
+                size_t last_v_idx = i + 1;
+
+                for (size_t j = i + 1; j < ed; j++)
+                  {
+                    Token *d = toks[j];
+
+                    switch (d->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          Str &dop
+                              = static_cast<OperatorToken *> (d)->get_val ();
+
+                          if (dop == ',' && !gb)
+                            {
+                              vars.push_back (expr_gen (toks, last_v_idx, j));
+
+                              last_v_idx = j;
+                              continue;
+                            }
+
+                          if (dop == '(' || dop == '{' || dop == '[')
+                            gb++;
+                          if (dop == ')' || dop == '}' || dop == ']')
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Keyword:
+                        {
+                          Str &kw
+                              = static_cast<KeywordToken *> (d)->get_val ();
+
+                          if (kw == "in" && !gb)
+                            {
+                              here;
+                              vars.push_back (expr_gen (toks, last_v_idx, j));
+                              last_v_idx = j;
+
+                              goto out_kwin_scan;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+                  }
+
+              out_kwin_scan:;
+
+                iterable = expr_gen (toks, last_v_idx + 1, ed);
+                body = expr_gen (toks, st, i);
+
+                if (res != nullptr)
+                  delete res;
+
+                res = static_cast<Expr *> (
+                    new InlineForExpr (vars, iterable, body));
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+    end3:
+      i--;
+    }
+
+  /* for repeat expression we start from the end */
+  i = ed - 1;
+  gb = 0;
+
+  /* repeat expression */
+  while (i > st)
     {
       Token *c = toks[i];
 
@@ -70,7 +175,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
         }
 
     end2:
-      i++;
+      i--;
     }
 
   i = st;

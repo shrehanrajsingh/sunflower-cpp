@@ -1,2 +1,4 @@
-i = 10 repeat 5
-write (i) # [10, 10, 10, 10, 10]
+a = [i, j] for j in 1 to 10 for i in 1 to 10
+for i in a
+    for j in i
+        write (j)

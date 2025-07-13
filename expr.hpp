@@ -353,6 +353,30 @@ public:
     return step;
   }
 
+  void
+  print () override
+  {
+    std::cout << "ToStepClause\n";
+
+    std::cout << "Left value: ";
+    if (lval != nullptr)
+      lval->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Right value: ";
+    if (rval != nullptr)
+      rval->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Step: ";
+    if (step != nullptr)
+      step->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
   ~ToStepClause () {}
 };
 
@@ -858,30 +882,64 @@ public:
 
 class InlineForExpr : public Expr
 {
-  Expr **vars;
-  size_t var_count;
+  Vec<Expr *> vars;
   Expr *iterable;
   Expr *body;
 
 public:
   InlineForExpr ()
-      : Expr (ExprType::InlineFor), vars{ nullptr }, var_count{ 0 },
-        iterable{ nullptr }, body{ nullptr }
+      : Expr (ExprType::InlineFor), iterable{ nullptr }, body{ nullptr }
   {
   }
 
-  InlineForExpr (Expr **_Vars, size_t _VarCount, Expr *_Iterable, Expr *_Body)
-      : Expr (ExprType::InlineFor), vars{ _Vars }, var_count{ _VarCount },
-        iterable{ _Iterable }, body{ _Body }
+  InlineForExpr (Vec<Expr *> _Vars, Expr *_Iterable, Expr *_Body)
+      : Expr (ExprType::InlineFor), vars{ _Vars }, iterable{ _Iterable },
+        body{ _Body }
   {
+  }
+
+  inline Vec<Expr *> &
+  get_vars ()
+  {
+    return vars;
+  }
+
+  inline const Vec<Expr *> &
+  get_vars () const
+  {
+    return vars;
+  }
+
+  inline Expr *&
+  get_iterable ()
+  {
+    return iterable;
+  }
+
+  inline const Expr *
+  get_iterable () const
+  {
+    return iterable;
+  }
+
+  inline Expr *&
+  get_body ()
+  {
+    return body;
+  }
+
+  inline const Expr *
+  get_body () const
+  {
+    return body;
   }
 
   void
   print () override
   {
     std::cout << "InlineForExpr\n";
-    std::cout << "Variables (" << var_count << "): \n";
-    for (size_t i = 0; i < var_count; i++)
+    std::cout << "Variables (" << vars.get_size () << "): \n";
+    for (size_t i = 0; i < vars.get_size (); i++)
       {
         std::cout << "  Var " << i << ": ";
         if (vars[i] == nullptr)
