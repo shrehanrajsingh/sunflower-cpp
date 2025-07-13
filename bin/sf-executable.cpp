@@ -1,9 +1,5 @@
 #include "sf-executable.hpp"
 
-#include <iostream>
-#include <string>
-#include <vector>
-
 struct cmd_line_args
 {
   bool help_requested = false;
