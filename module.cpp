@@ -1229,6 +1229,36 @@ expr_eval (Module &mod, Expr *e)
                   res = ao->get_vals ()[idx];
                   IR (res);
                 }
+              else if (idx_eval->get_type () == ObjectType::ArrayObj)
+                {
+                  Vec<Object *> rvals;
+
+                  ArrayObject *iao = static_cast<ArrayObject *> (idx_eval);
+                  Vec<Object *> &viao = iao->get_vals ();
+
+                  for (Object *&k : viao)
+                    {
+                      assert (OBJ_IS_INT (k));
+
+                      int kv = static_cast<IntegerConstant *> (
+                                   static_cast<ConstantObject *> (k)
+                                       ->get_c ()
+                                       .get ())
+                                   ->get_value ();
+
+                      if (kv >= ao->get_vals ().get_size ())
+                        break;
+
+                      rvals.push_back (ao->get_vals ()[kv]);
+                      IR (ao->get_vals ()[kv]);
+                    }
+
+                  if (res != nullptr)
+                    DR (res);
+
+                  res = static_cast<Object *> (new ArrayObject (rvals));
+                  IR (res);
+                }
               else
                 {
                   std::cerr << "Invalid array access. Exiting..." << std::endl;

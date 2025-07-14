@@ -732,6 +732,8 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                     res = static_cast<Expr *> (new ArrayAccess (arr, idx));
                     i = end_idx;
+
+                    goto end;
                   }
                 else
                   {
@@ -768,6 +770,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                                           expr_gen (toks, last_arg_idx, j));
 
                                       last_arg_idx = j;
+                                      break;
                                     }
                                 }
 
