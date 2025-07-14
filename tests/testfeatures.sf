@@ -21,3 +21,32 @@ unsafe j = get(-2)
 # if get(i) returns ? then j becomes 0 otherwise it takes get(i)
 # get(-2)? returns none, and none or 0 is 0
 j = get(-2)? or 0
+
+class Container
+    v = none
+    i = 0
+
+    fun _init (self)
+        self.v = []
+    
+    fun add (self, a)
+        self.v.push (a)
+    
+    fun _iter (self)
+        p = v[i]
+        i = i + 1
+
+        if i >= len (v)
+            i = 0 # reset
+            return? # stop iteration
+        return p
+    
+c = Container ()
+c.add (1)
+c.add (2)
+c.add (3)
+c.add (4)
+c.add (5)
+
+for i in c
+    write (i)
