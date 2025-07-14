@@ -1258,6 +1258,85 @@ expr_eval (Module &mod, Expr *e)
             }
             break;
 
+          case ObjectType::Constant:
+            {
+              assert (OBJ_IS_STR (arr_eval));
+
+              StringConstant *sc
+                  = static_cast<StringConstant *> (static_cast<Constant *> (
+                      static_cast<ConstantObject *> (arr_eval)
+                          ->get_c ()
+                          .get ()));
+
+              Str &s = sc->get_value ();
+
+              switch (idx_eval->get_type ())
+                {
+                case ObjectType::Constant:
+                  {
+                    assert (OBJ_IS_INT (idx_eval));
+
+                    int iv = static_cast<IntegerConstant *> (
+                                 static_cast<ConstantObject *> (idx_eval)
+                                     ->get_c ()
+                                     .get ())
+                                 ->get_value ();
+
+                    assert (iv < s.size () && iv >= 0
+                            && "String index out of range");
+
+                    if (res != nullptr)
+                      DR (res);
+
+                    res = static_cast<Object *> (new ConstantObject (
+                        static_cast<Constant *> (new StringConstant (s[iv]))));
+
+                    IR (res);
+                  }
+                  break;
+                case ObjectType::ArrayObj:
+                  {
+                    Str rs{ "" };
+
+                    ArrayObject *iao = static_cast<ArrayObject *> (idx_eval);
+                    Vec<Object *> &viao = iao->get_vals ();
+
+                    for (Object *&k : viao)
+                      {
+                        assert (OBJ_IS_INT (k));
+
+                        int kv = static_cast<IntegerConstant *> (
+                                     static_cast<ConstantObject *> (k)
+                                         ->get_c ()
+                                         .get ())
+                                     ->get_value ();
+
+                        if (kv >= s.size ())
+                          break;
+
+                        rs.push_back (s[kv]);
+                      }
+
+                    if (res != nullptr)
+                      DR (res);
+
+                    res = static_cast<Object *> (new ConstantObject (
+                        static_cast<Constant *> (new StringConstant (rs))));
+
+                    IR (res);
+                  }
+                  break;
+
+                default:
+                  {
+                    ERRMSG ("Invalid index type '"
+                            << int (idx_eval->get_type ()) << "'");
+                  }
+                  break;
+                }
+            }
+            break;
+
           default:
             std::cerr << "Cannot overload [] on type "
                       << (int)arr_eval->get_type () << ". Exiting..."
