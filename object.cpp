@@ -594,6 +594,10 @@ ConstantObject::get_stdout_repr ()
       res = "none";
       break;
 
+    case ConstantType::AmbigType:
+      res = "ambig";
+      break;
+
     case ConstantType::String:
       res = static_cast<StringConstant *> (cp)
                 ->get_value ()

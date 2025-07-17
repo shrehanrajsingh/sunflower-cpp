@@ -1056,6 +1056,17 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 i++;
                 goto end;
               }
+            else if (opv == '?')
+              {
+                /**
+                 * Ambig is defined as an operator while
+                 * token scanning and used as a constant
+                 * in practice
+                 */
+
+                res = static_cast<Expr *> (new ConstantExpr (
+                    static_cast<Constant *> (new AmbigConstant ())));
+              }
           }
           break;
 

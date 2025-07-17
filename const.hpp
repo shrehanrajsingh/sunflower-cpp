@@ -10,6 +10,7 @@ enum class ConstantType
   String = 2,
   Boolean = 3,
   NoneType = 4, /* let this be the default constant type for no init classes */
+  AmbigType = 5, /* ? */
 };
 
 namespace sf
@@ -151,6 +152,18 @@ public:
   print () override
   {
     std::cout << "none";
+  }
+};
+
+class AmbigConstant : public Constant
+{
+public:
+  AmbigConstant () : Constant (ConstantType::AmbigType) {}
+
+  void
+  print () override
+  {
+    std::cout << "ambig";
   }
 };
 } // namespace sf

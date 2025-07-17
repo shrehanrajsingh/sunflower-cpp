@@ -1058,6 +1058,13 @@ expr_eval (Module &mod, Expr *e)
             }
             break;
 
+          case ConstantType::AmbigType:
+            {
+              res = static_cast<Object *> (new ConstantObject (
+                  static_cast<Constant *> (new AmbigConstant ())));
+            }
+            break;
+
           default:
             break;
           }
