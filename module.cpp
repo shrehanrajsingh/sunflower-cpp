@@ -51,12 +51,8 @@ mod_exec (Module &mod)
             Expr *nv = v->get_value ();
 
             Object *val_eval;
-
-            /*
-              Safe eval with TC,
-              expand later with safety checks
-             */
             TC (val_eval = expr_eval (mod, nv));
+            AMBIG_CHECK (val_eval, { DR (val_eval); });
 
             /*
               Unless val_eval is nullptr,
@@ -164,7 +160,10 @@ mod_exec (Module &mod)
                   Object *oidx;
 
                   TC (oarr = expr_eval (mod, arr));
+                  AMBIG_CHECK (oarr, {});
+
                   TC (oidx = expr_eval (mod, idx));
+                  AMBIG_CHECK (oidx, { DR (oarr); });
 
                   switch (oarr->get_type ())
                     {
@@ -243,7 +242,9 @@ mod_exec (Module &mod)
                   Str &member
                       = static_cast<VariableExpr *> (e_child)->get_name ();
 
-                  Object *o_parent = expr_eval (mod, e_parent);
+                  Object *o_parent;
+                  TC (o_parent = expr_eval (mod, e_parent));
+                  AMBIG_CHECK (o_parent, {});
 
                   switch (o_parent->get_type ())
                     {
@@ -298,6 +299,7 @@ mod_exec (Module &mod)
             Object *name_eval;
 
             TC (name_eval = expr_eval (mod, fst->get_name ()));
+            AMBIG_CHECK (name_eval, {});
 
             Vec<Object *> args_eval;
 
@@ -305,6 +307,7 @@ mod_exec (Module &mod)
               {
                 Object *t = nullptr;
                 TC (t = expr_eval (mod, j));
+                AMBIG_CHECK (t, { DR (name_eval) });
 
                 /**
                  * We could use DR here
@@ -386,6 +389,11 @@ mod_exec (Module &mod)
                         Object *ret;
 
                         TC (ret = nf->call (fmod));
+                        AMBIG_CHECK (ret, {
+                          DR (ret);
+                          delete fmod;
+                          DR (name_eval)
+                        });
                         DR (ret);
 
                         delete fmod;
@@ -537,6 +545,11 @@ mod_exec (Module &mod)
                                    * do not really care about
                                    * the return value of the function
                                    */
+                                  if (fmod->get_ambig ())
+                                    AMBIG_CHECK (fmod->get_ambig (), {
+                                      IR (fmod->get_ambig ());
+                                      delete fmod;
+                                    });
 
                                   delete fmod;
                                 }
@@ -595,6 +608,11 @@ mod_exec (Module &mod)
                                   Object *ret;
 
                                   TC (ret = nf->call (fmod));
+                                  AMBIG_CHECK (ret, {
+                                    DR (co);
+                                    DR (ret);
+                                    delete fmod;
+                                  });
                                   DR (ret);
 
                                   delete fmod;
@@ -640,6 +658,7 @@ mod_exec (Module &mod)
 
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, ic->get_cond ()));
+            AMBIG_CHECK (cond_eval, { DR (cond_eval); });
             /*
               Since expr_eval already returns an object with an incremented
               reference count, we do not need to manually increase ourselves.
@@ -659,6 +678,10 @@ mod_exec (Module &mod)
                       {
                         Object *iv;
                         TC (iv = expr_eval (mod, ifc->get_cond ()));
+                        AMBIG_CHECK (iv, {
+                          DR (cond_eval);
+                          DR (iv);
+                        });
 
                         if (!_sfobj_isfalse (mod, iv))
                           {
@@ -705,6 +728,7 @@ mod_exec (Module &mod)
 
             Object *it_eval;
             TC (it_eval = expr_eval (mod, fc->get_iterable ()));
+            AMBIG_CHECK (it_eval, { DR (it_eval); });
 
             switch (it_eval->get_type ())
               {
@@ -869,6 +893,7 @@ mod_exec (Module &mod)
             if (mod.get_type () == ModuleType::Function)
               {
                 mod.get_ret () = expr_eval (mod, rt->get_val ());
+                AMBIG_CHECK (mod.get_ret (), {});
                 mod.get_continue_exec () = false;
               }
             else
@@ -882,6 +907,7 @@ mod_exec (Module &mod)
                 if (mref != nullptr)
                   {
                     mref->get_ret () = expr_eval (mod, rt->get_val ());
+                    AMBIG_CHECK (mref->get_ret (), {});
                     mref->get_continue_exec () = false;
 
                     mref = mod.parent;
@@ -898,7 +924,7 @@ mod_exec (Module &mod)
                     throw "return_used_outside_function";
                   }
 
-                goto func_end;
+                goto ret;
               }
           }
           break;
@@ -914,12 +940,17 @@ mod_exec (Module &mod)
 
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, cond));
+            AMBIG_CHECK (cond_eval, { DR (cond_eval); });
 
             while (!_sfobj_isfalse (mod, cond_eval))
               {
                 mod_exec (mod);
                 DR (cond_eval);
                 TC (cond_eval = expr_eval (mod, cond));
+                AMBIG_CHECK (cond_eval, {
+                  DR (cond_eval);
+                  mod.get_stmts () = st_pres;
+                });
               }
 
             DR (cond_eval);
@@ -940,6 +971,11 @@ mod_exec (Module &mod)
             mod.get_stmts () = body;
 
             TC (o_cond = expr_eval (mod, cond));
+            if (o_cond)
+              AMBIG_CHECK (o_cond, {
+                DR (o_cond);
+                mod.get_stmts () = st_pres;
+              });
             assert (o_cond && OBJ_IS_INT (o_cond));
 
             int ov
@@ -992,7 +1028,17 @@ mod_exec (Module &mod)
       i++;
     }
 
-func_end:;
+  goto ret;
+
+ambig_test:                         /* skip this by default */
+  if (mod.get_parent () == nullptr) /* only check in top-level module */
+    {
+      std::cerr << "Uncaught Ambiguity '?'" << std::endl;
+
+      return;
+    }
+
+ret:;
 }
 
 Object *
@@ -1070,6 +1116,7 @@ expr_eval (Module &mod, Expr *e)
           }
 
         IR (res);
+        AMBIG_CHECK (res, {});
       }
       break;
 
@@ -1083,9 +1130,11 @@ expr_eval (Module &mod, Expr *e)
 
             if (res != nullptr)
               DR (res);
-            res = o;
 
+            res = o;
             IR (res);
+
+            AMBIG_CHECK (res, {});
 
             delete[] p;
           }
@@ -1116,8 +1165,11 @@ expr_eval (Module &mod, Expr *e)
         ConditionalExpr *ce = static_cast<ConditionalExpr *> (e);
         Object *lobj;
         TC (lobj = expr_eval (mod, ce->get_lval ()));
+        AMBIG_CHECK (lobj, {});
+
         Object *robj;
         TC (robj = expr_eval (mod, ce->get_rval ()));
+        AMBIG_CHECK (robj, {});
 
         bool cnd = _sfobj_cmp (lobj, robj, ce->get_cond_type ());
         // lobj->print ();
@@ -1151,6 +1203,7 @@ expr_eval (Module &mod, Expr *e)
              * we can use for index in an array
              */
             TC (ev_idcs.push_back (expr_eval (mod, i)));
+            AMBIG_CHECK (ev_idcs.back (), {});
           }
 
         if (res != nullptr)
@@ -1188,6 +1241,7 @@ expr_eval (Module &mod, Expr *e)
                       .c_str ();
 
             TC (ev_idcs[std::string (k)] = expr_eval (mod, i.second));
+            AMBIG_CHECK (ev_idcs[std::string (k)], {});
 
             delete[] k;
             DR (keval);
@@ -1207,8 +1261,11 @@ expr_eval (Module &mod, Expr *e)
 
         Object *arr_eval;
         TC (arr_eval = expr_eval (mod, ac->get_arr ()));
+        AMBIG_CHECK (arr_eval, {});
+
         Object *idx_eval;
         TC (idx_eval = expr_eval (mod, ac->get_idx ()));
+        AMBIG_CHECK (idx_eval, {});
 
         switch (arr_eval->get_type ())
           {
@@ -1393,12 +1450,19 @@ expr_eval (Module &mod, Expr *e)
 
         Object *lv_eval;
         TC (lv_eval = expr_eval (mod, tsc->get_lval ()));
+        AMBIG_CHECK (lv_eval, {});
+
         Object *rv_eval;
         TC (rv_eval = expr_eval (mod, tsc->get_rval ()));
+        AMBIG_CHECK (rv_eval, {});
+
         Object *step_eval;
         TC (step_eval = tsc->get_step () != nullptr
                             ? expr_eval (mod, tsc->get_step ())
                             : nullptr);
+
+        if (step_eval != nullptr)
+          AMBIG_CHECK (step_eval, {});
 
         assert (OBJ_IS_INT (lv_eval) && OBJ_IS_INT (rv_eval));
         if (step_eval != nullptr)
@@ -1569,13 +1633,14 @@ expr_eval (Module &mod, Expr *e)
               {
                 st.push_back (
                     expr_eval (mod, static_cast<AVOperand *> (j)->get_val ()));
+                AMBIG_CHECK (st.back (), {});
               }
           }
 
         res = st.pop_back ();
         /**
          * DO NOT DO IR(res)
-         * st already has done it once.
+         * st has already done it once.
          * we will use that reference.
          */
       }
@@ -1588,6 +1653,7 @@ expr_eval (Module &mod, Expr *e)
         Object *name_eval;
 
         TC (name_eval = expr_eval (mod, fce->get_name ()));
+        AMBIG_CHECK (name_eval, {});
         // std::cout << (name_eval->get_self_arg () == nullptr) << '\n';
 
         Vec<Object *> args_eval;
@@ -1596,6 +1662,7 @@ expr_eval (Module &mod, Expr *e)
           {
             Object *t = nullptr;
             TC (t = expr_eval (mod, j));
+            AMBIG_CHECK (t, {});
 
             /**
              * We could use DR here
@@ -1677,6 +1744,7 @@ expr_eval (Module &mod, Expr *e)
                     // DR (ret);
 
                     res = ret;
+                    AMBIG_CHECK (res, {});
 
                     /**
                      * nf->call returns an object with
@@ -1745,6 +1813,7 @@ expr_eval (Module &mod, Expr *e)
                             new ConstantExpr (static_cast<Constant *> (
                                 p = new NoneConstant ())));
                         res = expr_eval (mod, t);
+                        AMBIG_CHECK (res, {});
 
                         delete p;
                         delete t;
@@ -1915,6 +1984,7 @@ expr_eval (Module &mod, Expr *e)
                               Object *ret;
 
                               TC (ret = nf->call (fmod));
+                              AMBIG_CHECK (ret, {});
                               DR (ret);
                               delete fmod;
                             }
@@ -1974,7 +2044,9 @@ expr_eval (Module &mod, Expr *e)
 
         Str &member = static_cast<VariableExpr *> (e_child)->get_name ();
 
-        Object *o_parent = expr_eval (mod, e_parent);
+        Object *o_parent;
+        TC (o_parent = expr_eval (mod, e_parent));
+        AMBIG_CHECK (o_parent, {});
         // std::cout << "Parent type: " << int (o_parent->get_type ())
         //           << std::endl;
 
@@ -1994,6 +2066,7 @@ expr_eval (Module &mod, Expr *e)
                   member.get_internal_buffer ());
 
               IR (res);
+              AMBIG_CHECK (res, {});
               // std::cout << int (res->get_type ()) << '\t'
               //           << static_cast<FunctionObject *> (res)
               //                  ->get_v ()
@@ -2029,7 +2102,9 @@ expr_eval (Module &mod, Expr *e)
 
               res = cl->get_mod ()->get_variable (
                   member.get_internal_buffer ());
+
               IR (res);
+              AMBIG_CHECK (res, {});
             }
             break;
 
@@ -2052,6 +2127,7 @@ expr_eval (Module &mod, Expr *e)
         Object *o_right = nullptr;
 
         TC (o_left = expr_eval (mod, left));
+        AMBIG_CHECK (o_left, {});
 
         if (res != nullptr)
           DR (res);
@@ -2065,6 +2141,7 @@ expr_eval (Module &mod, Expr *e)
           }
 
         IR (res);
+        AMBIG_CHECK (res, {});
 
         if (o_right != nullptr)
           DR (o_right);
@@ -2084,6 +2161,7 @@ expr_eval (Module &mod, Expr *e)
         Object *o_right = nullptr;
 
         TC (o_left = expr_eval (mod, left));
+        AMBIG_CHECK (o_left, {});
 
         if (res != nullptr)
           DR (res);
@@ -2097,6 +2175,7 @@ expr_eval (Module &mod, Expr *e)
           res = o_left;
 
         IR (res);
+        AMBIG_CHECK (res, {});
 
         if (o_right != nullptr)
           DR (o_right);
@@ -2113,6 +2192,7 @@ expr_eval (Module &mod, Expr *e)
         Object *o_val = nullptr;
 
         TC (o_val = expr_eval (mod, val));
+        AMBIG_CHECK (o_val, {});
 
         if (_sfobj_isfalse (mod, o_val))
           res = static_cast<Object *> (new ConstantObject (
@@ -2137,7 +2217,10 @@ expr_eval (Module &mod, Expr *e)
         Object *o_right = nullptr;
 
         TC (o_left = expr_eval (mod, left));
+        AMBIG_CHECK (o_left, {});
+
         TC (o_right = expr_eval (mod, right));
+        AMBIG_CHECK (o_right, {});
 
         assert (o_left && OBJ_IS_INT (o_left));
         assert (o_right && OBJ_IS_INT (o_right));
@@ -2174,7 +2257,10 @@ expr_eval (Module &mod, Expr *e)
         Object *o_right = nullptr;
 
         TC (o_left = expr_eval (mod, left));
+        AMBIG_CHECK (o_left, {});
+
         TC (o_right = expr_eval (mod, right));
+        AMBIG_CHECK (o_right, {});
 
         assert (o_left && OBJ_IS_INT (o_left));
         assert (o_right && OBJ_IS_INT (o_right));
@@ -2211,7 +2297,10 @@ expr_eval (Module &mod, Expr *e)
         Object *o_right = nullptr;
 
         TC (o_left = expr_eval (mod, left));
+        AMBIG_CHECK (o_left, {});
+
         TC (o_right = expr_eval (mod, right));
+        AMBIG_CHECK (o_right, {});
 
         assert (o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)));
         assert (o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)));
@@ -2264,7 +2353,10 @@ expr_eval (Module &mod, Expr *e)
         Object *o_right = nullptr;
 
         TC (o_left = expr_eval (mod, left));
+        AMBIG_CHECK (o_left, {});
+
         TC (o_right = expr_eval (mod, right));
+        AMBIG_CHECK (o_right, {});
 
         assert (o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)));
         assert (o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)));
@@ -2313,8 +2405,10 @@ expr_eval (Module &mod, Expr *e)
         Object *o_v = nullptr;
 
         TC (o_v = expr_eval (mod, v));
-
+        if (o_v)
+          AMBIG_CHECK (o_v, {});
         assert (o_v && OBJ_IS_INT (o_v));
+
         int vv = static_cast<IntegerConstant *> (
                      static_cast<ConstantObject *> (o_v)->get_c ().get ())
                      ->get_value ();
@@ -2342,7 +2436,10 @@ expr_eval (Module &mod, Expr *e)
         Object *o_body = nullptr;
 
         TC (o_times = expr_eval (mod, times));
+        AMBIG_CHECK (o_times, {});
+
         TC (o_body = expr_eval (mod, body));
+        AMBIG_CHECK (o_body, {});
 
         assert (o_times && OBJ_IS_INT (o_times));
 
@@ -2379,6 +2476,7 @@ expr_eval (Module &mod, Expr *e)
         Object *o_iterable = nullptr;
 
         TC (o_iterable = expr_eval (mod, iterable));
+        AMBIG_CHECK (o_iterable, {});
 
         Vec<Object *> res_objs;
 
@@ -2507,6 +2605,7 @@ expr_eval (Module &mod, Expr *e)
 
                   // mod_exec (mod);
                   res_objs.push_back (expr_eval (mod, body));
+                  AMBIG_CHECK (res_objs.back (), {});
                   DR (kobj);
                 }
             }
@@ -2540,6 +2639,31 @@ expr_eval (Module &mod, Expr *e)
                    "(res)?\n";
     }
 
+  if (OBJ_IS_AMBIG (res))
+    {
+      mod.get_continue_exec () = false;
+      mod.get_ambig () = res;
+
+      IR (res);
+    }
+
+  goto ret;
+
+ambig_test:; /* skip by default */
+  /**
+   * we received an intermediate
+   * ambig which needs to be highlighted
+   * (like in an array index)
+   * So we replace res with an ambig
+   * constant and return it
+   */
+  if (res != nullptr)
+    DR (res);
+
+  res = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new AmbigConstant ())));
+
+ret:
   return res;
 }
 

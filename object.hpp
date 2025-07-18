@@ -238,4 +238,15 @@ public:
    && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
           == ConstantType::Boolean)
 
+#define OBJ_IS_AMBIG(X)                                                       \
+  ((X)->get_type () == ObjectType::Constant                                   \
+   && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
+          == ConstantType::AmbigType)
+
+#define AMBIG_CHECK(X, Y)                                                     \
+  if (OBJ_IS_AMBIG ((X)))                                                     \
+    {                                                                         \
+      Y;                                                                      \
+      goto ambig_test;                                                        \
+    }
 } // namespace sf

@@ -27,10 +27,13 @@ class Module
 private:
   ModuleType type;
   Vec<Statement *> stmts;
+
   Module *parent;
   std::map<std::string, Object *> vtable;
-  Object *ret;
+
   bool continue_exec;
+  Object *ret;
+  Object *ambig;
 
 public:
   Module () : type (ModuleType::File)
@@ -49,13 +52,13 @@ public:
 
   Module (ModuleType t, Vec<Statement *> &st)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
-        continue_exec (true)
+        continue_exec (true), ambig (nullptr)
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &&st)
       : type (t), stmts (std::move (st)), parent (nullptr),
-        continue_exec (true)
+        continue_exec (true), ambig (nullptr), ret (nullptr)
   {
   }
 
@@ -63,6 +66,9 @@ public:
   {
     if (ret != nullptr)
       DR (ret);
+
+    if (ambig != nullptr)
+      DR (ambig);
 
     for (auto i : vtable)
       {
@@ -93,6 +99,12 @@ public:
   get_ret ()
   {
     return ret;
+  }
+
+  inline Object *&
+  get_ambig ()
+  {
+    return ambig;
   }
 
   inline bool &
