@@ -32,6 +32,7 @@ private:
   std::map<std::string, Object *> vtable;
 
   bool continue_exec;
+  bool saw_ambig;
   Object *ret;
   Object *ambig;
 
@@ -52,13 +53,13 @@ public:
 
   Module (ModuleType t, Vec<Statement *> &st)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
-        continue_exec (true), ambig (nullptr)
+        continue_exec (true), ambig (nullptr), saw_ambig (false)
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &&st)
       : type (t), stmts (std::move (st)), parent (nullptr),
-        continue_exec (true), ambig (nullptr), ret (nullptr)
+        continue_exec (true), ambig (nullptr), ret (nullptr), saw_ambig (false)
   {
   }
 
@@ -105,6 +106,12 @@ public:
   get_ambig ()
   {
     return ambig;
+  }
+
+  inline bool &
+  get_saw_ambig ()
+  {
+    return saw_ambig;
   }
 
   inline bool &

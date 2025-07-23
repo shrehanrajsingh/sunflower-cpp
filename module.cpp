@@ -299,7 +299,7 @@ mod_exec (Module &mod)
             Object *name_eval;
 
             TC (name_eval = expr_eval (mod, fst->get_name ()));
-            AMBIG_CHECK (name_eval, {});
+            AMBIG_CHECK (name_eval, { DR (name_eval); });
 
             Vec<Object *> args_eval;
 
@@ -307,7 +307,10 @@ mod_exec (Module &mod)
               {
                 Object *t = nullptr;
                 TC (t = expr_eval (mod, j));
-                AMBIG_CHECK (t, { DR (name_eval) });
+                AMBIG_CHECK (t, {
+                  DR (name_eval);
+                  DR (t);
+                });
 
                 /**
                  * We could use DR here
@@ -392,7 +395,7 @@ mod_exec (Module &mod)
                         AMBIG_CHECK (ret, {
                           DR (ret);
                           delete fmod;
-                          DR (name_eval)
+                          DR (name_eval);
                         });
                         DR (ret);
 
@@ -447,11 +450,21 @@ mod_exec (Module &mod)
 
                         mod_exec (*fmod);
 
-                        /**
-                         * In statement side we
-                         * do not really care about
-                         * the return value of the function
-                         */
+                        if (fmod->get_saw_ambig ())
+                          {
+                            delete fmod;
+                            DR (name_eval);
+                            goto ambig_test;
+                          }
+
+                        Object *ret = fmod->get_ret ();
+                        if (ret != nullptr)
+                          {
+                            AMBIG_CHECK (ret, {
+                              delete fmod;
+                              DR (name_eval);
+                            });
+                          }
 
                         delete fmod;
                       }
@@ -547,7 +560,9 @@ mod_exec (Module &mod)
                                    */
                                   if (fmod->get_ambig ())
                                     AMBIG_CHECK (fmod->get_ambig (), {
-                                      IR (fmod->get_ambig ());
+                                      // IR (fmod->get_ambig ());
+                                      DR (name_eval);
+                                      DR (co);
                                       delete fmod;
                                     });
 
@@ -610,6 +625,7 @@ mod_exec (Module &mod)
                                   TC (ret = nf->call (fmod));
                                   AMBIG_CHECK (ret, {
                                     DR (co);
+                                    DR (name_eval);
                                     DR (ret);
                                     delete fmod;
                                   });
@@ -893,8 +909,10 @@ mod_exec (Module &mod)
             if (mod.get_type () == ModuleType::Function)
               {
                 mod.get_ret () = expr_eval (mod, rt->get_val ());
-                AMBIG_CHECK (mod.get_ret (), {});
-                mod.get_continue_exec () = false;
+                AMBIG_CHECK (mod.get_ret (), {
+                  mod.get_continue_exec () = false;
+                  DR (mod.get_ret ());
+                });
               }
             else
               {
@@ -907,7 +925,19 @@ mod_exec (Module &mod)
                 if (mref != nullptr)
                   {
                     mref->get_ret () = expr_eval (mod, rt->get_val ());
-                    AMBIG_CHECK (mref->get_ret (), {});
+                    AMBIG_CHECK (mref->get_ret (), {
+                      DR (mref->get_ret ());
+                      mref->get_continue_exec () = false;
+
+                      mref = mod.parent;
+
+                      while (mref != nullptr
+                             && mref->get_type () != ModuleType::Function)
+                        {
+                          mref->get_continue_exec () = false;
+                          mref = mref->get_parent ();
+                        }
+                    });
                     mref->get_continue_exec () = false;
 
                     mref = mod.parent;
@@ -1002,15 +1032,7 @@ mod_exec (Module &mod)
             cmod->set_parent (&mod);
             cmod->get_stmts () = cds->get_body ();
 
-            try
-              {
-                mod_exec (*cmod);
-              }
-            catch (const std::exception &e)
-              {
-                here;
-                std::cerr << e.what () << '\n';
-              }
+            TC (mod_exec (*cmod));
 
             SfClass *sfc = new SfClass (cds->get_name (), cmod);
 
@@ -1030,7 +1052,8 @@ mod_exec (Module &mod)
 
   goto ret;
 
-ambig_test:                         /* skip this by default */
+ambig_test:
+  mod.get_saw_ambig () = true;
   if (mod.get_parent () == nullptr) /* only check in top-level module */
     {
       std::cerr << "Uncaught Ambiguity '?'" << std::endl;
@@ -1203,7 +1226,12 @@ expr_eval (Module &mod, Expr *e)
              * we can use for index in an array
              */
             TC (ev_idcs.push_back (expr_eval (mod, i)));
-            AMBIG_CHECK (ev_idcs.back (), {});
+            AMBIG_CHECK (ev_idcs.back (), {
+              for (Object *&j : ev_idcs)
+                {
+                  DR (j);
+                }
+            });
           }
 
         if (res != nullptr)
