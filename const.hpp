@@ -15,6 +15,7 @@ enum class ConstantType
 
 namespace sf
 {
+class Expr;
 class Constant
 {
 private:
@@ -157,13 +158,26 @@ public:
 
 class AmbigConstant : public Constant
 {
-public:
-  AmbigConstant () : Constant (ConstantType::AmbigType) {}
+  Expr *val;
 
-  void
-  print () override
+public:
+  AmbigConstant () : Constant (ConstantType::AmbigType), val{ nullptr } {}
+  AmbigConstant (Expr *_Val) : Constant (ConstantType::AmbigType), val{ _Val }
   {
-    std::cout << "ambig";
   }
+
+  inline Expr *&
+  get_val ()
+  {
+    return val;
+  }
+
+  inline Expr *const &
+  get_val () const
+  {
+    return val;
+  }
+
+  void print () override;
 };
 } // namespace sf

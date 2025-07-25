@@ -1056,7 +1056,21 @@ ambig_test:
   mod.get_saw_ambig () = true;
   if (mod.get_parent () == nullptr) /* only check in top-level module */
     {
-      std::cerr << "Uncaught Ambiguity '?'" << std::endl;
+      Object *amb = mod.get_ambig ();
+      if (OBJ_IS_AMBIG (amb))
+        {
+          AmbigObject *ao = static_cast<AmbigObject *> (amb);
+
+          if (ao->get_val () != nullptr)
+            std::cerr << "Uncaught Ambiguity: "
+                      << ao->get_val ()->get_stdout_repr () << std::endl;
+          else
+            std::cerr << "Uncaught Ambiguity" << std::endl;
+        }
+      else
+        {
+          std::cerr << "Uncaught Ambiguity" << std::endl;
+        }
 
       return;
     }
@@ -1129,8 +1143,14 @@ expr_eval (Module &mod, Expr *e)
 
           case ConstantType::AmbigType:
             {
-              res = static_cast<Object *> (new ConstantObject (
-                  static_cast<Constant *> (new AmbigConstant ())));
+              AmbigConstant *ac = static_cast<AmbigConstant *> (
+                  static_cast<ConstantExpr *> (e)->get_c ());
+
+              // res = static_cast<Object *> (new ConstantObject (
+              //     static_cast<Constant *> (new AmbigConstant ())));
+              res = static_cast<Object *> (new AmbigObject (
+                  ac->get_val () != nullptr ? expr_eval (mod, ac->get_val ())
+                                            : nullptr));
             }
             break;
 
@@ -1309,8 +1329,8 @@ expr_eval (Module &mod, Expr *e)
 
                   int idx = static_cast<IntegerConstant *> (ci)->get_value ();
 
-                  if (idx < 0)
-                    idx = idx % ao->get_vals ().get_size ();
+                  while (idx < 0)
+                    idx += ao->get_vals ().get_size ();
 
                   assert (idx < ao->get_vals ().get_size ()
                           && "Array index out of bounds.");
@@ -1772,7 +1792,10 @@ expr_eval (Module &mod, Expr *e)
                     // DR (ret);
 
                     res = ret;
-                    AMBIG_CHECK (res, {});
+                    AMBIG_CHECK (res, {
+                      DR (res);
+                      delete fmod;
+                    });
 
                     /**
                      * nf->call returns an object with
@@ -1832,8 +1855,17 @@ expr_eval (Module &mod, Expr *e)
 
                     mod_exec (*fmod);
 
+                    if (fmod->get_saw_ambig ())
+                      {
+                        delete fmod;
+                        goto ambig_test;
+                      }
+
                     if (fmod->get_ret () != nullptr)
-                      res = fmod->get_ret ();
+                      {
+                        res = fmod->get_ret ();
+                        AMBIG_CHECK (res, { delete fmod; });
+                      }
                     else
                       {
                         Constant *p;
@@ -1841,7 +1873,11 @@ expr_eval (Module &mod, Expr *e)
                             new ConstantExpr (static_cast<Constant *> (
                                 p = new NoneConstant ())));
                         res = expr_eval (mod, t);
-                        AMBIG_CHECK (res, {});
+                        AMBIG_CHECK (res, {
+                          delete p;
+                          delete t;
+                          delete fmod;
+                        });
 
                         delete p;
                         delete t;
@@ -2678,6 +2714,8 @@ expr_eval (Module &mod, Expr *e)
   goto ret;
 
 ambig_test:; /* skip by default */
+  // mod.get_continue_exec () = false;
+  // mod.get_ambig () = res;
   /**
    * we received an intermediate
    * ambig which needs to be highlighted
@@ -2686,10 +2724,23 @@ ambig_test:; /* skip by default */
    * constant and return it
    */
   if (res != nullptr)
-    DR (res);
+    {
+      if (!OBJ_IS_AMBIG (res))
+        {
+          res = static_cast<Object *> (new AmbigObject (nullptr));
+        }
+    }
+  else
+    {
+      res = static_cast<Object *> (new AmbigObject (nullptr));
+    }
 
-  res = static_cast<Object *> (
-      new ConstantObject (static_cast<Constant *> (new AmbigConstant ())));
+  if (!res->get_ref_count ())
+    IR (res);
+
+  mod.get_continue_exec () = false;
+  mod.get_ambig () = res;
+  IR (res);
 
 ret:
   return res;

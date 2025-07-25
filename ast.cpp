@@ -1064,8 +1064,18 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                  * in practice
                  */
 
-                res = static_cast<Expr *> (new ConstantExpr (
-                    static_cast<Constant *> (new AmbigConstant ())));
+                if (i + 1 == ed)
+                  {
+                    res = static_cast<Expr *> (new ConstantExpr (
+                        static_cast<Constant *> (new AmbigConstant ())));
+                  }
+                else
+                  {
+                    res = static_cast<Expr *> (
+                        new ConstantExpr (static_cast<Constant *> (
+                            new AmbigConstant (expr_gen (toks, i + 1, ed)))));
+                    goto ret;
+                  }
               }
           }
           break;

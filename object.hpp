@@ -57,6 +57,7 @@ enum class ObjectType
   DictObj = 3,
   SfClass = 4,
   ClassObj = 5,
+  AmbigObject = 6,
   NoObject,
 };
 
@@ -211,6 +212,52 @@ public:
   ~FunctionObject () {}
 };
 
+class AmbigObject : public Object
+{
+private:
+  Object *val;
+
+public:
+  AmbigObject () : Object (ObjectType::AmbigObject), val{ nullptr } {}
+  AmbigObject (Object *_Val) : Object (ObjectType::AmbigObject), val{ _Val } {}
+
+  std::string get_stdout_repr () override;
+  std::string
+  get_stdout_repr_in_container () override
+  {
+    return get_stdout_repr ();
+  }
+
+  inline Object *&
+  get_val ()
+  {
+    return val;
+  }
+
+  inline Object *const &
+  get_val () const
+  {
+    return val;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "AmbigObject";
+    if (val != nullptr)
+      {
+        std::cout << " containing: ";
+        val->print ();
+      }
+    else
+      {
+        std::cout << " (empty)" << std::endl;
+      }
+  }
+
+  ~AmbigObject () {}
+};
+
 #define OBJ_IS_INT(X)                                                         \
   ((X)->get_type () == ObjectType::Constant                                   \
    && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
@@ -238,10 +285,7 @@ public:
    && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
           == ConstantType::Boolean)
 
-#define OBJ_IS_AMBIG(X)                                                       \
-  ((X)->get_type () == ObjectType::Constant                                   \
-   && static_cast<ConstantObject *> ((X))->get_c ().get ()->get_type ()       \
-          == ConstantType::AmbigType)
+#define OBJ_IS_AMBIG(X) ((X)->get_type () == ObjectType::AmbigObject)
 
 #define AMBIG_CHECK(X, Y)                                                     \
   if (OBJ_IS_AMBIG ((X)))                                                     \

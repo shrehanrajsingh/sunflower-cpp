@@ -69,7 +69,13 @@ public:
       DR (ret);
 
     if (ambig != nullptr)
-      DR (ambig);
+      {
+        Object *vo = static_cast<AmbigObject *> (ambig)->get_val ();
+
+        if (vo != nullptr)
+          DR (vo);
+        DR (ambig);
+      }
 
     for (auto i : vtable)
       {

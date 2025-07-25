@@ -666,6 +666,12 @@ FunctionObject::get_stdout_repr ()
   return s.str ();
 }
 
+std::string
+AmbigObject::get_stdout_repr ()
+{
+  return "ambig";
+}
+
 bool
 _sfobj_isiterable (Object *&obj)
 {
