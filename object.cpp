@@ -543,6 +543,15 @@ _sfobj_passownership (Object *&obj)
       }
       break;
 
+    case ObjectType::AmbigObject:
+      {
+        AmbigObject *ao = static_cast<AmbigObject *> (obj);
+
+        if (ao->get_val () != nullptr)
+          ao->get_val ()->get_ref_count () = obj->get_ref_count () + 1;
+      }
+      break;
+
     default:
       break;
     }
@@ -561,6 +570,15 @@ _sfobj_removeownership (Object *&obj)
         // std::cout << f->get_ref_count () << '\n';
 
         DR__func (f);
+      }
+      break;
+
+    case ObjectType::AmbigObject:
+      {
+        AmbigObject *ao = static_cast<AmbigObject *> (obj);
+
+        if (ao->get_val () != nullptr)
+          ao->get_val ()->get_ref_count () = obj->get_ref_count () - 1;
       }
       break;
 

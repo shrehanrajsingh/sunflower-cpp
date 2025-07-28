@@ -1,2 +1,7 @@
-a = ? "hello"
-write (a)
+fun age (a)
+    if a < 18
+        return ? "Age must be >= 18"
+    return "Can vote"
+
+age (20)
+write (age (15))

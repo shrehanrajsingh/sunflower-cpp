@@ -452,7 +452,19 @@ mod_exec (Module &mod)
 
                         if (fmod->get_saw_ambig ())
                           {
+                            // here;
+                            // std::cout << fmod->get_ambig ()->get_ref_count
+                            // ()
+                            //           << '\n';
+                            mod.get_ambig () = fmod->get_ambig ();
+                            IR (mod.get_ambig ());
+                            mod.get_saw_ambig () = true;
+
                             delete fmod;
+                            // here;
+                            // std::cout << mod.get_ambig ()->get_ref_count ()
+                            //           << '\n';
+                            // DR (mod.get_ambig ());
                             DR (name_eval);
                             goto ambig_test;
                           }
@@ -911,7 +923,16 @@ mod_exec (Module &mod)
                 mod.get_ret () = expr_eval (mod, rt->get_val ());
                 AMBIG_CHECK (mod.get_ret (), {
                   mod.get_continue_exec () = false;
+                  mod.get_saw_ambig () = true;
+                  // DR (mod.get_ret ());
+
+                  mod.get_ambig () = mod.get_ret ();
+                  IR (mod.get_ambig ());
+
                   DR (mod.get_ret ());
+                  // here;
+                  // std::cout << mod.get_ambig ()->get_ref_count () << '\n';
+                  mod.get_ret () = nullptr;
                 });
               }
             else
@@ -1057,6 +1078,9 @@ ambig_test:
   if (mod.get_parent () == nullptr) /* only check in top-level module */
     {
       Object *amb = mod.get_ambig ();
+      // DR (amb);
+      // here;
+      // std::cout << amb->get_ref_count () << '\n';
       if (OBJ_IS_AMBIG (amb))
         {
           AmbigObject *ao = static_cast<AmbigObject *> (amb);
@@ -1065,13 +1089,18 @@ ambig_test:
             std::cerr << "Uncaught Ambiguity: "
                       << ao->get_val ()->get_stdout_repr () << std::endl;
           else
-            std::cerr << "Uncaught Ambiguity" << std::endl;
+            {
+              here;
+              std::cerr << "Uncaught Ambiguity" << std::endl;
+            }
         }
       else
         {
+          here;
           std::cerr << "Uncaught Ambiguity" << std::endl;
         }
 
+      DR (amb);
       return;
     }
 
@@ -1857,6 +1886,10 @@ expr_eval (Module &mod, Expr *e)
 
                     if (fmod->get_saw_ambig ())
                       {
+                        res = fmod->get_ambig ();
+                        IR (res);
+                        DR (name_eval);
+
                         delete fmod;
                         goto ambig_test;
                       }
@@ -1874,6 +1907,7 @@ expr_eval (Module &mod, Expr *e)
                                 p = new NoneConstant ())));
                         res = expr_eval (mod, t);
                         AMBIG_CHECK (res, {
+                          DR (name_eval);
                           delete p;
                           delete t;
                           delete fmod;
@@ -2729,6 +2763,8 @@ ambig_test:; /* skip by default */
         {
           res = static_cast<Object *> (new AmbigObject (nullptr));
         }
+      // else
+      //   here;
     }
   else
     {
@@ -2741,6 +2777,8 @@ ambig_test:; /* skip by default */
   mod.get_continue_exec () = false;
   mod.get_ambig () = res;
   IR (res);
+
+  // std::cout << res->get_ref_count () << '\n';
 
 ret:
   return res;
