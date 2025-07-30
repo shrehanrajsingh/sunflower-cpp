@@ -52,7 +52,14 @@ mod_exec (Module &mod)
 
             Object *val_eval;
             TC (val_eval = expr_eval (mod, nv));
-            AMBIG_CHECK (val_eval, { DR (val_eval); });
+
+            AMBIG_CHECK (val_eval, {
+                                       // mod.get_continue_exec () = false;
+                                       // mod.get_saw_ambig () = true;
+                                       // mod.get_ambig () = val_eval;
+
+                                       // IR (val_eval);
+                                   });
 
             /*
               Unless val_eval is nullptr,
@@ -299,7 +306,7 @@ mod_exec (Module &mod)
             Object *name_eval;
 
             TC (name_eval = expr_eval (mod, fst->get_name ()));
-            AMBIG_CHECK (name_eval, { DR (name_eval); });
+            AMBIG_CHECK (name_eval, {});
 
             Vec<Object *> args_eval;
 
@@ -307,10 +314,7 @@ mod_exec (Module &mod)
               {
                 Object *t = nullptr;
                 TC (t = expr_eval (mod, j));
-                AMBIG_CHECK (t, {
-                  DR (name_eval);
-                  DR (t);
-                });
+                AMBIG_CHECK (t, { DR (name_eval); });
 
                 /**
                  * We could use DR here
@@ -393,12 +397,11 @@ mod_exec (Module &mod)
 
                         TC (ret = nf->call (fmod));
                         AMBIG_CHECK (ret, {
-                          DR (ret);
                           delete fmod;
                           DR (name_eval);
                         });
-                        DR (ret);
 
+                        DR (ret);
                         delete fmod;
                       }
                       break;
@@ -572,6 +575,11 @@ mod_exec (Module &mod)
                                    */
                                   if (fmod->get_ambig ())
                                     AMBIG_CHECK (fmod->get_ambig (), {
+                                      mod.get_continue_exec () = false;
+                                      mod.get_saw_ambig () = true;
+                                      mod.get_ambig () = fmod->get_ambig ();
+                                      IR (fmod->get_ambig ());
+
                                       // IR (fmod->get_ambig ());
                                       DR (name_eval);
                                       DR (co);
@@ -636,9 +644,13 @@ mod_exec (Module &mod)
 
                                   TC (ret = nf->call (fmod));
                                   AMBIG_CHECK (ret, {
+                                    mod.get_continue_exec () = false;
+                                    mod.get_saw_ambig () = true;
+                                    mod.get_ambig () = ret;
+                                    IR (ret);
+
                                     DR (co);
                                     DR (name_eval);
-                                    DR (ret);
                                     delete fmod;
                                   });
                                   DR (ret);
@@ -686,7 +698,7 @@ mod_exec (Module &mod)
 
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, ic->get_cond ()));
-            AMBIG_CHECK (cond_eval, { DR (cond_eval); });
+            AMBIG_CHECK (cond_eval, {});
             /*
               Since expr_eval already returns an object with an incremented
               reference count, we do not need to manually increase ourselves.
@@ -706,10 +718,7 @@ mod_exec (Module &mod)
                       {
                         Object *iv;
                         TC (iv = expr_eval (mod, ifc->get_cond ()));
-                        AMBIG_CHECK (iv, {
-                          DR (cond_eval);
-                          DR (iv);
-                        });
+                        AMBIG_CHECK (iv, { DR (cond_eval); });
 
                         if (!_sfobj_isfalse (mod, iv))
                           {
@@ -756,7 +765,7 @@ mod_exec (Module &mod)
 
             Object *it_eval;
             TC (it_eval = expr_eval (mod, fc->get_iterable ()));
-            AMBIG_CHECK (it_eval, { DR (it_eval); });
+            AMBIG_CHECK (it_eval, {});
 
             switch (it_eval->get_type ())
               {
@@ -991,17 +1000,14 @@ mod_exec (Module &mod)
 
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, cond));
-            AMBIG_CHECK (cond_eval, { DR (cond_eval); });
+            AMBIG_CHECK (cond_eval, { mod.get_stmts () = st_pres; });
 
             while (!_sfobj_isfalse (mod, cond_eval))
               {
                 mod_exec (mod);
                 DR (cond_eval);
                 TC (cond_eval = expr_eval (mod, cond));
-                AMBIG_CHECK (cond_eval, {
-                  DR (cond_eval);
-                  mod.get_stmts () = st_pres;
-                });
+                AMBIG_CHECK (cond_eval, { mod.get_stmts () = st_pres; });
               }
 
             DR (cond_eval);
@@ -1023,10 +1029,7 @@ mod_exec (Module &mod)
 
             TC (o_cond = expr_eval (mod, cond));
             if (o_cond)
-              AMBIG_CHECK (o_cond, {
-                DR (o_cond);
-                mod.get_stmts () = st_pres;
-              });
+              AMBIG_CHECK (o_cond, { mod.get_stmts () = st_pres; });
             assert (o_cond && OBJ_IS_INT (o_cond));
 
             int ov
@@ -1034,7 +1037,7 @@ mod_exec (Module &mod)
                       static_cast<ConstantObject *> (o_cond)->get_c ().get ())
                       ->get_value ();
 
-            while (ov > 0)
+            while (ov > 0 && mod.get_continue_exec ())
               {
                 mod_exec (mod);
                 ov--;
@@ -1527,11 +1530,38 @@ expr_eval (Module &mod, Expr *e)
 
         Object *lv_eval;
         TC (lv_eval = expr_eval (mod, tsc->get_lval ()));
-        AMBIG_CHECK (lv_eval, {});
+        AMBIG_CHECK (lv_eval, {
+          /**
+           * mod already had an increase
+           * in ref_count as it was assigned
+           * ambig.
+           * Here we reclaim before reassigning
+           * the same ambig
+           * In future, there might be
+           * a better way to not reassign
+           * ambig over and over
+           * One approach could be
+           * to check before assigning,
+           * if an ambig already is associated
+           * with mod.
+           * If yes, then we free it, and assign the
+           * new ambig.
+           * This, however, violates the principle
+           * that ambig should stop program execution
+           * Currently, we use the simple workaround:
+           * reduce (ref_count) and reassign (ambig)
+           */
+          DR (lv_eval);
+          res = lv_eval;
+        });
 
         Object *rv_eval;
         TC (rv_eval = expr_eval (mod, tsc->get_rval ()));
-        AMBIG_CHECK (rv_eval, {});
+        AMBIG_CHECK (rv_eval, {
+          DR (lv_eval);
+          DR (rv_eval);
+          res = rv_eval;
+        });
 
         Object *step_eval;
         TC (step_eval = tsc->get_step () != nullptr
@@ -1539,7 +1569,12 @@ expr_eval (Module &mod, Expr *e)
                             : nullptr);
 
         if (step_eval != nullptr)
-          AMBIG_CHECK (step_eval, {});
+          AMBIG_CHECK (step_eval, {
+            DR (step_eval);
+            DR (lv_eval);
+            DR (rv_eval);
+            res = step_eval;
+          });
 
         assert (OBJ_IS_INT (lv_eval) && OBJ_IS_INT (rv_eval));
         if (step_eval != nullptr)
@@ -1589,6 +1624,8 @@ expr_eval (Module &mod, Expr *e)
 
         if (step_eval != nullptr)
           DR (step_eval);
+        // res = static_cast<Object *> (new AmbigObject (nullptr));
+        // AMBIG_CHECK (res, {});
       }
       break;
     case ExprType::ExprArith:

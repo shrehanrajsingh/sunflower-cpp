@@ -1,7 +1,4 @@
-fun age (a)
-    if a < 18
-        return ? "Age must be >= 18"
-    return "Can vote"
+fun age ()
+    a = ? to 5 step 2
 
-age (20)
-write (age (15))
+age ()
