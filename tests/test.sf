@@ -1,4 +1,6 @@
-fun age ()
-    a = ? to 5 step 2
+fun can_vote (a)
+    if a < 18
+        return? "Age is less than 18"
+    return "Can Vote"
 
-age ()
+write (can_vote (10))

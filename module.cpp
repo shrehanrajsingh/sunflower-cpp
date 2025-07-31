@@ -1092,15 +1092,15 @@ ambig_test:
             std::cerr << "Uncaught Ambiguity: "
                       << ao->get_val ()->get_stdout_repr () << std::endl;
           else
-            {
-              here;
-              std::cerr << "Uncaught Ambiguity" << std::endl;
-            }
+            std::cerr << "Uncaught Ambiguity" << std::endl;
         }
       else
         {
-          here;
-          std::cerr << "Uncaught Ambiguity" << std::endl;
+          std::cerr << "Uncaught Ambiguity" << std::endl << "Object: ";
+          if (amb != nullptr)
+            amb->print ();
+          else
+            std::cout << "nullptr\n";
         }
 
       DR (amb);
@@ -1767,7 +1767,10 @@ expr_eval (Module &mod, Expr *e)
         Object *name_eval;
 
         TC (name_eval = expr_eval (mod, fce->get_name ()));
-        AMBIG_CHECK (name_eval, {});
+        AMBIG_CHECK (name_eval, {
+          DR (res);
+          res = name_eval;
+        });
         // std::cout << (name_eval->get_self_arg () == nullptr) << '\n';
 
         Vec<Object *> args_eval;
@@ -1776,7 +1779,11 @@ expr_eval (Module &mod, Expr *e)
           {
             Object *t = nullptr;
             TC (t = expr_eval (mod, j));
-            AMBIG_CHECK (t, {});
+            AMBIG_CHECK (t, {
+              DR (name_eval);
+              DR (t);
+              res = t;
+            });
 
             /**
              * We could use DR here
@@ -1857,9 +1864,10 @@ expr_eval (Module &mod, Expr *e)
                     TC (ret = nf->call (fmod));
                     // DR (ret);
 
-                    res = ret;
-                    AMBIG_CHECK (res, {
-                      DR (res);
+                    AMBIG_CHECK (ret, {
+                      DR (name_eval);
+                      DR (ret);
+                      res = ret;
                       delete fmod;
                     });
 
@@ -1924,7 +1932,12 @@ expr_eval (Module &mod, Expr *e)
                     if (fmod->get_saw_ambig ())
                       {
                         res = fmod->get_ambig ();
-                        IR (res);
+
+                        /**
+                         * ! DO NOT UNCOMMENT THE NEXT LINE
+                         * ! IT RESULTS IN A MEMORY LEAK
+                         */
+                        // IR (res);
                         DR (name_eval);
 
                         delete fmod;
@@ -2119,7 +2132,11 @@ expr_eval (Module &mod, Expr *e)
                               Object *ret;
 
                               TC (ret = nf->call (fmod));
-                              AMBIG_CHECK (ret, {});
+                              AMBIG_CHECK (ret, {
+                                res = ret;
+                                DR (name_eval);
+                                DR (co);
+                              });
                               DR (ret);
                               delete fmod;
                             }
@@ -2139,6 +2156,7 @@ expr_eval (Module &mod, Expr *e)
                 assert (args_eval.get_size () == 0);
 
               res = co;
+              AMBIG_CHECK (res, { DR (name_eval); });
 
               /**
                * NOTE: We have already done an IR(co)
