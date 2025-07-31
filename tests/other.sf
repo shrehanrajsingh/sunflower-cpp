@@ -1,7 +1,9 @@
 fun min (a, b)
     if a < b
         return a
-    return b
+    else
+        return b
+    write ("here")
 
 fun total_cost (mask, pos, n, cost)
     if mask == (1 << n) - 1

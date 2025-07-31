@@ -929,7 +929,9 @@ mod_exec (Module &mod)
 
             if (mod.get_type () == ModuleType::Function)
               {
+                mod.get_continue_exec () = false;
                 mod.get_ret () = expr_eval (mod, rt->get_val ());
+
                 AMBIG_CHECK (mod.get_ret (), {
                   mod.get_continue_exec () = false;
                   mod.get_saw_ambig () = true;
