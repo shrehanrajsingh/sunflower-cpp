@@ -20,9 +20,12 @@ Vec<Token *>
 tokenize (char *p)
 {
   Vec<Token *> res;
+  int line_number = 1;
+  int line_col = 0;
 
   while (*p != '\0')
     {
+      line_col++;
       char d = *p;
 
       if (isalpha (d) || d == '_')
@@ -44,7 +47,7 @@ tokenize (char *p)
           else
             res.push_back (new IdentifierToken (v));
 
-          continue;
+          goto end_skip_inc;
         }
 
       if (isnumber (d))
@@ -74,7 +77,7 @@ tokenize (char *p)
           else
             res.push_back (new IntegerToken (atoi (v.get_internal_buffer ())));
 
-          continue;
+          goto end_skip_inc;
         }
 
       switch (d)
@@ -270,7 +273,7 @@ tokenize (char *p)
               p++;
 
             res.push_back (new StringToken (v));
-            continue;
+            goto end_skip_inc;
           }
           break;
 
@@ -281,12 +284,17 @@ tokenize (char *p)
               p++;
             while (*p != '\n');
 
+            // goto end_skip_inc;
             continue;
           }
           break;
 
         case '\n':
-          res.push_back (new NewlineToken ());
+          {
+            res.push_back (new NewlineToken ());
+            line_col = 0;
+            line_number++;
+          }
           break;
 
         default:
@@ -295,6 +303,10 @@ tokenize (char *p)
 
     end:
       p++;
+
+    end_skip_inc:;
+      res.back ()->get_line_number () = line_number;
+      res.back ()->get_line_col () = line_col;
     }
 
   return res;

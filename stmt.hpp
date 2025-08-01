@@ -24,16 +24,29 @@ class Statement
 {
 private:
   StatementType type;
+  int line_number;
 
 public:
-  Statement () : type (StatementType::NoStmt) {}
-  Statement (StatementType t) : type (t) {}
+  Statement () : type (StatementType::NoStmt), line_number{ 0 } {}
+  Statement (StatementType t) : type (t), line_number{ 0 } {}
   ~Statement () = default;
 
   inline StatementType
   get_type () const
   {
     return type;
+  }
+
+  inline int &
+  get_line_number ()
+  {
+    return line_number;
+  }
+
+  inline const int
+  get_line_number () const
+  {
+    return line_number;
   }
 
   virtual void print () {};

@@ -23,15 +23,47 @@ namespace sf
 class Token
 {
   TokenType type;
+  int line_number;
+  int line_col;
 
 public:
-  Token () { type = TokenType::EndOfFile; }
-  Token (TokenType t) : type (t) {}
+  Token () : line_number{ 0 }, line_col{ 0 } { type = TokenType::EndOfFile; }
+  Token (TokenType t) : type (t), line_number{ 0 }, line_col{ 0 } {}
 
   inline TokenType
   get_type () const
   {
     return type;
+  }
+
+  inline int &
+  get_line_number ()
+  {
+    return line_number;
+  }
+
+  inline const int
+  get_line_number () const
+  {
+    return line_number;
+  }
+
+  inline int &
+  get_line_col ()
+  {
+    return line_col;
+  }
+
+  inline const int
+  get_line_col () const
+  {
+    return line_col;
+  }
+
+  void
+  print_pos ()
+  {
+    std::cout << "(ln: " << line_number << ", lc: " << line_col << ")\n";
   }
 
   virtual void print () {};

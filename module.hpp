@@ -36,6 +36,9 @@ private:
   Object *ret;
   Object *ambig;
 
+  Vec<Str> code_lines;
+  Vec<int> backtrace;
+
 public:
   Module () : type (ModuleType::File)
   {
@@ -57,9 +60,23 @@ public:
   {
   }
 
+  Module (ModuleType t, Vec<Statement *> &st, Vec<Str> &lines)
+      : type (t), stmts (st), parent (nullptr), ret (nullptr),
+        continue_exec (true), ambig (nullptr), saw_ambig (false),
+        code_lines (lines)
+  {
+  }
+
   Module (ModuleType t, Vec<Statement *> &&st)
       : type (t), stmts (std::move (st)), parent (nullptr),
         continue_exec (true), ambig (nullptr), ret (nullptr), saw_ambig (false)
+  {
+  }
+
+  Module (ModuleType t, Vec<Statement *> &&st, Vec<Str> &lines)
+      : type (t), stmts (st), parent (nullptr), ret (nullptr),
+        continue_exec (true), ambig (nullptr), saw_ambig (false),
+        code_lines (lines)
   {
   }
 
@@ -141,6 +158,30 @@ public:
   {
     /* don't delete current parent */
     parent = p;
+  }
+
+  inline Vec<Str> &
+  get_code_lines ()
+  {
+    return code_lines;
+  }
+
+  inline const Vec<Str> &
+  get_code_lines () const
+  {
+    return code_lines;
+  }
+
+  inline Vec<int> &
+  get_backtrace ()
+  {
+    return backtrace;
+  }
+
+  inline const Vec<int> &
+  get_backtrace () const
+  {
+    return backtrace;
   }
 
   Object *get_variable (std::string);

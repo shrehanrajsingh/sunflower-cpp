@@ -219,6 +219,17 @@ test4 ()
   while (std::getline (fl, p))
     s += p + '\n';
 
+  Vec<Str> lines;
+  lines.push_back ("");
+
+  for (char c : s)
+    {
+      if (c == '\n')
+        lines.push_back ("");
+      else
+        lines.back ().push_back (c);
+    }
+
   // std::cout << s << std::endl;
   Vec<Token *> r = tokenize ((char *)s.c_str ());
 
@@ -226,6 +237,7 @@ test4 ()
   for (auto &&i : r)
     {
       i->print ();
+      i->print_pos ();
     }
 
   Vec<Statement *> ast = stmt_gen (r);
@@ -280,7 +292,7 @@ test4 ()
     {
       // while (1)
       {
-        Module *m = new Module (ModuleType::File, ast);
+        Module *m = new Module (ModuleType::File, ast, lines);
 
         mod_exec (*m);
 

@@ -1204,6 +1204,7 @@ stmt_gen (Vec<Token *> &toks)
                 res.push_back (static_cast<Statement *> (
                     new VarDeclStatement (e_name, e_val)));
 
+                SET_LINE_NUMBER (res, c);
                 i = vv_idx;
               }
 
@@ -1238,6 +1239,7 @@ stmt_gen (Vec<Token *> &toks)
                 res.push_back (static_cast<Statement *> (
                     new FuncCallStatement (expr_gen (toks, nv_idx, i), args)));
 
+                SET_LINE_NUMBER (res, c);
                 i = j;
               }
           }
@@ -1416,6 +1418,7 @@ stmt_gen (Vec<Token *> &toks)
                   }
 
                 res.push_back (ifst);
+                SET_LINE_NUMBER (res, c);
                 i = block_end_idx - 1;
               }
             else if (kw == "for")
@@ -1531,6 +1534,7 @@ stmt_gen (Vec<Token *> &toks)
                                                      stmt_gen (body_toks));
 
                 res.push_back (fc);
+                SET_LINE_NUMBER (res, c);
                 i = block_end_idx - 1;
               }
             else if (kw == "fun")
@@ -1630,6 +1634,7 @@ stmt_gen (Vec<Token *> &toks)
                         = new FuncDeclStatement (arg_list, body, name);
 
                     res.push_back (static_cast<Statement *> (fds));
+                    SET_LINE_NUMBER (res, c);
                     i = body_block_end - 1;
                   }
                 else
@@ -1690,6 +1695,7 @@ stmt_gen (Vec<Token *> &toks)
                   }
 
                 res.push_back (new ReturnStatement (r));
+                SET_LINE_NUMBER (res, c);
                 i = j;
               }
             else if (kw == "while")
@@ -1752,6 +1758,7 @@ stmt_gen (Vec<Token *> &toks)
 
                 res.push_back (static_cast<Statement *> (
                     new WhileStatement (cond, body)));
+                SET_LINE_NUMBER (res, c);
 
                 i = block_end_idx - 1;
               }
@@ -1815,6 +1822,7 @@ stmt_gen (Vec<Token *> &toks)
 
                 res.push_back (static_cast<Statement *> (
                     new RepeatStatement (cond, body)));
+                SET_LINE_NUMBER (res, c);
 
                 i = block_end_idx - 1;
               }
@@ -1844,6 +1852,7 @@ stmt_gen (Vec<Token *> &toks)
 
                 res.push_back (static_cast<Statement *> (
                     new ClassDeclStatement (name_str, body)));
+                SET_LINE_NUMBER (res, c);
 
                 i = block_end_idx - 1;
               }
