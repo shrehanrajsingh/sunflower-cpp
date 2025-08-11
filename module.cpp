@@ -55,6 +55,7 @@ mod_exec (Module &mod)
 
             AMBIG_CHECK (val_eval, {
               mod.get_backtrace ().push_back (st->get_line_number ());
+              // std::cout << val_eval->get_ref_count () << '\n';
               // mod.get_continue_exec () = false;
               // mod.get_saw_ambig () = true;
               // mod.get_ambig () = val_eval;
@@ -1347,6 +1348,7 @@ expr_eval (Module &mod, Expr *e)
              */
             TC (ev_idcs.push_back (expr_eval (mod, i)));
             AMBIG_CHECK (ev_idcs.back (), {
+              res = ev_idcs.back ();
               for (Object *&j : ev_idcs)
                 {
                   DR (j);
@@ -1389,7 +1391,8 @@ expr_eval (Module &mod, Expr *e)
                       .c_str ();
 
             TC (ev_idcs[std::string (k)] = expr_eval (mod, i.second));
-            AMBIG_CHECK (ev_idcs[std::string (k)], {});
+            AMBIG_CHECK (ev_idcs[std::string (k)],
+                         { res = ev_idcs[std::string (k)]; });
 
             delete[] k;
             DR (keval);
@@ -1815,7 +1818,11 @@ expr_eval (Module &mod, Expr *e)
               {
                 st.push_back (
                     expr_eval (mod, static_cast<AVOperand *> (j)->get_val ()));
-                AMBIG_CHECK (st.back (), {});
+                AMBIG_CHECK (st.back (), {
+                  for (Object *&i : st)
+                    DR (i);
+                  res = st.back ();
+                });
               }
           }
 

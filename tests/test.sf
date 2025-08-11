@@ -1,8 +1,3 @@
-fun other ()
-    return ?
-
 fun test ()
-    return 1 & other ()
-
-a = test ()
-write (a)
+    a = 2 * ? / 3
+test ()
