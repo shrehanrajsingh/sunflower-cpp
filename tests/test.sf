@@ -1,3 +1,11 @@
-fun test ()
-    a = 2 * ? / 3
-test ()
+class Test
+    fun _init (self, name)
+        self.name = name
+    
+    fun get_name (self)
+        if self.name != "Shrehan"
+            return ?
+        return self.name
+
+test = Test ("admin")
+write (test.get_name ())

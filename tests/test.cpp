@@ -290,23 +290,23 @@ test4 ()
   native::add_natives (ast);
   try
     {
-      while (1)
-        {
-          Module *m = new Module (ModuleType::File, ast, lines);
+      // while (1)
+      {
+        Module *m = new Module (ModuleType::File, ast, lines);
 
-          mod_exec (*m);
+        mod_exec (*m);
 
-          std::cout << "--------------" << std::endl;
+        std::cout << "--------------" << std::endl;
 
-          for (auto i : m->get_vtable ())
-            {
-              std::cout << i.first << std::endl;
-              i.second->print ();
-              std::cout << std::endl;
-            }
+        for (auto i : m->get_vtable ())
+          {
+            std::cout << i.first << std::endl;
+            i.second->print ();
+            std::cout << std::endl;
+          }
 
-          delete m;
-        }
+        delete m;
+      }
     }
   catch (const char *e)
     {

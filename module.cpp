@@ -476,6 +476,12 @@ mod_exec (Module &mod)
                             // ()
                             //           << '\n';
                             mod.get_ambig () = fmod->get_ambig ();
+
+                            for (int i : fmod->get_backtrace ())
+                              {
+                                mod.get_backtrace ().push_back (i);
+                              }
+
                             IR (mod.get_ambig ());
                             mod.get_saw_ambig () = true;
 
@@ -1154,7 +1160,7 @@ ambig_test:
           for (int i = 0; i < mod.get_backtrace ().get_size (); i++)
             {
               std::cerr << "#" << (i + 1) << " ";
-              if (i < mod.get_code_lines ().get_size ()
+              if (mod.get_backtrace ()[i] < mod.get_code_lines ().get_size ()
                   && mod.get_backtrace ()[i] - 1
                          < mod.get_code_lines ().get_size ())
                 {
@@ -2163,6 +2169,36 @@ expr_eval (Module &mod, Expr *e)
                                 }
 
                               mod_exec (*fmod);
+
+                              if (fmod->get_saw_ambig ())
+                                {
+                                  // here;
+                                  // std::cout << fmod->get_ambig
+                                  // ()->get_ref_count
+                                  // ()
+                                  //           << '\n';
+                                  mod.get_ambig () = fmod->get_ambig ();
+
+                                  for (int i : fmod->get_backtrace ())
+                                    {
+                                      mod.get_backtrace ().push_back (i);
+                                    }
+
+                                  // IR (mod.get_ambig ());
+                                  DR (mod.get_ambig ());
+                                  mod.get_saw_ambig () = true;
+
+                                  DR (co);
+
+                                  delete fmod;
+                                  // here;
+                                  // std::cout << mod.get_ambig
+                                  // ()->get_ref_count ()
+                                  //           << '\n';
+                                  // DR (mod.get_ambig ());
+                                  DR (name_eval);
+                                  goto ambig_test;
+                                }
 
                               /**
                                * In statement side we
