@@ -2136,8 +2136,8 @@ expr_eval (Module &mod, Expr *e)
                               CodedFunction *cf
                                   = static_cast<CodedFunction *> (fo_f);
 
-                              // printf ("%d %d\n", cf->get_args
-                              // ().get_size (),
+                              // printf ("%d %d\n", cf->get_args ().get_size
+                              // (),
                               //         args_eval.get_size ());
                               assert (cf->get_args ().get_size ()
                                       == args_eval.get_size ());

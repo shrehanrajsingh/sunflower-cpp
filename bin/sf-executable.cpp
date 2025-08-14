@@ -87,12 +87,23 @@ main (int argc, char *argv[])
       while (std::getline (ifs, p))
         s += p + '\n';
 
+      sf::Vec<sf::Str> lines;
+      lines.push_back ("");
+
+      for (char c : s)
+        {
+          if (c == '\n')
+            lines.push_back ("");
+          else
+            lines.back ().push_back (c);
+        }
+
       sf::Vec<sf::Token *> r = sf::tokenize ((char *)s.c_str ());
       sf::Vec<sf::Statement *> ast = sf::stmt_gen (r);
 
       sf::native::add_natives (ast);
 
-      sf::Module *m = new sf::Module (ModuleType::File, ast);
+      sf::Module *m = new sf::Module (ModuleType::File, ast, lines);
 
       try
         {
