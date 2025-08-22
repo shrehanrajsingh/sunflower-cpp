@@ -1856,6 +1856,31 @@ stmt_gen (Vec<Token *> &toks)
 
                 i = block_end_idx - 1;
               }
+            else if (kw == "import")
+              {
+                assert (i + 3 < toks.get_size ());
+                Token *path = toks[i + 1];
+                assert (path->get_type () == TokenType::String);
+
+                Token *as_tok = toks[i + 2];
+                assert (as_tok->get_type () == TokenType::Keyword
+                        && static_cast<KeywordToken *> (as_tok)->get_val ()
+                               == "as");
+
+                Token *alias = toks[i + 3];
+                assert (alias->get_type () == TokenType::Identifier);
+
+                Str alias_str
+                    = static_cast<IdentifierToken *> (alias)->get_val ();
+
+                Str path_str = static_cast<StringToken *> (path)->get_val ();
+
+                res.push_back (static_cast<Statement *> (
+                    new ImportStatement (path_str, alias_str)));
+                SET_LINE_NUMBER (res, c);
+
+                i += 3;
+              }
           }
           break;
 

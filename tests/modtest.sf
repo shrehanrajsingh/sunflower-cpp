@@ -1,0 +1,7 @@
+fun factorial (n)
+    a = 1
+
+    for i in 2 to n + 1
+        a = a * i
+    
+    return a

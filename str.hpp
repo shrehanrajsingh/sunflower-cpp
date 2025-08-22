@@ -130,6 +130,18 @@ public:
     return res;
   }
 
+  int
+  find (char c)
+  {
+    for (int i = 0; i < size (); i++)
+      {
+        if (v[i] == c)
+          return i;
+      }
+
+    return -1;
+  }
+
   friend Str operator+ (const Str &, const char);
   friend bool operator== (const Str &, const Str &);
   friend bool operator== (const Str &, char *);

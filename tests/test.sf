@@ -1,41 +1,4 @@
-class BST
-    val = none
-    left = none
-    right = none
+import 'modtest.sf' as other
 
-    fun _init (self, val, left, right)
-        self.val = val
-        self.left = left
-        self.right = right
-    
-    fun insert (self, val)
-        if val == self.val
-            return ? "Duplicate value received"
-        
-        if val < self.val
-            if not self.left
-                self.left = BST (val, none, none)
-            else
-                self.left.insert (val)
-        else if val > self.val
-            if not self.right
-                self.right = BST (val, none, none)
-            else
-                self.right.insert (val)
-    
-    fun print (self)
-        write (self.val)
-
-        if self.left
-            self.left.print ()
-        if self.right
-            self.right.print ()
-
-bst = BST (100, none, none)
-bst.insert (99)
-bst.insert (101)
-bst.insert (98)
-bst.insert (102)
-bst.insert (100)
-
-bst.print ()
+factorial = other.factorial
+write (factorial (5))

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "arithmetic.hpp"
+#include "environment.hpp"
 #include "expr.hpp"
 #include "header.hpp"
 #include "object.hpp"
@@ -35,6 +36,8 @@ private:
   bool saw_ambig;
   Object *ret;
   Object *ambig;
+
+  Environment *env;
 
   Vec<Str> code_lines;
   Vec<int> backtrace;
@@ -77,6 +80,22 @@ public:
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
         code_lines (lines)
+  {
+  }
+
+  Module (ModuleType t, Vec<Statement *> &st, Vec<Str> &lines,
+          Environment *_Env)
+      : type (t), stmts (st), parent (nullptr), ret (nullptr),
+        continue_exec (true), ambig (nullptr), saw_ambig (false),
+        code_lines (lines), env (_Env)
+  {
+  }
+
+  Module (ModuleType t, Vec<Statement *> &&st, Vec<Str> &lines,
+          Environment *_Env)
+      : type (t), stmts (st), parent (nullptr), ret (nullptr),
+        continue_exec (true), ambig (nullptr), saw_ambig (false),
+        code_lines (lines), env (_Env)
   {
   }
 
@@ -145,6 +164,12 @@ public:
   get_continue_exec ()
   {
     return continue_exec;
+  }
+
+  inline Environment *&
+  get_env ()
+  {
+    return env;
   }
 
   Module *

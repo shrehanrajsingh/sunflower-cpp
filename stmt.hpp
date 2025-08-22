@@ -15,6 +15,7 @@ enum class StatementType
   WhileStmt = 6,
   ClassDeclStmt = 7,
   RepeatStmt = 8,
+  ImportStmt = 9,
   NoStmt,
 };
 
@@ -477,5 +478,51 @@ public:
   }
 
   ~RepeatStatement () {}
+};
+
+class ImportStatement : public Statement
+{
+private:
+  Str filepath;
+  Str alias;
+
+public:
+  ImportStatement ()
+      : Statement (StatementType::ImportStmt), filepath{ "" }, alias{ "" }
+  {
+  }
+
+  ImportStatement (Str _FilePath)
+      : Statement (StatementType::ImportStmt), filepath{ _FilePath },
+        alias{ "" }
+  {
+  }
+
+  ImportStatement (Str _FilePath, Str _Alias)
+      : Statement (StatementType::ImportStmt), filepath{ _FilePath },
+        alias{ _Alias }
+  {
+  }
+
+  inline Str &
+  get_filepath ()
+  {
+    return filepath;
+  }
+
+  inline Str &
+  get_alias ()
+  {
+    return alias;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "Import Statement: path=" << filepath << ", alias=" << alias
+              << std::endl;
+  }
+
+  ~ImportStatement () {}
 };
 } // namespace sf

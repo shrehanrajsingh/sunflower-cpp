@@ -1,4 +1,7 @@
 #include "module.hpp"
+#include "ast.hpp"
+#include "native/native.hpp"
+#include "stmt.hpp"
 
 namespace sf
 {
@@ -1112,6 +1115,90 @@ mod_exec (Module &mod)
 
             mod.set_variable (sfc->get_name ().get_internal_buffer (),
                               static_cast<Object *> (sfc));
+          }
+          break;
+
+        case StatementType::ImportStmt:
+          {
+            ImportStatement *ist = static_cast<ImportStatement *> (st);
+            Str &alias = ist->get_alias ();
+            Str &path = ist->get_filepath ();
+
+            std::ifstream mfp (path.get_internal_buffer ());
+            std::ifstream main_f;
+
+            Environment *n_env = new Environment ();
+            n_env->get_args () = mod.get_env ()->get_args ();
+            n_env->get_syspaths () = mod.get_env ()->get_syspaths ();
+
+            if (!mfp)
+              {
+                /* go through env paths */
+                Environment *&env = mod.get_env ();
+
+                if (env == nullptr)
+                  {
+                    std::cerr << "File '" << path << "' does not exist"
+                              << std::endl;
+                    exit (-1);
+                  }
+                else
+                  {
+                    for (Str &pt : env->get_syspaths ())
+                      {
+                        Str np = pt + path;
+
+                        std::ifstream file_np (np.get_internal_buffer ());
+
+                        if (!!file_np)
+                          {
+                            file_np.close ();
+                            main_f = std::ifstream (np.get_internal_buffer ());
+
+                            int p_sl = path.find ('/');
+                            Str p_dir;
+
+                            for (int i = 0; i < p_sl; i++)
+                              p_dir.push_back (path[i]);
+
+                            n_env->add_path (pt + p_dir);
+                          }
+                      }
+                  }
+              }
+
+            std::string s, p;
+            while (std::getline (main_f, p))
+              s += p + '\n';
+
+            Vec<Str> lines;
+            lines.push_back ("");
+
+            for (char c : s)
+              {
+                if (c == '\n')
+                  lines.push_back ("");
+                else
+                  lines.back ().push_back (c);
+              }
+
+            // std::cout << s << std::endl;
+            Vec<Token *> r = tokenize ((char *)s.c_str ());
+
+            Vec<Statement *> ast = stmt_gen (r);
+
+            native::add_natives (ast);
+
+            Module *m = new Module (ModuleType::File, ast, lines);
+            m->get_env () = n_env;
+
+            mod_exec (*m);
+
+            Object *mo = static_cast<Object *> (new ModuleObject (m));
+
+            mod.set_variable (alias.get_internal_buffer (), mo);
+
+            main_f.close ();
           }
           break;
 
@@ -2391,6 +2478,25 @@ expr_eval (Module &mod, Expr *e)
 
               res = cl->get_mod ()->get_variable (
                   member.get_internal_buffer ());
+
+              IR (res);
+              AMBIG_CHECK (res, {});
+            }
+            break;
+
+          case ObjectType::ModuleObject:
+            {
+              ModuleObject *mo = static_cast<ModuleObject *> (o_parent);
+              Module *mo_mod = mo->get_mod ();
+
+              if (!mo_mod->has_variable (member.get_internal_buffer ()))
+                {
+                  throw std::runtime_error (
+                      (Str{ "Module does not have member " } + member)
+                          .get_internal_buffer ());
+                }
+
+              res = mo_mod->get_variable (member.get_internal_buffer ());
 
               IR (res);
               AMBIG_CHECK (res, {});

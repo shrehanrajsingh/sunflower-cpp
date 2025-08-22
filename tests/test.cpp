@@ -2,6 +2,8 @@
 
 #define TEST(X) test##X ()
 
+sf::Environment *sf_env = nullptr;
+
 /* vector test */
 void
 test1 ()
@@ -210,6 +212,8 @@ test4 ()
 
   std::ifstream fl ("../../tests/test.sf");
 
+  sf_env->add_path ("../../tests/");
+
   if (!fl)
     {
       ERRMSG ("Invalid file path");
@@ -292,7 +296,7 @@ test4 ()
     {
       // while (1)
       {
-        Module *m = new Module (ModuleType::File, ast, lines);
+        Module *m = new Module (ModuleType::File, ast, lines, sf_env);
 
         mod_exec (*m);
 
@@ -416,6 +420,12 @@ test6 ()
 int
 main (int argc, char const *argv[])
 {
+  sf_env = new sf::Environment ();
+  for (int i = 0; i < argc; i++)
+    {
+      sf_env->add_arg (argv[i]);
+    }
+
   TEST (4);
   // std::cout << "Program ended." << std::endl;
   return 0;

@@ -30,6 +30,7 @@ add_library(sunflower
     sfdict.hpp sfdict.cpp
     arithmetic.hpp arithmetic.cpp
     sfclass.hpp sfclass.cpp
+    environment.hpp environment.cpp
 
     # native/native.hpp native/native.cpp
     # native/putln.hpp native/putln.cpp

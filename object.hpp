@@ -58,6 +58,7 @@ enum class ObjectType
   SfClass = 4,
   ClassObj = 5,
   AmbigObject = 6,
+  ModuleObject = 7,
   NoObject,
 };
 
@@ -256,6 +257,32 @@ public:
   }
 
   ~AmbigObject () {}
+};
+
+class ModuleObject : public Object
+{
+private:
+  Module *mod;
+
+public:
+  ModuleObject () : Object (ObjectType::ModuleObject) {}
+  ModuleObject (Module *_Mod) : Object (ObjectType::ModuleObject), mod{ _Mod }
+  {
+  }
+
+  inline Module *&
+  get_mod ()
+  {
+    return mod;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "ModuleObject\n";
+  }
+
+  ~ModuleObject () {}
 };
 
 #define OBJ_IS_INT(X)                                                         \
