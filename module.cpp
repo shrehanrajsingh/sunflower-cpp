@@ -237,6 +237,64 @@ mod_exec (Module &mod)
                       }
                       break;
 
+                    case ObjectType::Constant:
+                      {
+                        ConstantObject *co
+                            = static_cast<ConstantObject *> (oarr);
+
+                        Constant *co_c = co->get_c ().get ();
+
+                        switch (co_c->get_type ())
+                          {
+                          case ConstantType::String:
+                            {
+                              StringConstant *sc
+                                  = static_cast<StringConstant *> (co_c);
+
+                              Str &val = sc->get_value ();
+
+                              assert (OBJ_IS_INT (oidx)
+                                      && "Index must be an integer");
+
+                              int iv = static_cast<IntegerConstant *> (
+                                           static_cast<ConstantObject *> (oidx)
+                                               ->get_c ()
+                                               .get ())
+                                           ->get_value ();
+
+                              assert (iv > -1 && iv < val.size ()
+                                      && "Index out of bounds");
+
+                              assert (OBJ_IS_STR (val_eval)
+                                      && "Value for string assignment must be "
+                                         "a string");
+
+                              Str &rhs_val
+                                  = static_cast<StringConstant *> (
+                                        static_cast<ConstantObject *> (
+                                            val_eval)
+                                            ->get_c ()
+                                            .get ())
+                                        ->get_value ();
+
+                              assert (rhs_val.size () == 1
+                                      && "Expected a single character");
+
+                              val[iv] = rhs_val[0];
+                              IR (val_eval);
+                            }
+                            break;
+
+                          default:
+                            {
+                              std::cerr << "Invalid constant assignment\n";
+                              exit (-1);
+                            }
+                            break;
+                          }
+                      }
+                      break;
+
                     default:
                       break;
                     }
