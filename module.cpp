@@ -248,25 +248,9 @@ mod_exec (Module &mod)
                           {
                           case ConstantType::String:
                             {
-                              StringConstant *sc
-                                  = static_cast<StringConstant *> (co_c);
-
-                              Str &val = sc->get_value ();
-
-                              assert (OBJ_IS_INT (oidx)
-                                      && "Index must be an integer");
-
-                              int iv = static_cast<IntegerConstant *> (
-                                           static_cast<ConstantObject *> (oidx)
-                                               ->get_c ()
-                                               .get ())
-                                           ->get_value ();
-
-                              assert (iv > -1 && iv < val.size ()
-                                      && "Index out of bounds");
-
                               assert (OBJ_IS_STR (val_eval)
-                                      && "Value for string assignment must be "
+                                      && "Value for string "
+                                         "assignment must be "
                                          "a string");
 
                               Str &rhs_val
@@ -277,11 +261,100 @@ mod_exec (Module &mod)
                                             .get ())
                                         ->get_value ();
 
-                              assert (rhs_val.size () == 1
-                                      && "Expected a single character");
+                              StringConstant *sc
+                                  = static_cast<StringConstant *> (co_c);
 
-                              val[iv] = rhs_val[0];
-                              IR (val_eval);
+                              Str &sc_val = sc->get_value ();
+
+                              switch (oidx->get_type ())
+                                {
+                                case ObjectType::Constant:
+                                  {
+                                    ConstantObject *idx_co
+                                        = static_cast<ConstantObject *> (oidx);
+
+                                    Constant *idx_c = idx_co->get_c ().get ();
+
+                                    switch (idx_c->get_type ())
+                                      {
+                                      case ConstantType::Integer:
+                                        {
+                                          int iv = static_cast<
+                                                       IntegerConstant *> (
+                                                       static_cast<
+                                                           ConstantObject *> (
+                                                           oidx)
+                                                           ->get_c ()
+                                                           .get ())
+                                                       ->get_value ();
+
+                                          assert (iv > -1
+                                                  && iv < sc_val.size ()
+                                                  && "Index out of bounds");
+
+                                          assert (rhs_val.size () == 1
+                                                  && "Expected a single "
+                                                     "character");
+
+                                          sc_val[iv] = rhs_val[0];
+                                        }
+                                        break;
+
+                                      default:
+                                        break;
+                                      }
+                                  }
+                                  break;
+
+                                case ObjectType::ArrayObj:
+                                  {
+                                    /*
+                                      a = "somelongstring"
+                                      a[i to j] = "string of size (j-i)"
+                                    */
+
+                                    ArrayObject *ao
+                                        = static_cast<ArrayObject *> (oidx);
+
+                                    Vec<Object *> &ao_vals = ao->get_vals ();
+
+                                    assert (ao_vals.get_size ()
+                                                == rhs_val.size ()
+                                            && "String assignment requires "
+                                               "bounds to be equal to size of "
+                                               "value string");
+
+                                    for (int i = 0; i < ao_vals.get_size ();
+                                         i++)
+                                      {
+                                        Object *ao_i = ao_vals[i];
+
+                                        assert (OBJ_IS_INT (ao_i)
+                                                && "Values in array index "
+                                                   "must be integers");
+
+                                        int iv
+                                            = static_cast<IntegerConstant *> (
+                                                  static_cast<
+                                                      ConstantObject *> (ao_i)
+                                                      ->get_c ()
+                                                      .get ())
+                                                  ->get_value ();
+
+                                        sc_val[iv] = rhs_val[i];
+                                      }
+                                  }
+                                  break;
+
+                                default:
+                                  {
+                                    std::cerr << "Invalid index for string "
+                                                 "assignment.";
+
+                                    exit (-1);
+                                  }
+                                  break;
+                                }
                             }
                             break;
 

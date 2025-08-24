@@ -1,3 +1,7 @@
 a = "hello"
 a[0] = 'H'
 write (a)
+
+a = "12hel6789"
+a[2 to 5] = "345"
+write (a)
