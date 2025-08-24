@@ -1,4 +1,3 @@
 import 'modtest.sf' as other
 
-factorial = other.factorial
-write (factorial (5))
+write (other.factorial (10))
