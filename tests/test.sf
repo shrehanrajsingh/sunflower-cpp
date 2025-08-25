@@ -1,3 +1,2 @@
 a = '123hel789'
-a.replace ('hel', '456')
-write (a)
+write (a.replace ('hel', '456'))

@@ -2172,6 +2172,8 @@ expr_eval (Module &mod, Expr *e)
                       delete fmod;
                     });
 
+                    res = ret;
+
                     /**
                      * nf->call returns an object with
                      * an increased refcount (to save ownership

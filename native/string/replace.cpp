@@ -28,11 +28,11 @@ _native_replace (Module *mod)
 
   self_val.replace (a_val, b_val);
 
-  sf::Object *r = static_cast<sf::Object *> (new sf::ConstantObject (
-      static_cast<sf::Constant *> (new sf::NoneConstant ())));
+  // sf::Object *r = static_cast<sf::Object *> (new sf::ConstantObject (
+  //     static_cast<sf::Constant *> (new sf::NoneConstant ())));
 
-  IR (r);
-  return r;
+  IR (self);
+  return self;
 }
 
 SF_API void
