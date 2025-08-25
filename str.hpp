@@ -131,9 +131,9 @@ public:
   }
 
   int
-  find (char c)
+  find (char c, int start = 0)
   {
-    for (int i = 0; i < size (); i++)
+    for (int i = start; i < size (); i++)
       {
         if (v[i] == c)
           return i;
@@ -143,9 +143,9 @@ public:
   }
 
   int
-  find (Str &rhs)
+  find (Str &rhs, int start = 0)
   {
-    for (int i = 0; i < size (); i++)
+    for (int i = start; i < size (); i++)
       {
         bool match = true;
         for (int j = 0; j < rhs.size () && i + j < size (); j++)

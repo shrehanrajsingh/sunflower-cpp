@@ -10,6 +10,7 @@
 #include "write.hpp"
 
 /* string methods */
+#include "string/count.hpp"
 #include "string/find.hpp"
 #include "string/replace.hpp"
 
