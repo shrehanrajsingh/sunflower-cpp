@@ -142,6 +142,43 @@ public:
     return -1;
   }
 
+  void
+  replace (Str &a, Str &b)
+  {
+    if (a.size () == 0)
+      return;
+
+    Vec<char> result;
+    for (size_t i = 0; i < size ();)
+      {
+        bool match = true;
+        for (size_t j = 0; j < a.size () && i + j < size (); j++)
+          {
+            if (v[i + j] != a[j])
+              {
+                match = false;
+                break;
+              }
+          }
+
+        if (match && i + a.size () <= size ())
+          {
+            for (size_t j = 0; j < b.size (); j++)
+              {
+                result.push_back (b[j]);
+              }
+            i += a.size ();
+          }
+        else
+          {
+            result.push_back (v[i]);
+            i++;
+          }
+      }
+
+    v = std::move (result);
+  }
+
   friend Str operator+ (const Str &, const char);
   friend bool operator== (const Str &, const Str &);
   friend bool operator== (const Str &, char *);

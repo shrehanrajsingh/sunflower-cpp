@@ -9,6 +9,9 @@
 #include "putln.hpp"
 #include "write.hpp"
 
+/* string methods */
+#include "string/replace.hpp"
+
 namespace sf
 {
 namespace native

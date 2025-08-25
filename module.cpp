@@ -494,9 +494,11 @@ mod_exec (Module &mod)
                             = static_cast<NativeFunction *> (fv);
 
                         if (!nf->get_va_args ())
-                          assert (nf->get_args ().get_size ()
-                                  == args_eval.get_size ()
-                                         + fv->get_self_arg ());
+                          {
+                            assert (nf->get_args ().get_size ()
+                                    == args_eval.get_size ()
+                                           + fv->get_self_arg ());
+                          }
                         else
                           assert (nf->get_args ().get_size ()
                                   > 0); /* at least one arg */
@@ -2631,6 +2633,53 @@ expr_eval (Module &mod, Expr *e)
 
               IR (res);
               AMBIG_CHECK (res, {});
+            }
+            break;
+
+          case ObjectType::Constant:
+            {
+              ConstantObject *co = static_cast<ConstantObject *> (o_parent);
+              Constant *co_c = co->get_c ().get ();
+
+              switch (co_c->get_type ())
+                {
+                case ConstantType::String:
+                  {
+                    Str meth_name = Str{ "''." } + member;
+
+                    if (!mod.has_variable (meth_name.get_internal_buffer ()))
+                      {
+                        throw std::runtime_error (
+                            (Str{ "No such native method found: " }
+                             + meth_name)
+                                .get_internal_buffer ());
+                      }
+
+                    res = mod.get_variable (meth_name.get_internal_buffer ());
+
+                    IR (res);
+                    AMBIG_CHECK (res, {});
+
+                    if (res->get_type () == ObjectType::FuncObject
+                        && static_cast<FunctionObject *> (res)
+                               ->get_v ()
+                               ->get_self_arg ())
+                      {
+                        if (res->get_self_arg () != nullptr)
+                          {
+                            DR (res->get_self_arg ());
+                            res->get_self_arg () = nullptr;
+                          }
+
+                        res->get_self_arg () = o_parent;
+                        IR (o_parent);
+                      }
+                  }
+                  break;
+
+                default:
+                  break;
+                }
             }
             break;
 
