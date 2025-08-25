@@ -1,2 +1,3 @@
 a = '123hel789'
 write (a.replace ('hel', '456'))
+write (a.find ('456'))

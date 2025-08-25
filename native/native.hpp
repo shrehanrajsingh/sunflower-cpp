@@ -10,6 +10,7 @@
 #include "write.hpp"
 
 /* string methods */
+#include "string/find.hpp"
 #include "string/replace.hpp"
 
 namespace sf

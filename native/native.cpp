@@ -13,6 +13,7 @@ add_natives (Vec<Statement *> &m)
 
   /* string methods */
   _add_native_replace (m);
+  _add_native_find (m);
 }
 } // namespace native
 } // namespace sf

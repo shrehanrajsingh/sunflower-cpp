@@ -142,6 +142,28 @@ public:
     return -1;
   }
 
+  int
+  find (Str &rhs)
+  {
+    for (int i = 0; i < size (); i++)
+      {
+        bool match = true;
+        for (int j = 0; j < rhs.size () && i + j < size (); j++)
+          {
+            if (v[i + j] != rhs[j])
+              {
+                match = false;
+                break;
+              }
+          }
+
+        if (match)
+          return i;
+      }
+
+    return -1;
+  }
+
   void
   replace (Str &a, Str &b)
   {
