@@ -1,2 +1,2 @@
-a = '456456456'
-write (a.count ('456'))
+a = 10
+write (a.base (8))

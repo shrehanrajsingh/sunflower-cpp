@@ -2679,6 +2679,40 @@ expr_eval (Module &mod, Expr *e)
                   }
                   break;
 
+                case ConstantType::Integer:
+                  {
+                    Str meth_name = Str{ "0." } + member;
+
+                    if (!mod.has_variable (meth_name.get_internal_buffer ()))
+                      {
+                        throw std::runtime_error (
+                            (Str{ "No such native method found: " }
+                             + meth_name)
+                                .get_internal_buffer ());
+                      }
+
+                    res = mod.get_variable (meth_name.get_internal_buffer ());
+
+                    IR (res);
+                    AMBIG_CHECK (res, {});
+
+                    if (res->get_type () == ObjectType::FuncObject
+                        && static_cast<FunctionObject *> (res)
+                               ->get_v ()
+                               ->get_self_arg ())
+                      {
+                        if (res->get_self_arg () != nullptr)
+                          {
+                            DR (res->get_self_arg ());
+                            res->get_self_arg () = nullptr;
+                          }
+
+                        res->get_self_arg () = o_parent;
+                        IR (o_parent);
+                      }
+                  }
+                  break;
+
                 default:
                   break;
                 }

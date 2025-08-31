@@ -15,6 +15,9 @@ add_natives (Vec<Statement *> &m)
   _add_native_replace (m);
   _add_native_find (m);
   _add_native_count (m);
+
+  /* integer methods */
+  _add_native_int_base (m);
 }
 } // namespace native
 } // namespace sf

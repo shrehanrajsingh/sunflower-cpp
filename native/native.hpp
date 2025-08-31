@@ -14,6 +14,9 @@
 #include "string/find.hpp"
 #include "string/replace.hpp"
 
+/* integer methods */
+#include "int/base.hpp"
+
 namespace sf
 {
 namespace native
