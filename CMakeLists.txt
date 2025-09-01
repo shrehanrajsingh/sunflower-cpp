@@ -34,6 +34,8 @@ add_library(sunflower
     sfclass.hpp sfclass.cpp
     environment.hpp environment.cpp
 
+    win/sf-win.hpp win/sf-win.cpp
+
     # native/native.hpp native/native.cpp
     # native/putln.hpp native/putln.cpp
     # native/write.hpp native/write.cpp

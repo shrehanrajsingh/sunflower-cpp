@@ -51,7 +51,7 @@ tokenize (char *p)
           goto end_skip_inc;
         }
 
-      if (isnumber (d))
+      if (isdigit (d))
         {
           Str v;
           bool saw_dot = false;
@@ -66,7 +66,7 @@ tokenize (char *p)
                     saw_dot = true;
                 }
 
-              if (!isnumber (d) && d != '.')
+              if (!isdigit (d) && d != '.')
                 break;
 
               v.push_back (d);
