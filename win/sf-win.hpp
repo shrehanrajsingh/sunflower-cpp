@@ -10,6 +10,8 @@ extern "C"
 {
 #endif // __cplusplus
 
+  double pow (double, double);
+
 #if defined(__cplusplus)
 }
 #endif // __cplusplus
