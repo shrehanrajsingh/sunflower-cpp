@@ -145,7 +145,10 @@ public:
   int
   find (Str &rhs, int start = 0)
   {
-    for (int i = start; i < size (); i++)
+    if (rhs.size () + start >= size ())
+      return -1;
+
+    for (int i = start; i < size () - rhs.size () + 1; i++)
       {
         bool match = true;
         for (int j = 0; j < rhs.size () && i + j < size (); j++)
