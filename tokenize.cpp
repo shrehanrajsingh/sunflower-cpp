@@ -31,7 +31,7 @@ tokenize (char *p)
 
       if (isalpha (d) || d == '_')
         {
-          Str v;
+          Str v = "";
 
           while (isalnum (d) || d == '_')
             {
@@ -60,7 +60,10 @@ tokenize (char *p)
             {
               if (d == '.')
                 {
-                  if (saw_dot || !isdigit (*(p + 1)))
+                  if (!isdigit (*(p + 1)))
+                    break;
+
+                  if (saw_dot)
                     break;
                   else
                     saw_dot = true;

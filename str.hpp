@@ -3,221 +3,223 @@
 #include "header.hpp"
 #include "vec.hpp"
 
-namespace sf
-{
-class Str
-{
-private:
-  Vec<char> v;
+#include "str2.hpp"
 
-public:
-  Str () : v (Vec<char> ()) {};
-  ~Str () {};
-
-  Str (const Str &rhs) { v = rhs.v; }
-  Str (Str &&rhs) noexcept : v (std::move (rhs.v)) {}
-  Str (char &rhs) { v.push_back (rhs); }
-  //   Str (const Str &rhs) { v = std::move (rhs.v); }
-
-  Str &
-  operator= (const Str &rhs)
-  {
-    v = rhs.v;
-    return *this;
-  }
-
-  Str &
-  operator= (Str &&rhs) noexcept
-  {
-    v = std::move (rhs.v);
-    return *this;
-  }
-
-  Str (const char *_s)
-  {
-    char *s = (char *)_s;
-    while (*s)
-      push_back (*s++);
-  }
-
-  Str &
-  operator= (char *__raw_S)
-  {
-    v.clear ();
-    while (*__raw_S)
-      v.push_back (*__raw_S++);
-
-    return *this;
-  }
-
-  Str &
-  operator= (const char *__raw_S)
-  {
-    char *s = (char *)__raw_S;
-    v.clear ();
-    while (*s)
-      v.push_back (*s++);
-
-    return *this;
-  }
-
-  size_t
-  size () const
-  {
-    return v.get_size ();
-  }
-
-  void
-  push_back (char c)
-  {
-    v.push_back (c);
-  }
-
-  char
-  pop_back (void)
-  {
-    return v.pop_back ();
-  }
-
-  char &
-  operator[] (size_t i)
-  {
-    return v[i];
-  }
-
-  const char
-  operator[] (size_t i) const
-  {
-    return v[i];
-  }
-
-  char *
-  c_str ()
-  {
-    char *p;
-    char *s = p = new char[v.get_size () + 1];
-
-    for (char c : v)
-      *p++ = c;
-    *p++ = '\0';
-
-    return s;
-  }
-
-  char *
-  get_internal_buffer ()
-  {
-    return v.get ();
-  }
-
-  friend std::ostream &
-  operator<< (std::ostream &_Out, Str &rhs)
-  {
-    for (auto c : rhs.v)
-      _Out << c;
-
-    return _Out;
-  }
-
-  Str
-  operator+ (const Str &rhs)
-  {
-    Str res (*this);
-
-    for (size_t i = 0; i < rhs.size (); i++)
-      res.push_back (rhs[i]);
-
-    return res;
-  }
-
-  int
-  find (char c, int start = 0)
-  {
-    for (int i = start; i < size (); i++)
-      {
-        if (v[i] == c)
-          return i;
-      }
-
-    return -1;
-  }
-
-  int
-  find (Str &rhs, int start = 0)
-  {
-    if (rhs.size () + start >= size ())
-      return -1;
-
-    for (int i = start; i < size () - rhs.size () + 1; i++)
-      {
-        bool match = true;
-        for (int j = 0; j < rhs.size () && i + j < size (); j++)
-          {
-            if (v[i + j] != rhs[j])
-              {
-                match = false;
-                break;
-              }
-          }
-
-        if (match)
-          return i;
-      }
-
-    return -1;
-  }
-
-  void
-  replace (Str &a, Str &b)
-  {
-    if (a.size () == 0)
-      return;
-
-    Vec<char> result;
-    for (size_t i = 0; i < size ();)
-      {
-        bool match = true;
-        for (size_t j = 0; j < a.size () && i + j < size (); j++)
-          {
-            if (v[i + j] != a[j])
-              {
-                match = false;
-                break;
-              }
-          }
-
-        if (match && i + a.size () <= size ())
-          {
-            for (size_t j = 0; j < b.size (); j++)
-              {
-                result.push_back (b[j]);
-              }
-            i += a.size ();
-          }
-        else
-          {
-            result.push_back (v[i]);
-            i++;
-          }
-      }
-
-    v = std::move (result);
-  }
-
-  friend Str operator+ (const Str &, const char);
-  friend bool operator== (const Str &, const Str &);
-  friend bool operator== (const Str &, char *);
-  friend bool operator== (const Str &, char);
-  friend bool operator< (const Str &, const Str &);
-};
-
-// std::ostream &
-// operator<< (std::ostream &_Out, Str &rhs)
+// namespace sf
 // {
-//   for (auto c : rhs.v)
-//     _Out << c;
+// class Str
+// {
+// private:
+//   Vec<char> v;
 
-//   return _Out;
-// }
+// public:
+//   Str () : v (Vec<char> ()) {};
+//   ~Str () {};
 
-} // namespace sf
+//   Str (const Str &rhs) { v = rhs.v; }
+//   Str (Str &&rhs) noexcept : v (std::move (rhs.v)) {}
+//   Str (char &rhs) { v.push_back (rhs); }
+//   //   Str (const Str &rhs) { v = std::move (rhs.v); }
+
+//   Str &
+//   operator= (const Str &rhs)
+//   {
+//     v = rhs.v;
+//     return *this;
+//   }
+
+//   Str &
+//   operator= (Str &&rhs) noexcept
+//   {
+//     v = std::move (rhs.v);
+//     return *this;
+//   }
+
+//   Str (const char *_s)
+//   {
+//     char *s = (char *)_s;
+//     while (*s)
+//       push_back (*s++);
+//   }
+
+//   Str &
+//   operator= (char *__raw_S)
+//   {
+//     v.clear ();
+//     while (*__raw_S)
+//       v.push_back (*__raw_S++);
+
+//     return *this;
+//   }
+
+//   Str &
+//   operator= (const char *__raw_S)
+//   {
+//     char *s = (char *)__raw_S;
+//     v.clear ();
+//     while (*s)
+//       v.push_back (*s++);
+
+//     return *this;
+//   }
+
+//   size_t
+//   size () const
+//   {
+//     return v.get_size ();
+//   }
+
+//   void
+//   push_back (char c)
+//   {
+//     v.push_back (c);
+//   }
+
+//   char
+//   pop_back (void)
+//   {
+//     return v.pop_back ();
+//   }
+
+//   char &
+//   operator[] (size_t i)
+//   {
+//     return v[i];
+//   }
+
+//   const char
+//   operator[] (size_t i) const
+//   {
+//     return v[i];
+//   }
+
+//   char *
+//   c_str ()
+//   {
+//     char *p;
+//     char *s = p = new char[v.get_size () + 1];
+
+//     for (char c : v)
+//       *p++ = c;
+//     *p++ = '\0';
+
+//     return s;
+//   }
+
+//   char *
+//   get_internal_buffer ()
+//   {
+//     return v.get ();
+//   }
+
+//   friend std::ostream &
+//   operator<< (std::ostream &_Out, Str &rhs)
+//   {
+//     for (auto c : rhs.v)
+//       _Out << c;
+
+//     return _Out;
+//   }
+
+//   Str
+//   operator+ (const Str &rhs)
+//   {
+//     Str res (*this);
+
+//     for (size_t i = 0; i < rhs.size (); i++)
+//       res.push_back (rhs[i]);
+
+//     return res;
+//   }
+
+//   int
+//   find (char c, int start = 0)
+//   {
+//     for (int i = start; i < size (); i++)
+//       {
+//         if (v[i] == c)
+//           return i;
+//       }
+
+//     return -1;
+//   }
+
+//   int
+//   find (Str &rhs, int start = 0)
+//   {
+//     if (rhs.size () + start >= size ())
+//       return -1;
+
+//     for (int i = start; i < size () - rhs.size () + 1; i++)
+//       {
+//         bool match = true;
+//         for (int j = 0; j < rhs.size () && i + j < size (); j++)
+//           {
+//             if (v[i + j] != rhs[j])
+//               {
+//                 match = false;
+//                 break;
+//               }
+//           }
+
+//         if (match)
+//           return i;
+//       }
+
+//     return -1;
+//   }
+
+//   void
+//   replace (Str &a, Str &b)
+//   {
+//     if (a.size () == 0)
+//       return;
+
+//     Vec<char> result;
+//     for (size_t i = 0; i < size ();)
+//       {
+//         bool match = true;
+//         for (size_t j = 0; j < a.size () && i + j < size (); j++)
+//           {
+//             if (v[i + j] != a[j])
+//               {
+//                 match = false;
+//                 break;
+//               }
+//           }
+
+//         if (match && i + a.size () <= size ())
+//           {
+//             for (size_t j = 0; j < b.size (); j++)
+//               {
+//                 result.push_back (b[j]);
+//               }
+//             i += a.size ();
+//           }
+//         else
+//           {
+//             result.push_back (v[i]);
+//             i++;
+//           }
+//       }
+
+//     v = std::move (result);
+//   }
+
+//   friend Str operator+ (const Str &, const char);
+//   friend bool operator== (const Str &, const Str &);
+//   friend bool operator== (const Str &, char *);
+//   friend bool operator== (const Str &, char);
+//   friend bool operator< (const Str &, const Str &);
+// };
+
+// // std::ostream &
+// // operator<< (std::ostream &_Out, Str &rhs)
+// // {
+// //   for (auto c : rhs.v)
+// //     _Out << c;
+
+// //   return _Out;
+// // }
+
+// } // namespace sf
