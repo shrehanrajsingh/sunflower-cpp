@@ -60,7 +60,7 @@ tokenize (char *p)
             {
               if (d == '.')
                 {
-                  if (saw_dot)
+                  if (saw_dot || !isdigit (*(p + 1)))
                     break;
                   else
                     saw_dot = true;

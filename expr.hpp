@@ -495,8 +495,8 @@ class LogicalAndExpr : public Expr
 
 public:
   LogicalAndExpr () : Expr (ExprType::LogicalAnd) {}
-  LogicalAndExpr (Expr *_L, Expr *_R)
-      : Expr (ExprType::LogicalAnd), left{ _L }, right{ _R }
+  LogicalAndExpr (Expr *__raw_L, Expr *__raw_R)
+      : Expr (ExprType::LogicalAnd), left{ __raw_L }, right{ __raw_R }
   {
   }
 
@@ -544,8 +544,8 @@ class LogicalOrExpr : public Expr
 
 public:
   LogicalOrExpr () : Expr (ExprType::LogicalOr) {}
-  LogicalOrExpr (Expr *_L, Expr *_R)
-      : Expr (ExprType::LogicalOr), left{ _L }, right (_R)
+  LogicalOrExpr (Expr *__raw_L, Expr *__raw_R)
+      : Expr (ExprType::LogicalOr), left{ __raw_L }, right (__raw_R)
   {
   }
 

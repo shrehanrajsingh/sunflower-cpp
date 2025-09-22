@@ -24,7 +24,12 @@ _native_int_base (Module *mod)
   int p = 0;
   while (self_val)
     {
-      base_conv += (self_val % a_val) * pow (10, p++);
+      int a = 1;
+      int pp = p++;
+      while (pp--)
+        a *= 10;
+
+      base_conv += (self_val % a_val) * a;
       self_val /= a_val;
     }
 

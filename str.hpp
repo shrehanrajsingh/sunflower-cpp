@@ -41,19 +41,19 @@ public:
   }
 
   Str &
-  operator= (char *_S)
+  operator= (char *__raw_S)
   {
     v.clear ();
-    while (*_S)
-      v.push_back (*_S++);
+    while (*__raw_S)
+      v.push_back (*__raw_S++);
 
     return *this;
   }
 
   Str &
-  operator= (const char *_S)
+  operator= (const char *__raw_S)
   {
-    char *s = (char *)_S;
+    char *s = (char *)__raw_S;
     v.clear ();
     while (*s)
       v.push_back (*s++);
