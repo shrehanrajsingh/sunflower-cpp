@@ -13,9 +13,4 @@ fun about (req, res)
 
 server.get ('/about', about)
 
-# all same
-th (fun \ server.serve (), []).detach ()
-# th (server.serve, []).detach ()
-# th (server.serve).detach ()
-
-th.wait_all ()
+server.serve ()
