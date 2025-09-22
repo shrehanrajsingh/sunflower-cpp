@@ -168,13 +168,13 @@ public:
   Str
   operator+ (const Str &rhs) const
   {
-    Str result;
-    result.resize (len + rhs.len + 1);
-    memcpy (result.v, v, len);
-    memcpy (result.v + len, rhs.v, rhs.len);
-    result.len = len + rhs.len;
-    result.v[result.len] = '\0';
-    return result;
+    Str res;
+    res.resize (len + rhs.len + 1);
+    memcpy (res.v, v, len);
+    memcpy (res.v + len, rhs.v, rhs.len);
+    res.len = len + rhs.len;
+    res.v[res.len] = '\0';
+    return res;
   }
 
   int
@@ -210,22 +210,22 @@ public:
     if (a.size () == 0)
       return;
 
-    Str result;
+    Str res;
     for (size_t i = 0; i < size ();)
       {
         if (i + a.size () <= size () && strncmp (v + i, a.v, a.size ()) == 0)
           {
-            result = result + b;
+            res = res + b;
             i += a.size ();
           }
         else
           {
-            result.push_back (v[i]);
+            res.push_back (v[i]);
             i++;
           }
       }
 
-    *this = std::move (result);
+    *this = std::move (res);
   }
 
   friend Str operator+ (const Str &, const char);
