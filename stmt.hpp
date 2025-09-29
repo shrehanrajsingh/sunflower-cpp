@@ -16,6 +16,7 @@ enum class StatementType
   ClassDeclStmt = 7,
   RepeatStmt = 8,
   ImportStmt = 9,
+  TryCatchStmt = 10,
   NoStmt,
 };
 
@@ -524,5 +525,69 @@ public:
   }
 
   ~ImportStatement () {}
+};
+
+class TryCatchStmt : public Statement
+{
+private:
+  Vec<Statement *> try_body;
+  Vec<Statement *> catch_body;
+  Expr *catch_clause;
+
+public:
+  TryCatchStmt ()
+      : Statement (StatementType::TryCatchStmt), catch_clause{ nullptr }
+  {
+  }
+
+  TryCatchStmt (Expr *_CClause)
+      : Statement (StatementType::TryCatchStmt), catch_clause{ _CClause }
+  {
+  }
+
+  TryCatchStmt (Expr *_CClause, Vec<Statement *> _TryBody,
+                Vec<Statement *> _CatchBody)
+      : Statement (StatementType::TryCatchStmt), catch_clause{ _CClause },
+        try_body{ _TryBody }, catch_body{ _CatchBody }
+  {
+  }
+
+  inline Vec<Statement *> &
+  get_try_body ()
+  {
+    return try_body;
+  }
+
+  inline Vec<Statement *> &
+  get_catch_body ()
+  {
+    return catch_body;
+  }
+
+  inline Expr *&
+  get_cclause ()
+  {
+    return catch_clause;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "TryCatchStmt:\nTry Body (" << try_body.get_size () << ")\n";
+    for (Statement *&i : try_body)
+      i->print ();
+
+    std::cout << "catch_clause: ";
+    if (catch_clause)
+      catch_clause->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Catch Body (" << catch_body.get_size () << ")\n";
+    for (Statement *&i : catch_body)
+      i->print ();
+  }
+
+  ~TryCatchStmt () {}
 };
 } // namespace sf

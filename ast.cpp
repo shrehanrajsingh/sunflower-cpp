@@ -1881,6 +1881,71 @@ stmt_gen (Vec<Token *> &toks)
 
                 i += 3;
               }
+            else if (kw == "try")
+              {
+                TryCatchStmt *st = new TryCatchStmt ();
+
+                size_t block_st_idx = i + 2;
+                size_t block_end_idx = _sf_ast_getblock_idx (
+                    toks, i, _sf_ast_gettabspace (toks, i));
+
+                Vec<Token *> trybody_toks;
+                for (size_t j = block_st_idx; j < block_end_idx; j++)
+                  {
+                    trybody_toks.push_back (toks[j]);
+                  }
+
+                st->get_try_body () = stmt_gen (trybody_toks);
+
+                while (
+                    block_end_idx < toks.get_size ()
+                    && (toks[block_end_idx]->get_type () == TokenType::Newline
+                        || toks[block_end_idx]->get_type ()
+                               == TokenType::Tabspace))
+                  block_end_idx++;
+
+                if (block_end_idx < toks.get_size ()
+                    && toks[block_end_idx]->get_type () == TokenType::Keyword
+                    && static_cast<KeywordToken *> (toks[block_end_idx])
+                               ->get_val ()
+                           == "catch")
+                  {
+                    block_end_idx++; /* eat 'catch' */
+
+                    size_t cc_end_idx = block_end_idx;
+                    for (size_t j = block_end_idx; j < toks.get_size (); j++)
+                      {
+                        if (toks[j]->get_type () == TokenType::Newline)
+                          {
+                            cc_end_idx = j;
+                            break;
+                          }
+                      }
+
+                    if (cc_end_idx != block_end_idx)
+                      {
+                        st->get_cclause ()
+                            = expr_gen (toks, block_end_idx, cc_end_idx);
+                      }
+
+                    size_t bei2 = _sf_ast_getblock_idx (
+                        toks, cc_end_idx, _sf_ast_gettabspace (toks, i));
+
+                    Vec<Token *> catchbody_toks;
+                    for (size_t j = cc_end_idx; j < bei2; j++)
+                      {
+                        catchbody_toks.push_back (toks[j]);
+                      }
+
+                    st->get_catch_body () = stmt_gen (catchbody_toks);
+                    i = bei2 - 1;
+                  }
+                else
+                  i = block_end_idx - 1;
+
+                res.push_back (st);
+                SET_LINE_NUMBER (res, c);
+              }
           }
           break;
 

@@ -1335,6 +1335,98 @@ mod_exec (Module &mod)
           }
           break;
 
+        case StatementType::TryCatchStmt:
+          {
+            TryCatchStmt *tcs = static_cast<TryCatchStmt *> (st);
+
+            Vec<Statement *> &try_body = tcs->get_try_body ();
+            Vec<Statement *> &catch_body = tcs->get_catch_body ();
+            Expr *&catch_clause = tcs->get_cclause ();
+
+            Module *m = new Module (ModuleType::File, try_body,
+                                    mod.get_code_lines ());
+            m->set_parent (&mod);
+
+            mod_exec (*m);
+
+            if (m->get_saw_ambig ())
+              {
+                m->get_stmts () = catch_body;
+                m->set_parent (nullptr);
+
+                Object *amb_obj = m->get_ambig ();
+                assert (OBJ_IS_AMBIG (amb_obj));
+
+                Object *amb_val
+                    = static_cast<AmbigObject *> (amb_obj)->get_val ();
+
+                if (amb_val == nullptr)
+                  amb_val = static_cast<Object *> (new ConstantObject (
+                      static_cast<Constant *> (new NoneConstant ())));
+
+                // std::cout << amb_obj->get_ref_count () << '\t'
+                //           << amb_val->get_ref_count () << '\n';
+
+                switch (catch_clause->get_type ())
+                  {
+                  case ExprType::Variable:
+                    {
+                      Str &vname = static_cast<VariableExpr *> (catch_clause)
+                                       ->get_name ();
+
+                      m->set_variable (vname.get_internal_buffer (), amb_val);
+                    }
+                    break;
+
+                  default:
+                    break;
+                  }
+
+                m->set_parent (&mod);
+
+                m->get_saw_ambig () = false;
+                m->get_continue_exec () = true;
+
+                // std::cout << amb_obj->get_ref_count () << '\t'
+                //           << amb_val->get_ref_count () << '\n';
+
+                m->get_backtrace ().clear ();
+                mod_exec (*m);
+
+                // std::cout << amb_obj->get_ref_count () << '\t'
+                //           << amb_val->get_ref_count () << '\n';
+
+                if (m->get_saw_ambig ())
+                  {
+                    mod.get_ambig () = m->get_ambig ();
+                    mod.get_saw_ambig () = true;
+
+                    IR (mod.get_ambig ());
+
+                    for (int i = 0; i < m->get_backtrace ().get_size (); i++)
+                      {
+                        mod.get_backtrace ().push_back (
+                            m->get_backtrace ()[i]);
+                      }
+
+                    delete m;
+
+                    static_cast<AmbigObject *> (amb_obj)->get_val () = nullptr;
+                    DR (amb_obj);
+
+                    goto ambig_test;
+                  }
+
+                delete m;
+
+                static_cast<AmbigObject *> (amb_obj)->get_val () = nullptr;
+                DR (amb_obj);
+              }
+            else
+              delete m;
+          }
+          break;
+
         default:
           std::cerr << "invalid type: " << (int)st->get_type () << std::endl;
           break;
@@ -1384,10 +1476,14 @@ ambig_test:
                   && mod.get_backtrace ()[i] - 1
                          < mod.get_code_lines ().get_size ())
                 {
-                  std::cerr
-                      << "Line " << mod.get_backtrace ()[i] << ": "
-                      << mod.get_code_lines ()[mod.get_backtrace ()[i] - 1]
-                      << "\n";
+                  std::string s
+                      = mod.get_code_lines ()[mod.get_backtrace ()[i] - 1]
+                            .get_internal_buffer ();
+                  while (s.front () == ' ' || s.front () == '\t')
+                    s.erase (s.begin ());
+
+                  std::cerr << "Line " << mod.get_backtrace ()[i] << ": " << s
+                            << "\n";
                 }
               else
                 {

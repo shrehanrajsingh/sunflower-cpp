@@ -1,1 +1,11 @@
-write (32.base (2))
+fun legal_age (a)
+    if a < 18
+        return ? "Below legal age"
+    return true
+
+legal_age (19)
+legal_age (18)
+try
+    legal_age (17)
+catch E
+    write ('Error:', E)
