@@ -1,11 +1,17 @@
-fun legal_age (a)
+fun age (a)
     if a < 18
         return ? "Below legal age"
-    return true
+    else if a > 999
+        return ? "Too old"
+    return a
 
-legal_age (19)
-legal_age (18)
-try
-    legal_age (17)
-catch E
-    write ('Error:', E)
+a = try age (17) catch 18
+write (a)
+a = try age (17) catch e -> e
+write (a)
+a = try age (17) catch e -> {'Below legal age': 18}[e]
+write (a)
+a = try age (1020) catch 999
+write (a)
+a = try age (1020) catch e -> {'Below legal age': 18, 'Too old': 19}[e]
+write (a)

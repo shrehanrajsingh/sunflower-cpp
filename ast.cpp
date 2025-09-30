@@ -25,8 +25,126 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 {
   Expr *res = nullptr;
 
-  size_t i = ed - 1;
+  size_t i = st;
   int gb = 0;
+
+  /* try catch */
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "try" && !gb)
+              {
+                size_t catch_kwidx = i + 1;
+                int gb = 0;
+
+                for (size_t j = catch_kwidx; j < ed; j++)
+                  {
+                    Token *d = toks[j];
+
+                    switch (c->get_type ())
+                      {
+                      case TokenType::Operator:
+                        {
+                          Str &dop
+                              = static_cast<OperatorToken *> (d)->get_val ();
+
+                          if (dop == '(' || dop == '{' || dop == '[')
+                            gb++;
+                          if (dop == ')' || dop == '}' || dop == ']')
+                            gb--;
+                        }
+                        break;
+
+                      case TokenType::Keyword:
+                        {
+                          Str &kw
+                              = static_cast<KeywordToken *> (d)->get_val ();
+
+                          if (kw == "catch" && !gb)
+                            {
+                              catch_kwidx = j;
+                              goto tce_fl1;
+                              break;
+                            }
+                        }
+                        break;
+
+                      default:
+                        break;
+                      }
+                  }
+
+              tce_fl1:;
+
+                TryCatchExpr *tce = new TryCatchExpr ();
+
+                if (catch_kwidx == i + 1)
+                  {
+                    /* no catch */
+                    tce->get_tryexpr () = expr_gen (toks, i + 1, ed);
+                  }
+                else
+                  {
+                    tce->get_tryexpr () = expr_gen (toks, i + 1, catch_kwidx);
+
+                    if (catch_kwidx + 2 >= ed)
+                      {
+                        /* no var mentioned */
+                        tce->get_catchexpr ()
+                            = expr_gen (toks, catch_kwidx + 1, ed);
+                      }
+                    else
+                      {
+                        Token *c2 = toks[catch_kwidx + 2];
+
+                        if (c2->get_type () == TokenType::Operator
+                            && static_cast<OperatorToken *> (c2)->get_val ()
+                                   == "->")
+                          {
+                            tce->get_catchcvar () = expr_gen (
+                                toks, catch_kwidx + 1, catch_kwidx + 3);
+
+                            tce->get_catchexpr ()
+                                = expr_gen (toks, catch_kwidx + 3, ed);
+                          }
+                      }
+                  }
+
+                res = static_cast<Expr *> (tce);
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+    end4:
+      i++;
+    }
+
+  i = ed - 1;
+  gb = 0;
 
   /* inline for */
   while (i > st)

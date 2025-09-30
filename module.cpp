@@ -3370,6 +3370,57 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::TryCatch:
+      {
+        TryCatchExpr *tce = static_cast<TryCatchExpr *> (e);
+
+        Expr *e_try = tce->get_tryexpr ();
+        Expr *e_catch_var = tce->get_catchcvar ();
+        Expr *e_catch = tce->get_catchexpr ();
+
+        Object *ev = expr_eval (mod, e_try);
+
+        if (OBJ_IS_AMBIG (ev))
+          {
+            mod.get_continue_exec () = true;
+            DR (mod.get_ambig ());
+            mod.get_ambig () = nullptr;
+
+            AmbigObject *ao = static_cast<AmbigObject *> (ev);
+
+            Object *aov = ao->get_val ();
+            ao->get_val () = nullptr;
+            DR (ev);
+
+            if (e_catch_var == nullptr)
+              {
+                res = expr_eval (mod, e_catch);
+              }
+            else
+              {
+                assert (e_catch_var->get_type () == ExprType::Variable);
+                Str &vn
+                    = static_cast<VariableExpr *> (e_catch_var)->get_name ();
+
+                Module *m = new Module (ModuleType::File);
+                m->set_variable (vn.get_internal_buffer (), aov);
+                m->set_parent (&mod);
+
+                res = expr_eval (*m, e_catch);
+
+                m->set_parent (nullptr);
+                delete m;
+              }
+
+            DR (aov);
+          }
+        else
+          {
+            res = ev;
+          }
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;

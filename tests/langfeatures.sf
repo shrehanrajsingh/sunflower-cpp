@@ -266,3 +266,34 @@ for i in a
 write ("0123456789"[1 to 10 step 2])
 write ("a123456789"[0])
 write ([1, 2, 3, 4, 5][0 to 5 step 2])
+
+fun legal_age (a)
+    if a < 18
+        return ? "Below legal age"
+    return true
+
+legal_age (19)
+legal_age (18)
+try
+    legal_age (17)
+catch E
+    if E == "Below legal age"
+        write ("<18")
+
+fun age (a)
+    if a < 18
+        return ? "Below legal age"
+    else if a > 999
+        return ? "Too old"
+    return a
+
+a = try age (17) catch 18
+write (a)
+a = try age (17) catch e -> e
+write (a)
+a = try age (17) catch e -> {'Below legal age': 18}[e]
+write (a)
+a = try age (1020) catch 999
+write (a)
+a = try age (1020) catch e -> {'Below legal age': 18, 'Too old': 19}[e]
+write (a)

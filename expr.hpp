@@ -28,6 +28,7 @@ enum class ExprType
   BitNegate = 19,
   Repeat = 20,
   InlineFor = 21,
+  TryCatch = 22,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -313,6 +314,23 @@ public:
   get_idx ()
   {
     return idx;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "Array Access:\nArr: ";
+
+    if (arr)
+      arr->print ();
+    else
+      std::cout << "nullptr";
+
+    std::cout << "Idx: ";
+    if (idx)
+      idx->print ();
+    else
+      std::cout << "nullptr";
   }
 
   ~ArrayAccess () {}
@@ -962,5 +980,64 @@ public:
   }
 
   ~InlineForExpr () {}
+};
+
+class TryCatchExpr : public Expr
+{
+private:
+  Expr *try_expr;
+  Expr *catch_cvar;
+  Expr *catch_expr;
+
+public:
+  TryCatchExpr (Expr *_TryExpr = nullptr, Expr *_CatchCVar = nullptr,
+                Expr *_CatchExpr = nullptr)
+      : Expr (ExprType::TryCatch), try_expr{ _TryExpr },
+        catch_cvar{ _CatchCVar }, catch_expr{ _CatchExpr }
+  {
+  }
+
+  inline Expr *&
+  get_tryexpr ()
+  {
+    return try_expr;
+  }
+
+  inline Expr *&
+  get_catchcvar ()
+  {
+    return catch_cvar;
+  }
+
+  inline Expr *&
+  get_catchexpr ()
+  {
+    return catch_expr;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "TryCatch expr:\nTry: ";
+
+    if (try_expr)
+      try_expr->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Catch:\nVar: ";
+    if (catch_cvar)
+      catch_cvar->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "Val: ";
+    if (catch_expr)
+      catch_expr->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
+  ~TryCatchExpr () {}
 };
 } // namespace sf

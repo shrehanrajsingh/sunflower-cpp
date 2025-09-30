@@ -90,7 +90,15 @@ tokenize (char *p)
           res.push_back (new OperatorToken ("+"));
           break;
         case '-':
-          res.push_back (new OperatorToken ("-"));
+          {
+            if (*(p + 1) == '>')
+              {
+                res.push_back (new OperatorToken ("->"));
+                p++;
+              }
+            else
+              res.push_back (new OperatorToken ("-"));
+          }
           break;
         case '*':
           res.push_back (new OperatorToken ("*"));
