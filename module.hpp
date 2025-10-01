@@ -102,7 +102,9 @@ public:
   ~Module ()
   {
     if (ret != nullptr)
-      DR (ret);
+      {
+        DR (ret);
+      }
 
     if (ambig != nullptr)
       {
@@ -116,6 +118,9 @@ public:
           }
         DR (ambig);
       }
+
+    if (env != nullptr)
+      delete env;
 
     for (auto i : vtable)
       {

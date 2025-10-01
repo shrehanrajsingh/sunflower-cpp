@@ -35,7 +35,7 @@ _add_native_find (Vec<Statement *> &ast)
   NativeFunction *nv_find = new NativeFunction (_native_find, { "self", "a" });
   nv_find->set_self_arg (true);
 
-  I (nv_find);
+  // I (nv_find);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("''.find")),

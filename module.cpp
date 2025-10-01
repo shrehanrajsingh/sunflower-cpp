@@ -88,11 +88,9 @@ mod_exec (Module &mod)
                 {
                   VariableExpr *nv = static_cast<VariableExpr *> (ne);
 
-                  char *p = (char *)nv->get_name ().c_str ();
+                  char *p = (char *)nv->get_name ().get_internal_buffer ();
                   mod.set_variable (p, val_eval); /* set_variable takes care of
                                                      ref_count increment */
-
-                  delete[] p;
                 }
                 break;
 
@@ -841,6 +839,204 @@ mod_exec (Module &mod)
                 }
                 break;
 
+              case ObjectType::ModuleObject:
+                {
+                  ModuleObject *mo = static_cast<ModuleObject *> (name_eval);
+                  Module *&mo_mod = mo->get_mod ();
+
+                  if (mo_mod->has_variable ("_init"))
+                    {
+                      Object *mo_init = mo_mod->get_variable ("_init");
+
+                      if (mo_init->get_type ()
+                          != ObjectType::FuncObject) /* only functions for now
+                                                      */
+                        {
+                          ERRMSG ("Module._init is not a function");
+                        }
+
+                      FunctionObject *fo
+                          = static_cast<FunctionObject *> (mo_init);
+
+                      Function *fv = fo->get_v ();
+
+                      switch (fv->get_type ())
+                        {
+                        case FuncType::Native:
+                          {
+                            NativeFunction *nf
+                                = static_cast<NativeFunction *> (fv);
+
+                            if (!nf->get_va_args ())
+                              {
+                                assert (nf->get_args ().get_size ()
+                                        == args_eval.get_size ()
+                                               + fv->get_self_arg ());
+                              }
+                            else
+                              assert (nf->get_args ().get_size ()
+                                      > 0); /* at least one arg */
+
+                            if (fv->get_self_arg ())
+                              {
+                                assert (mo_init->get_self_arg () != nullptr);
+                                args_eval.insert (0, mo_init->get_self_arg ());
+                              }
+
+                            Module *fmod = new Module (ModuleType::Function,
+                                                       Vec<Statement *> ());
+                            fmod->set_parent (&mod);
+
+                            if (nf->get_va_args ())
+                              {
+                                /**
+                                 * Function uses variable arguments
+                                 */
+                                Str arg_a = nf->get_args ()[0];
+
+                                /* convert args_eval to ArrayObject */
+                                for (Object *&i : args_eval)
+                                  IR (i); /* transfer back ownership */
+
+                                ArrayObject *ao = new ArrayObject (args_eval);
+
+                                char *p = arg_a.c_str ();
+                                fmod->set_variable (p, ao);
+
+                                delete[] p;
+                              }
+                            else
+                              {
+                                size_t j = 0;
+                                for (Str &a : nf->get_args ())
+                                  {
+                                    char *p = a.c_str ();
+                                    fmod->set_variable (p, args_eval[j++]);
+
+                                    delete[] p;
+                                  }
+                              }
+
+                            Object *ret;
+
+                            TC (ret = nf->call (fmod));
+                            AMBIG_CHECK (ret, {
+                              delete fmod;
+                              DR (name_eval);
+                              mod.get_backtrace ().push_back (
+                                  st->get_line_number ());
+                            });
+
+                            DR (ret);
+                            delete fmod;
+                          }
+                          break;
+
+                        case FuncType::Coded:
+                          {
+                            CodedFunction *cf
+                                = static_cast<CodedFunction *> (fv);
+
+                            // printf ("%d %d\n", cf->get_args ().get_size (),
+                            //         args_eval.get_size ());
+                            if (!cf->get_va_args ())
+                              assert (cf->get_args ().get_size ()
+                                      == args_eval.get_size ()
+                                             + fv->get_self_arg ());
+                            else
+                              assert (cf->get_args ().get_size ()
+                                      > 0); /* at least one arg */
+
+                            if (fv->get_self_arg ())
+                              {
+                                assert (mo_init->get_self_arg () != nullptr);
+                                args_eval.insert (0, mo_init->get_self_arg ());
+                              }
+
+                            Module *fmod = new Module (ModuleType::Function,
+                                                       cf->get_body ());
+                            fmod->set_parent (&mod);
+
+                            size_t j = 0;
+                            for (Expr *&a : cf->get_args ())
+                              {
+                                switch (a->get_type ())
+                                  {
+                                  case ExprType::Variable:
+                                    {
+                                      char *p = static_cast<VariableExpr *> (a)
+                                                    ->get_name ()
+                                                    .c_str ();
+                                      fmod->set_variable (p, args_eval[j++]);
+
+                                      delete[] p;
+                                    }
+                                    break;
+
+                                  default:
+                                    break;
+                                  }
+                              }
+
+                            mod_exec (*fmod);
+
+                            if (fmod->get_saw_ambig ())
+                              {
+                                // here;
+                                // std::cout << fmod->get_ambig
+                                // ()->get_ref_count
+                                // ()
+                                //           << '\n';
+                                mod.get_ambig () = fmod->get_ambig ();
+
+                                for (int i : fmod->get_backtrace ())
+                                  {
+                                    mod.get_backtrace ().push_back (i);
+                                  }
+
+                                IR (mod.get_ambig ());
+                                mod.get_saw_ambig () = true;
+
+                                delete fmod;
+                                // here;
+                                // std::cout << mod.get_ambig ()->get_ref_count
+                                // ()
+                                //           << '\n';
+                                // DR (mod.get_ambig ());
+                                DR (name_eval);
+                                goto ambig_test;
+                              }
+
+                            Object *ret = fmod->get_ret ();
+                            if (ret != nullptr)
+                              {
+                                AMBIG_CHECK (ret, {
+                                  delete fmod;
+                                  DR (name_eval);
+                                  mod.get_backtrace ().push_back (
+                                      st->get_line_number ());
+                                });
+                              }
+
+                            delete fmod;
+                          }
+                          break;
+
+                        default:
+                          /* unreachable */
+                          here;
+                          exit (__LINE__);
+                          break;
+                        }
+                    }
+                  else
+                    {
+                      ERRMSG (
+                          "Module is not callable (lacks _init () method)");
+                    }
+                }
+                break;
+
               default:
                 ERRMSG ("Entity with type " << (int)name_eval->get_type ()
                                             << " is not callable");
@@ -1317,21 +1513,35 @@ mod_exec (Module &mod)
 
             // std::cout << s << std::endl;
             Vec<Token *> r = tokenize ((char *)s.c_str ());
+            // Vec<Token *> r;
 
             Vec<Statement *> ast = stmt_gen (r);
+            // Vec<Statement *> ast;
 
             native::add_natives (ast);
 
-            Module *m = new Module (ModuleType::File, ast, lines);
+            Module *m = new Module (ModuleType::File, ast);
             m->get_env () = n_env;
 
             mod_exec (*m);
 
+            // for (auto &&i : m->get_vtable ())
+            //   std::cout << i.first << '\t' << i.second->get_ref_count ()
+            //             << '\n';
+
             Object *mo = static_cast<Object *> (new ModuleObject (m));
 
             mod.set_variable (alias.get_internal_buffer (), mo);
-
             main_f.close ();
+
+            // for (Statement *i : m->get_stmts ())
+            //   {
+            //     if (i != nullptr)
+            //       delete i;
+            //   }
+
+            for (Token *&i : r)
+              delete i;
           }
           break;
 
@@ -1621,7 +1831,8 @@ expr_eval (Module &mod, Expr *e)
         if (res != nullptr)
           DR (res);
 
-        res = static_cast<Object *> (new FunctionObject (fe->get_v ().get ()));
+        res = static_cast<Object *> (
+            new FunctionObject (new Function (*fe->get_v ().get ())));
         IR (res);
       }
       break;
@@ -2621,6 +2832,248 @@ expr_eval (Module &mod, Expr *e)
                * Conclusion:
                * ! DO NOT CALL IR(res) HERE
                */
+            }
+            break;
+
+          case ObjectType::ModuleObject:
+            {
+              ModuleObject *mo = static_cast<ModuleObject *> (name_eval);
+              Module *&mo_mod = mo->get_mod ();
+
+              if (mo_mod->has_variable ("_init"))
+                {
+                  Object *mo_init = mo_mod->get_variable ("_init");
+
+                  if (mo_init->get_type ()
+                      != ObjectType::FuncObject) /* only functions for now
+                                                  */
+                    {
+                      ERRMSG ("Module._init is not a function");
+                    }
+
+                  FunctionObject *fo = static_cast<FunctionObject *> (mo_init);
+
+                  Function *fv = fo->get_v ();
+
+                  switch (fv->get_type ())
+                    {
+                    case FuncType::Native:
+                      {
+                        NativeFunction *nf
+                            = static_cast<NativeFunction *> (fv);
+
+                        if (!nf->get_va_args ())
+                          assert (nf->get_args ().get_size ()
+                                  == args_eval.get_size ()
+                                         + fv->get_self_arg ());
+                        else
+                          assert (nf->get_args ().get_size ()
+                                  > 0); /* at least one arg */
+
+                        if (fv->get_self_arg ())
+                          {
+                            assert (mo_init->get_self_arg () != nullptr);
+                            args_eval.insert (0, mo_init->get_self_arg ());
+                          }
+
+                        Module *fmod = new Module (ModuleType::Function,
+                                                   Vec<Statement *> ());
+                        fmod->set_parent (&mod);
+
+                        if (nf->get_va_args ())
+                          {
+                            /**
+                             * Function uses variable arguments
+                             */
+                            Str arg_a = nf->get_args ()[0];
+
+                            /* convert args_eval to ArrayObject */
+                            for (Object *&i : args_eval)
+                              IR (i); /* transfer back ownership */
+
+                            ArrayObject *ao = new ArrayObject (args_eval);
+
+                            char *p = arg_a.c_str ();
+                            fmod->set_variable (p, ao);
+
+                            delete[] p;
+                          }
+                        else
+                          {
+                            size_t j = 0;
+                            for (Str &a : nf->get_args ())
+                              {
+                                char *p = a.c_str ();
+                                fmod->set_variable (p, args_eval[j++]);
+
+                                delete[] p;
+                              }
+                          }
+
+                        Object *ret;
+
+                        TC (ret = nf->call (fmod));
+                        // DR (ret);
+
+                        AMBIG_CHECK (ret, {
+                          DR (name_eval);
+                          DR (ret);
+                          res = ret;
+                          delete fmod;
+                        });
+
+                        res = ret;
+
+                        /**
+                         * nf->call returns an object with
+                         * an increased refcount (to save ownership
+                         * transfer during return)
+                         * we will use that refcount for res.
+                         * So we will not call an IR(X)/I(X) here
+                         */
+
+                        delete fmod;
+                      }
+                      break;
+
+                    case FuncType::Coded:
+                      {
+                        CodedFunction *cf = static_cast<CodedFunction *> (fv);
+
+                        // printf ("%d %d\n", cf->get_args ().get_size (),
+                        //         args_eval.get_size ());
+                        if (!cf->get_va_args ())
+                          assert (cf->get_args ().get_size ()
+                                  == args_eval.get_size ()
+                                         + fv->get_self_arg ());
+                        else
+                          assert (cf->get_args ().get_size ()
+                                  > 0); /* at least one arg */
+
+                        if (fv->get_self_arg ())
+                          {
+                            assert (mo_init->get_self_arg () != nullptr);
+                            args_eval.insert (0, mo_init->get_self_arg ());
+                          }
+
+                        Module *fmod = new Module (ModuleType::Function,
+                                                   cf->get_body ());
+                        fmod->set_parent (&mod);
+
+                        size_t j = 0;
+                        for (Expr *&a : cf->get_args ())
+                          {
+                            switch (a->get_type ())
+                              {
+                              case ExprType::Variable:
+                                {
+                                  char *p = static_cast<VariableExpr *> (a)
+                                                ->get_name ()
+                                                .c_str ();
+                                  fmod->set_variable (p, args_eval[j++]);
+
+                                  delete[] p;
+                                }
+                                break;
+
+                              default:
+                                break;
+                              }
+                          }
+
+                        mod_exec (*fmod);
+
+                        if (fmod->get_saw_ambig ())
+                          {
+                            res = fmod->get_ambig ();
+
+                            for (int i = 0;
+                                 i < fmod->get_backtrace ().get_size (); i++)
+                              {
+                                mod.get_backtrace ().push_back (
+                                    fmod->get_backtrace ()[i]);
+                              }
+
+                            /**
+                             * ! DO NOT UNCOMMENT THE NEXT LINE
+                             * ! IT RESULTS IN A MEMORY LEAK
+                             */
+                            // IR (res);
+                            DR (name_eval);
+
+                            delete fmod;
+                            goto ambig_test;
+                          }
+
+                        if (fmod->get_ret () != nullptr)
+                          {
+                            res = fmod->get_ret ();
+                            AMBIG_CHECK (res, {
+                              for (int i = 0;
+                                   i < fmod->get_backtrace ().get_size (); i++)
+                                {
+                                  mod.get_backtrace ().push_back (
+                                      fmod->get_backtrace ()[i]);
+                                }
+
+                              delete fmod;
+                            });
+                          }
+                        else
+                          {
+                            Constant *p;
+                            Expr *t = static_cast<Expr *> (
+                                new ConstantExpr (static_cast<Constant *> (
+                                    p = new NoneConstant ())));
+                            res = expr_eval (mod, t);
+                            AMBIG_CHECK (res, {
+                              DR (name_eval);
+                              delete p;
+                              delete t;
+
+                              delete fmod;
+                            });
+
+                            delete p;
+                            delete t;
+                          }
+
+                        /**
+                         * TODO: check whether coded functions
+                         * return an increased refcount which
+                         * we could possibly use.
+                         *
+                         * ? Check:
+                         * ?  So I checked the code for ReturnStmt rule
+                         * ?  and it uses expr_eval to evaluate return
+                         * ?  object, so we can use that extra RCI
+                         * ?  here.
+                         *
+                         * ! But:
+                         * !  when we delete fmod the RCI is lost
+                         * !  so we need proper ownership for res
+                         * !  in this scope
+                         *
+                         * * Conclusion:
+                         * *  Do call IR(res)/I(res) here
+                         */
+                        IR (res);
+
+                        delete fmod;
+                      }
+                      break;
+
+                    default:
+                      /* unreachable */
+                      here;
+                      exit (__LINE__);
+                      break;
+                    }
+                }
+              else
+                {
+                  ERRMSG ("Module is not callable (lacks _init () method)");
+                }
             }
             break;
 

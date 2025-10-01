@@ -59,6 +59,11 @@ _add_native_write (Vec<Statement *> &ast)
                      static_cast<Expr *> (new VariableExpr ("write")),
                      static_cast<Expr *> (new FunctionExpr (
                          static_cast<Function *> (nv_write))))));
+
+  // ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
+  //                    static_cast<Expr *> (new VariableExpr ("write")),
+  //                    static_cast<Expr *> (new ConstantExpr (
+  //                        static_cast<Constant *> (new NoneConstant ()))))));
 }
 } // namespace native
 

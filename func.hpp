@@ -128,7 +128,8 @@ public:
       : Function (FuncType::Coded), body (B), args (a)
   {
   }
-  ~CodedFunction () {}
+
+  ~CodedFunction ();
 
   inline Vec<Statement *> &
   get_body ()

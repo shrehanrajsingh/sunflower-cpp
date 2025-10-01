@@ -68,7 +68,7 @@ public:
 
   virtual void print () {};
 
-  ~Token () {}
+  virtual ~Token () {}
 };
 
 class IdentifierToken : public Token

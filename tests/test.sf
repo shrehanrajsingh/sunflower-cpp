@@ -1,9 +1,2 @@
-fun age (a)
-    if a < 18
-        return ? "Below legal age"
-    else if a > 999
-        return ? "Too old"
-    return a
-
-a = try age (17)
-write (a)
+while 1
+    import 'dir/some.sf' as some

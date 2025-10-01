@@ -53,7 +53,7 @@ private:
 public:
   Expr () : type (ExprType::NoExpr) {}
   Expr (ExprType t) : type (t) {}
-  ~Expr () = default;
+  virtual ~Expr () = default;
 
   inline ExprType
   get_type () const
@@ -74,7 +74,11 @@ public:
 
   ConstantExpr (Constant *v) : Expr (ExprType::Constant), c (v) {}
 
-  ~ConstantExpr () = default;
+  ~ConstantExpr ()
+  {
+    if (c != nullptr)
+      delete c;
+  }
 
   void
   print () override
@@ -132,7 +136,14 @@ public:
     // std::cout << (int)name->get_type () << '\t' << (int)val->get_type ()
     //           << '\n';
   }
-  ~VarDeclExpr () = default;
+  ~VarDeclExpr ()
+  {
+    if (name != nullptr)
+      delete name;
+
+    if (val != nullptr)
+      delete val;
+  }
 
   void
   print () override
@@ -287,7 +298,14 @@ public:
     rval->print ();
   }
 
-  ~ConditionalExpr () {}
+  ~ConditionalExpr ()
+  {
+    if (lval != nullptr)
+      delete lval;
+
+    if (rval != nullptr)
+      delete rval;
+  }
 };
 
 class ArrayAccess : public Expr
@@ -333,7 +351,14 @@ public:
       std::cout << "nullptr";
   }
 
-  ~ArrayAccess () {}
+  ~ArrayAccess ()
+  {
+    if (arr != nullptr)
+      delete arr;
+
+    if (idx != nullptr)
+      delete idx;
+  }
 };
 
 class ToStepClause : public Expr
@@ -395,7 +420,17 @@ public:
       std::cout << "nullptr\n";
   }
 
-  ~ToStepClause () {}
+  ~ToStepClause ()
+  {
+    if (lval != nullptr)
+      delete lval;
+
+    if (rval != nullptr)
+      delete rval;
+
+    if (step != nullptr)
+      delete step;
+  }
 };
 
 class FuncCallExpr : public Expr
@@ -412,7 +447,14 @@ public:
   {
   }
 
-  ~FuncCallExpr () = default;
+  ~FuncCallExpr ()
+  {
+    if (name != nullptr)
+      delete name;
+
+    for (Expr *&i : args)
+      delete i;
+  }
 
   void
   print () override
@@ -503,7 +545,14 @@ public:
       child->print ();
   }
 
-  ~DotAccess () {}
+  ~DotAccess ()
+  {
+    if (parent != nullptr)
+      delete parent;
+
+    if (child != nullptr)
+      delete child;
+  }
 };
 
 class LogicalAndExpr : public Expr
@@ -552,7 +601,14 @@ public:
       std::cout << "nullptr" << '\n';
   }
 
-  ~LogicalAndExpr () {}
+  ~LogicalAndExpr ()
+  {
+    if (left != nullptr)
+      delete left;
+
+    if (right != nullptr)
+      delete right;
+  }
 };
 
 class LogicalOrExpr : public Expr
@@ -601,7 +657,14 @@ public:
       std::cout << "nullptr" << '\n';
   }
 
-  ~LogicalOrExpr () {}
+  ~LogicalOrExpr ()
+  {
+    if (left != nullptr)
+      delete left;
+
+    if (right != nullptr)
+      delete right;
+  }
 };
 
 class LogicalNotExpr : public Expr
@@ -631,7 +694,11 @@ public:
     val->print ();
   }
 
-  ~LogicalNotExpr () {}
+  ~LogicalNotExpr ()
+  {
+    if (val != nullptr)
+      delete val;
+  }
 };
 
 class BitLeftShiftExpr : public Expr
@@ -678,7 +745,14 @@ public:
       std::cout << "nullptr\n";
   }
 
-  ~BitLeftShiftExpr () {}
+  ~BitLeftShiftExpr ()
+  {
+    if (left != nullptr)
+      delete left;
+
+    if (right != nullptr)
+      delete right;
+  }
 };
 
 class BitRightShiftExpr : public Expr
@@ -725,7 +799,14 @@ public:
       std::cout << "nullptr\n";
   }
 
-  ~BitRightShiftExpr () {}
+  ~BitRightShiftExpr ()
+  {
+    if (left != nullptr)
+      delete left;
+
+    if (right != nullptr)
+      delete right;
+  }
 };
 
 class BitAndExpr : public Expr
@@ -769,7 +850,14 @@ public:
       std::cout << "nullptr\n";
   }
 
-  ~BitAndExpr () {}
+  ~BitAndExpr ()
+  {
+    if (left != nullptr)
+      delete left;
+
+    if (right != nullptr)
+      delete right;
+  }
 };
 
 class BitOrExpr : public Expr
@@ -813,7 +901,14 @@ public:
       std::cout << "nullptr\n";
   }
 
-  ~BitOrExpr () {}
+  ~BitOrExpr ()
+  {
+    if (left != nullptr)
+      delete left;
+
+    if (right != nullptr)
+      delete right;
+  }
 };
 
 class BitNegateExpr : public Expr
@@ -841,7 +936,11 @@ public:
       std::cout << "nullptr\n";
   }
 
-  ~BitNegateExpr () {}
+  ~BitNegateExpr ()
+  {
+    if (val != nullptr)
+      delete val;
+  }
 };
 
 class RepeatExpr : public Expr
@@ -895,7 +994,14 @@ public:
       body->print ();
   }
 
-  ~RepeatExpr () {}
+  ~RepeatExpr ()
+  {
+    if (times != nullptr)
+      delete times;
+
+    if (body != nullptr)
+      delete body;
+  }
 };
 
 class InlineForExpr : public Expr
@@ -979,7 +1085,17 @@ public:
       body->print ();
   }
 
-  ~InlineForExpr () {}
+  ~InlineForExpr ()
+  {
+    if (iterable != nullptr)
+      delete iterable;
+
+    if (body != nullptr)
+      delete body;
+
+    for (Expr *&i : vars)
+      delete i;
+  }
 };
 
 class TryCatchExpr : public Expr
@@ -1038,6 +1154,16 @@ public:
       std::cout << "nullptr\n";
   }
 
-  ~TryCatchExpr () {}
+  ~TryCatchExpr ()
+  {
+    if (try_expr != nullptr)
+      delete try_expr;
+
+    if (catch_cvar != nullptr)
+      delete catch_cvar;
+
+    if (catch_expr != nullptr)
+      delete catch_expr;
+  }
 };
 } // namespace sf

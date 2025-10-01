@@ -210,7 +210,11 @@ public:
     return v;
   }
 
-  ~FunctionObject () {}
+  ~FunctionObject ()
+  {
+    if (v != nullptr)
+      delete v;
+  }
 };
 
 class AmbigObject : public Object
@@ -282,7 +286,7 @@ public:
     std::cout << "ModuleObject\n";
   }
 
-  ~ModuleObject () {}
+  ~ModuleObject ();
 };
 
 #define OBJ_IS_INT(X)                                                         \

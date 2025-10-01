@@ -358,7 +358,7 @@ template <typename T>
 void
 Vec<T>::insert (size_t i, T &&v)
 {
-  if (i > size)
+  if (i >= size)
     {
       push_back (v);
       return;

@@ -1,4 +1,5 @@
 #include "object.hpp"
+#include "module.hpp"
 
 namespace sf
 {
@@ -22,6 +23,17 @@ _sfobj_refcheck (Object *&obj)
 
   if (obj->get_ref_count () < 1)
     {
+      // if (obj->get_type () == ObjectType::ModuleObject)
+      //   {
+      //     ModuleObject *mo = static_cast<ModuleObject *> (obj);
+      //     Module *momod = mo->get_mod ();
+
+      //     Vec<Statement *> &getstmts = momod->get_stmts ();
+
+      //     for (Statement *&i : getstmts)
+      //       delete i;
+      //   }
+
       delete obj;
       obj = nullptr;
     }
@@ -702,5 +714,18 @@ _sfobj_iscallable (Module &mod, Object *&obj)
 {
   /* add all callables here */
   return obj->get_type () == ObjectType::FuncObject;
+}
+
+ModuleObject::~ModuleObject ()
+{
+  Vec<Statement *> &getstmts = mod->get_stmts ();
+
+  for (Statement *&i : getstmts)
+    {
+      delete i;
+    }
+
+  if (mod != nullptr)
+    delete mod;
 }
 } // namespace sf

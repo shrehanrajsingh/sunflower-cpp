@@ -31,7 +31,7 @@ private:
 public:
   Statement () : type (StatementType::NoStmt), line_number{ 0 } {}
   Statement (StatementType t) : type (t), line_number{ 0 } {}
-  ~Statement () = default;
+  virtual ~Statement () = default;
 
   inline StatementType
   get_type () const
@@ -71,7 +71,14 @@ public:
   {
   }
 
-  ~VarDeclStatement () = default;
+  ~VarDeclStatement ()
+  {
+    if (name != nullptr)
+      delete name;
+
+    if (value != nullptr)
+      delete value;
+  }
 
   void
   print () override
@@ -127,7 +134,14 @@ public:
   {
   }
 
-  ~FuncCallStatement () = default;
+  ~FuncCallStatement ()
+  {
+    if (name != nullptr)
+      delete name;
+
+    for (Expr *&i : args)
+      delete i;
+  }
 
   void
   print () override
@@ -184,7 +198,21 @@ public:
         elif_constructs (_ElifConstructs), else_body (_ElseBody)
   {
   }
-  ~IfConstruct () {}
+
+  ~IfConstruct ()
+  {
+    if (cond != nullptr)
+      delete cond;
+
+    for (Statement *&i : body)
+      delete i;
+
+    for (Statement *&i : else_body)
+      delete i;
+
+    for (IfConstruct *&i : elif_constructs)
+      delete i;
+  }
 
   inline Vec<Statement *> &
   get_body ()
@@ -297,7 +325,17 @@ public:
       i->print ();
   }
 
-  ~ForConstruct () {}
+  ~ForConstruct ()
+  {
+    if (iterable != nullptr)
+      delete iterable;
+
+    for (Statement *&i : body)
+      delete i;
+
+    for (Expr *&i : var_list)
+      delete i;
+  }
 };
 
 class FuncDeclStatement : public Statement
@@ -354,7 +392,14 @@ public:
         std::cout << "(nullptr)" << std::endl;
   }
 
-  ~FuncDeclStatement () {}
+  ~FuncDeclStatement ()
+  {
+    for (Statement *&i : body)
+      delete i;
+
+    for (Expr *&i : args)
+      delete i;
+  }
 };
 
 class ReturnStatement : public Statement
@@ -386,7 +431,11 @@ public:
       std::cout << "(nullptr)" << std::endl;
   }
 
-  ~ReturnStatement () {}
+  ~ReturnStatement ()
+  {
+    if (val != nullptr)
+      delete val;
+  }
 };
 
 class WhileStatement : public Statement
@@ -432,7 +481,14 @@ public:
       i->print ();
   }
 
-  ~WhileStatement () {}
+  ~WhileStatement ()
+  {
+    if (cond != nullptr)
+      delete cond;
+
+    for (Statement *&i : body)
+      delete i;
+  }
 };
 
 class RepeatStatement : public Statement
@@ -478,7 +534,14 @@ public:
       }
   }
 
-  ~RepeatStatement () {}
+  ~RepeatStatement ()
+  {
+    if (cond != nullptr)
+      delete cond;
+
+    for (Statement *&i : body)
+      delete i;
+  }
 };
 
 class ImportStatement : public Statement
@@ -588,6 +651,16 @@ public:
       i->print ();
   }
 
-  ~TryCatchStmt () {}
+  ~TryCatchStmt ()
+  {
+    if (catch_clause != nullptr)
+      delete catch_clause;
+
+    for (Statement *&i : try_body)
+      delete i;
+
+    for (Statement *&i : catch_body)
+      delete i;
+  }
 };
 } // namespace sf

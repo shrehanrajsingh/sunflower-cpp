@@ -5,3 +5,6 @@ fun factorial (n)
         a = a * i
     
     return a
+
+fun _init ()
+    write ("Inside module constructor!!")

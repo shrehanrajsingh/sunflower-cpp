@@ -1,4 +1,6 @@
 #include "func.hpp"
+#include "expr.hpp"
+#include "stmt.hpp"
 
 namespace sf
 {
@@ -10,5 +12,14 @@ _sffunc_refcheck (Function *&f)
       delete f;
       f = nullptr;
     }
+}
+
+CodedFunction::~CodedFunction ()
+{
+  for (Statement *&i : body)
+    delete i;
+
+  for (Expr *&i : args)
+    delete i;
 }
 } // namespace sf

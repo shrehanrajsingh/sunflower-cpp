@@ -47,7 +47,7 @@ _add_native_int_base (Vec<Statement *> &ast)
       = new NativeFunction (_native_int_base, { "self", "a" });
   nv_base->set_self_arg (true);
 
-  I (nv_base);
+  // I (nv_base);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("0.base")),
