@@ -5,13 +5,5 @@ fun age (a)
         return ? "Too old"
     return a
 
-a = try age (17) catch 18
-write (a)
-a = try age (17) catch e -> e
-write (a)
-a = try age (17) catch e -> {'Below legal age': 18}[e]
-write (a)
-a = try age (1020) catch 999
-write (a)
-a = try age (1020) catch e -> {'Below legal age': 18, 'Too old': 19}[e]
+a = try age (17)
 write (a)

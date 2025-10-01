@@ -3392,24 +3392,34 @@ expr_eval (Module &mod, Expr *e)
             ao->get_val () = nullptr;
             DR (ev);
 
-            if (e_catch_var == nullptr)
+            if (e_catch != nullptr)
               {
-                res = expr_eval (mod, e_catch);
+                if (e_catch_var == nullptr)
+                  {
+                    res = expr_eval (mod, e_catch);
+                  }
+                else
+                  {
+                    assert (e_catch_var->get_type () == ExprType::Variable);
+                    Str &vn = static_cast<VariableExpr *> (e_catch_var)
+                                  ->get_name ();
+
+                    Module *m = new Module (ModuleType::File);
+                    m->set_variable (vn.get_internal_buffer (), aov);
+                    m->set_parent (&mod);
+
+                    res = expr_eval (*m, e_catch);
+
+                    m->set_parent (nullptr);
+                    delete m;
+                  }
               }
             else
               {
-                assert (e_catch_var->get_type () == ExprType::Variable);
-                Str &vn
-                    = static_cast<VariableExpr *> (e_catch_var)->get_name ();
+                res = static_cast<Object *> (new ConstantObject (
+                    static_cast<Constant *> (new NoneConstant ())));
 
-                Module *m = new Module (ModuleType::File);
-                m->set_variable (vn.get_internal_buffer (), aov);
-                m->set_parent (&mod);
-
-                res = expr_eval (*m, e_catch);
-
-                m->set_parent (nullptr);
-                delete m;
+                IR (res);
               }
 
             DR (aov);
@@ -3418,6 +3428,13 @@ expr_eval (Module &mod, Expr *e)
           {
             res = ev;
           }
+
+        /**
+         * * Note
+         * do not call IR (res)
+         * we will reuse the ref count obtained from expr_eval calls.
+         * Where there are no such calls, IR will be done separately
+         */
       }
       break;
 
