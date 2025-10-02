@@ -23,8 +23,3 @@ class File
         if self.id
             file.close (self.id)
             self.id = 0
-
-a = File ("../../tests/test.sf", "r")
-write (a.read ())
-a.close ()
-write (a.read ())

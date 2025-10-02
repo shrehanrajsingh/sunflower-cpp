@@ -46,7 +46,15 @@ open (Module *mod)
 
   std::fstream fs (fname.get_internal_buffer (), mode);
 
-  assert (!!fs && "File not found");
+  if (!fs)
+    {
+      /* 0 is returned when file cannot be opened */
+      Object *r = static_cast<Object *> (new ConstantObject (
+          static_cast<Constant *> (new IntegerConstant (0))));
+
+      IR (r);
+      return r;
+    }
 
   FileHandle *fh = new FileHandle (fmid, std::move (fs), perms);
   filemap[fmid] = fh;
@@ -91,6 +99,37 @@ read (Module *mod)
 
   Object *r = static_cast<Object *> (new ConstantObject (
       static_cast<Constant *> (new StringConstant (full.c_str ()))));
+
+  IR (r);
+  return r;
+}
+
+SF_API Object *
+close (Module *mod)
+{
+  Object *fileid = mod->get_variable ("fileid");
+
+  assert (OBJ_IS_INT (fileid) && "File id must be an integer");
+
+  size_t id = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (fileid)->get_c ().get ())
+          ->get_value ());
+
+  if (!filemap.count (id))
+    {
+      std::cerr << "File with id " << id << " does not exist." << std::endl;
+      exit (-1);
+    }
+
+  FileHandle *fh = filemap[id];
+  std::fstream &fs = fh->get_fs ();
+
+  assert (fs.is_open () && "File has already been closed");
+  fs.close ();
+
+  Object *r = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
 
   IR (r);
   return r;
