@@ -297,3 +297,39 @@ a = try age (1020) catch 999
 write (a)
 a = try age (1020) catch e -> {'Below legal age': 18, 'Too old': 19}[e]
 write (a)
+
+import '_Native_File' as file
+
+a = file.open ('../../tests/test.sf', 'r') # returns a numeric id
+write (a) # print id
+write (file.read (a))
+file.close (a)
+
+class File
+    id = 0
+
+    fun _init (self, name, perms)
+        self.id = file.open (name, perms)
+
+        # this is a workaround to
+        # to raise an error, since
+        # the return value of _init
+        # is discarded
+        if not self.id
+            _ = ? "File could not be opened"
+    
+    fun read (self)
+        if not self.id
+            return ? "File has not been created or is closed"
+        
+        return file.read (self.id)
+    
+    fun close (self)
+        if self.id
+            file.close (self.id)
+            self.id = 0
+
+a = File ("../../tests/test.sf", "r")
+write (a.read ())
+a.close ()
+write (a.read ())
