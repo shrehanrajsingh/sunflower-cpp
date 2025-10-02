@@ -45,7 +45,7 @@ _add_native_count (Vec<Statement *> &ast)
       = new NativeFunction (_native_count, { "self", "a" });
   nv_count->set_self_arg (true);
 
-  // I (nv_count);
+  I (nv_count);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("''.count")),

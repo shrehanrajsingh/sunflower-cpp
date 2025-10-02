@@ -42,7 +42,7 @@ _add_native_replace (Vec<Statement *> &ast)
       = new NativeFunction (_native_replace, { "self", "a", "b" });
   nv_replace->set_self_arg (true);
 
-  // I (nv_replace);
+  I (nv_replace);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("''.replace")),

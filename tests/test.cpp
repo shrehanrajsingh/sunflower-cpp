@@ -429,7 +429,10 @@ main (int argc, char const *argv[])
       sf_env->add_arg (argv[i]);
     }
 
+  sf::native_mod::nmod_init ();
+
   TEST (4);
   // std::cout << "Program ended." << std::endl;
+  sf::native_mod::nmod_destroy ();
   return 0;
 }

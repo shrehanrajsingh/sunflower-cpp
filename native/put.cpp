@@ -25,7 +25,7 @@ SF_API void
 _add_native_put (Vec<Statement *> &ast)
 {
   NativeFunction *nv_put = new NativeFunction (_native_put, { "a" });
-  // I (nv_put);
+  I (nv_put);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("put")),

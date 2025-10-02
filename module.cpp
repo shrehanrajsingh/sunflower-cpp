@@ -3,6 +3,8 @@
 #include "native/native.hpp"
 #include "stmt.hpp"
 
+#include "native/module/nmod.hpp"
+
 namespace sf
 {
 Object *
@@ -457,6 +459,8 @@ mod_exec (Module &mod)
               {
                 Object *t = nullptr;
                 TC (t = expr_eval (mod, j));
+                assert (t != nullptr);
+
                 AMBIG_CHECK (t, {
                   DR (name_eval);
                   mod.get_backtrace ().push_back (st->get_line_number ());
@@ -1456,6 +1460,9 @@ mod_exec (Module &mod)
             std::ifstream mfp (path.get_internal_buffer ());
             std::ifstream main_f;
 
+            bool file_opened = false;
+            bool is_native_module = false;
+
             Environment *n_env = new Environment ();
             n_env->get_args () = mod.get_env ()->get_args ();
             n_env->get_syspaths () = mod.get_env ()->get_syspaths ();
@@ -1491,9 +1498,33 @@ mod_exec (Module &mod)
                               p_dir.push_back (path[i]);
 
                             n_env->add_path (pt + p_dir);
+                            file_opened = true;
+                            break;
                           }
                       }
                   }
+              }
+
+            Module *m;
+
+            if (!file_opened)
+              {
+                /* check through native modules */
+                Module *gm = native_mod::get_mod (path.get_internal_buffer ());
+
+                if (gm != nullptr)
+                  {
+                    is_native_module = true;
+                    file_opened = true;
+                    m = gm;
+                  }
+              }
+
+            if (!file_opened)
+              {
+                std::cerr << "File '" << path << "' does not exist"
+                          << std::endl;
+                exit (-1);
               }
 
             std::string s, p;
@@ -1511,19 +1542,29 @@ mod_exec (Module &mod)
                   lines.back ().push_back (c);
               }
 
-            // std::cout << s << std::endl;
-            Vec<Token *> r = tokenize ((char *)s.c_str ());
-            // Vec<Token *> r;
+            if (!is_native_module)
+              {
+                // std::cout << "(" << s << ")" << std::endl;
+                Vec<Token *> r = tokenize ((char *)s.c_str ());
+                // Vec<Token *> r;
 
-            Vec<Statement *> ast = stmt_gen (r);
-            // Vec<Statement *> ast;
+                Vec<Statement *> ast = stmt_gen (r);
+                // Vec<Statement *> ast;
 
-            native::add_natives (ast);
+                native::add_natives (ast);
 
-            Module *m = new Module (ModuleType::File, ast);
-            m->get_env () = n_env;
+                m = new Module (ModuleType::File, ast);
+                m->get_env () = n_env;
 
-            mod_exec (*m);
+                mod_exec (*m);
+
+                for (Token *&i : r)
+                  delete i;
+              }
+            else
+              {
+                m->get_env () = n_env;
+              }
 
             // for (auto &&i : m->get_vtable ())
             //   std::cout << i.first << '\t' << i.second->get_ref_count ()
@@ -1539,9 +1580,6 @@ mod_exec (Module &mod)
             //     if (i != nullptr)
             //       delete i;
             //   }
-
-            for (Token *&i : r)
-              delete i;
           }
           break;
 
@@ -1831,8 +1869,20 @@ expr_eval (Module &mod, Expr *e)
         if (res != nullptr)
           DR (res);
 
-        res = static_cast<Object *> (
-            new FunctionObject (new Function (*fe->get_v ().get ())));
+        Function *f = fe->get_v ().get ();
+        if (f->get_type () == FuncType::Native)
+          {
+            res = static_cast<Object *> (
+                new FunctionObject (new NativeFunction (
+                    *static_cast<NativeFunction *> (fe->get_v ().get ()))));
+          }
+        else if (f->get_type () == FuncType::Coded)
+          {
+            res = static_cast<Object *> (
+                new FunctionObject (new CodedFunction (
+                    *static_cast<CodedFunction *> (fe->get_v ().get ()))));
+          }
+
         IR (res);
       }
       break;

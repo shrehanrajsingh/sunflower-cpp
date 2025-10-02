@@ -12,4 +12,5 @@
 #include "tokenize.hpp"
 #include "vec.hpp"
 
+#include "native/module/nmod.hpp"
 #include "native/native.hpp"

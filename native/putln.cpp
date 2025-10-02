@@ -25,7 +25,7 @@ SF_API void
 _add_native_putln (Vec<Statement *> &ast)
 {
   NativeFunction *nv_putln = new NativeFunction (_native_putln, { "a" });
-  // I (nv_putln);
+  I (nv_putln);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("putln")),

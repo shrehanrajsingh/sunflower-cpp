@@ -11,7 +11,8 @@ add_subdirectory(tests)
 add_subdirectory(bin)
 
 file(GLOB_RECURSE NATIVE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/native/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/native/*.hpp")
-file(GLOB_RECURSE NATIVE_STRING_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/native/string/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/native/string/*.hpp")
+# file(GLOB_RECURSE NATIVE_STRING_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/native/string/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/native/string/*.hpp")
+# file(GLOB_RECURSE MOD_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/native/module/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/native/module/*.hpp")
 
 
 add_library(sunflower
@@ -40,7 +41,6 @@ add_library(sunflower
     # native/putln.hpp native/putln.cpp
     # native/write.hpp native/write.cpp
     ${NATIVE_SOURCES}
-    ${NATIVE_STRING_SOURCES}
 
     sunflower.hpp sunflower.cpp)
 

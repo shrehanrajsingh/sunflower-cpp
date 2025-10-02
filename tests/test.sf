@@ -1,2 +1,5 @@
-while 1
-    import 'dir/some.sf' as some
+import '_Native_File' as file # need to make this object oriented
+
+a = file.open ('../../tests/test.sf', 'r') # returns a numeric id
+write (a) # print id
+write (file.read (a))
