@@ -1580,6 +1580,8 @@ mod_exec (Module &mod)
             //     if (i != nullptr)
             //       delete i;
             //   }
+
+            // m->get_stmts ().clear ();
           }
           break;
 

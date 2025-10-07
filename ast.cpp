@@ -1138,8 +1138,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 //   }
                 // else
                 //   {
-                Arithmetic *arp = new Arithmetic;
-                *arp = Arithmetic::from_infix (a);
+                Arithmetic *arp = new Arithmetic (Arithmetic::from_infix (a));
                 res = static_cast<Expr *> (arp);
                 // }
 

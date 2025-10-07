@@ -27,7 +27,7 @@ public:
     return type;
   }
 
-  ~AVBase () {}
+  virtual ~AVBase () {}
 };
 
 class AVOperator : public AVBase
@@ -71,7 +71,11 @@ public:
     return val;
   }
 
-  ~AVOperand () {}
+  ~AVOperand ()
+  {
+    if (val != nullptr)
+      delete val;
+  }
 };
 
 class Arithmetic : public Expr
@@ -130,7 +134,14 @@ public:
 
   static Arithmetic from_infix (Vec<AVBase *> &);
 
-  ~Arithmetic () {}
+  ~Arithmetic ()
+  {
+    for (AVBase *&i : vals)
+      {
+        if (i != nullptr)
+          delete i;
+      }
+  }
 };
 
 } // namespace sf

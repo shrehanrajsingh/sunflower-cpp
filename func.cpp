@@ -16,10 +16,16 @@ _sffunc_refcheck (Function *&f)
 
 CodedFunction::~CodedFunction ()
 {
-  for (Statement *&i : body)
-    delete i;
+  /**
+   * CodedFunction takes a reference
+   * to both body and args from FuncDeclStatement
+   * So you cannot delete the pointers
+   * in body and args in both the places
+   */
+  // for (Statement *&i : body)
+  //   delete i;
 
-  for (Expr *&i : args)
-    delete i;
+  // for (Expr *&i : args)
+  //   delete i;
 }
 } // namespace sf

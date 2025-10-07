@@ -718,6 +718,7 @@ _sfobj_iscallable (Module &mod, Object *&obj)
 
 ModuleObject::~ModuleObject ()
 {
+  // here;
   Vec<Statement *> &getstmts = mod->get_stmts ();
 
   for (Statement *&i : getstmts)

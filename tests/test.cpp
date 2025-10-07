@@ -320,8 +320,8 @@ test4 ()
       std::cerr << e << std::endl;
     }
 
-  for (auto &&i : ast)
-    delete i;
+  // for (auto &&i : ast)
+  //   delete i;
 
   fl.close ();
 }

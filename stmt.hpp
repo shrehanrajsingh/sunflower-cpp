@@ -394,11 +394,29 @@ public:
 
   ~FuncDeclStatement ()
   {
+    /**
+     * CodedFunction takes a reference
+     * to both body and args from FuncDeclStatement
+     * So you cannot delete the pointers
+     * in body and args in both the places
+     */
     for (Statement *&i : body)
-      delete i;
+      {
+        if (i != nullptr)
+          {
+            delete i;
+            i = nullptr;
+          }
+      }
 
     for (Expr *&i : args)
-      delete i;
+      {
+        if (i != nullptr)
+          {
+            delete i;
+            i = nullptr;
+          }
+      }
   }
 };
 
