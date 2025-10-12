@@ -1,2 +1,10 @@
+class Test
+    fun _init (self)
+        write ('Initialized')
+    
+    fun _kill (self)
+        write ('Killed')
+
+
 while 1
-    import 'modtest.sf' as other
+    a = Test ()

@@ -34,6 +34,67 @@ _sfobj_refcheck (Object *&obj)
       //       delete i;
       //   }
 
+      if (obj->get_type () == ObjectType::ClassObj)
+        {
+          ClassObject *co = static_cast<ClassObject *> (obj);
+          Module *mco = co->get_mod ();
+
+          IR (obj);
+
+          if (mco->has_variable ("_kill"))
+            {
+              Object *kill_fun = mco->get_variable ("_kill");
+
+              if (kill_fun->get_type () == ObjectType::FuncObject)
+                {
+                  FunctionObject *fo
+                      = static_cast<FunctionObject *> (kill_fun);
+                  Function *fv = fo->get_v ();
+
+                  switch (fv->get_type ())
+                    {
+                    case FuncType::Coded:
+                      {
+                        CodedFunction *cf = static_cast<CodedFunction *> (fv);
+                        Module *fmod
+                            = new Module (ModuleType::File, cf->get_body ());
+
+                        fmod->set_parent (mco->get_parent ());
+
+                        Expr *e = cf->get_args ()[0];
+
+                        if (e->get_type () == ExprType::Variable)
+                          {
+                            fmod->set_variable (static_cast<VariableExpr *> (e)
+                                                    ->get_name ()
+                                                    .get_internal_buffer (),
+                                                obj);
+                          }
+                        else if (e->get_type () == ExprType::VarDecl)
+                          {
+                            /* TODO */
+                            here;
+                            std::cout << "TODO";
+                          }
+
+                        mod_exec (*fmod);
+
+                        delete fmod;
+                      }
+                      break;
+
+                    case FuncType::Native:
+                      {
+                      }
+                      break;
+
+                    default:
+                      break;
+                    }
+                }
+            }
+        }
+
       delete obj;
       obj = nullptr;
     }
