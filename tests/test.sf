@@ -1,10 +1,14 @@
-class Test
-    fun _init (self)
-        write ('Initialized')
-    
-    fun _kill (self)
-        write ('Killed')
+import '_Native_Thread' as thread
 
+fun test (a, b, c)
+    write ("TEST THREAD")
+    sum = 0
+    for i in 1 to 10000
+        sum = sum + i
+    write ("SUM IS", sum)
 
-while 1
-    a = Test ()
+th = thread.create (test, [1, 2, 3])
+thread.run (th)
+write ("here")
+
+thread.join_all ()

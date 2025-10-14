@@ -45,53 +45,64 @@ _sfobj_refcheck (Object *&obj)
             {
               Object *kill_fun = mco->get_variable ("_kill");
 
-              if (kill_fun->get_type () == ObjectType::FuncObject)
-                {
-                  FunctionObject *fo
-                      = static_cast<FunctionObject *> (kill_fun);
-                  Function *fv = fo->get_v ();
+              Vec<Object *> args;
+              // args.push_back (obj);
+              IR (obj);
+              kill_fun->get_self_arg () = obj;
+              Object *res = call_func (*mco->get_parent (), kill_fun, args);
 
-                  switch (fv->get_type ())
-                    {
-                    case FuncType::Coded:
-                      {
-                        CodedFunction *cf = static_cast<CodedFunction *> (fv);
-                        Module *fmod
-                            = new Module (ModuleType::File, cf->get_body ());
+              DR (res);
 
-                        fmod->set_parent (mco->get_parent ());
+              // if (kill_fun->get_type () == ObjectType::FuncObject)
+              //   {
+              //     FunctionObject *fo
+              //         = static_cast<FunctionObject *> (kill_fun);
+              //     Function *fv = fo->get_v ();
 
-                        Expr *e = cf->get_args ()[0];
+              //     switch (fv->get_type ())
+              //       {
+              //       case FuncType::Coded:
+              //         {
+              //           CodedFunction *cf = static_cast<CodedFunction *>
+              //           (fv); Module *fmod
+              //               = new Module (ModuleType::File, cf->get_body
+              //               ());
 
-                        if (e->get_type () == ExprType::Variable)
-                          {
-                            fmod->set_variable (static_cast<VariableExpr *> (e)
-                                                    ->get_name ()
-                                                    .get_internal_buffer (),
-                                                obj);
-                          }
-                        else if (e->get_type () == ExprType::VarDecl)
-                          {
-                            /* TODO */
-                            here;
-                            std::cout << "TODO";
-                          }
+              //           fmod->set_parent (mco->get_parent ());
 
-                        mod_exec (*fmod);
+              //           Expr *e = cf->get_args ()[0];
 
-                        delete fmod;
-                      }
-                      break;
+              //           if (e->get_type () == ExprType::Variable)
+              //             {
+              //               fmod->set_variable (static_cast<VariableExpr *>
+              //               (e)
+              //                                       ->get_name ()
+              //                                       .get_internal_buffer (),
+              //                                   obj);
+              //             }
+              //           else if (e->get_type () == ExprType::VarDecl)
+              //             {
+              //               /* TODO */
+              //               here;
+              //               std::cout << "TODO";
+              //             }
 
-                    case FuncType::Native:
-                      {
-                      }
-                      break;
+              //           mod_exec (*fmod);
 
-                    default:
-                      break;
-                    }
-                }
+              //           delete fmod;
+              //         }
+              //         break;
+
+              //       case FuncType::Native:
+              //         {
+              //           /* TODO */
+              //         }
+              //         break;
+
+              //       default:
+              //         break;
+              //       }
+              //   }
             }
         }
 

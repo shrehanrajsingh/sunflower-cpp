@@ -520,7 +520,9 @@ mod_exec (Module &mod)
                             /**
                              * Function uses variable arguments
                              */
-                            Str arg_a = nf->get_args ()[0];
+                            Str arg_a
+                                = nf->get_args ()[nf->get_args ().get_size ()
+                                                  - 1];
 
                             /* convert args_eval to ArrayObject */
                             for (Object *&i : args_eval)
@@ -4011,5 +4013,170 @@ Module::has_variable (std::string rhs)
     return parent == nullptr ? false : parent->has_variable (rhs);
 
   return true;
+}
+
+Object *
+call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
+{
+  Module *nmod = new Module (ModuleType::File);
+  Object *res = nullptr;
+
+  switch (fname->get_type ())
+    {
+    case ObjectType::FuncObject:
+      {
+        FunctionObject *fo = static_cast<FunctionObject *> (fname);
+        Function *&fv = fo->get_v ();
+
+        switch (fv->get_type ())
+          {
+          case FuncType::Coded:
+            {
+              CodedFunction *cf = static_cast<CodedFunction *> (fv);
+              if (!cf->get_va_args ())
+                assert (cf->get_args ().get_size ()
+                        == fargs.get_size () + fv->get_self_arg ());
+              else
+                assert (cf->get_args ().get_size ()
+                        > 0); /* at least one arg */
+
+              if (fv->get_self_arg ())
+                {
+                  assert (fname->get_self_arg () != nullptr);
+                  fargs.insert (0, fname->get_self_arg ());
+                }
+
+              nmod->set_parent (&mod);
+              nmod->get_stmts () = cf->get_body ();
+
+              size_t j = 0;
+              for (Expr *&a : cf->get_args ())
+                {
+                  switch (a->get_type ())
+                    {
+                    case ExprType::Variable:
+                      {
+                        char *p = static_cast<VariableExpr *> (a)
+                                      ->get_name ()
+                                      .c_str ();
+                        nmod->set_variable (p, fargs[j++]);
+
+                        delete[] p;
+                      }
+                      break;
+
+                    default:
+                      break;
+                    }
+                }
+
+              mod_exec (*nmod);
+
+              if (nmod->get_saw_ambig ())
+                {
+                  // here;
+                  // std::cout << nmod->get_ambig ()->get_ref_count
+                  // ()
+                  //           << '\n';
+                  mod.get_ambig () = nmod->get_ambig ();
+
+                  for (int i : nmod->get_backtrace ())
+                    {
+                      mod.get_backtrace ().push_back (i);
+                    }
+
+                  IR (mod.get_ambig ());
+                  mod.get_saw_ambig () = true;
+
+                  delete nmod;
+                  // here;
+                  // std::cout << mod.get_ambig ()->get_ref_count ()
+                  //           << '\n';
+                  // DR (mod.get_ambig ());
+                }
+
+              Object *ret = nmod->get_ret ();
+              res = ret;
+            }
+            break;
+
+          case FuncType::Native:
+            {
+              NativeFunction *nf = static_cast<NativeFunction *> (fv);
+
+              if (!nf->get_va_args ())
+                {
+                  assert (nf->get_args ().get_size ()
+                          == fargs.get_size () + fv->get_self_arg ());
+                }
+              else
+                assert (nf->get_args ().get_size ()
+                        > 0); /* at least one arg */
+
+              if (fv->get_self_arg ())
+                {
+                  assert (fname->get_self_arg () != nullptr);
+                  fargs.insert (0, fname->get_self_arg ());
+                }
+
+              Module *fmod
+                  = new Module (ModuleType::Function, Vec<Statement *> ());
+              fmod->set_parent (&mod);
+
+              if (nf->get_va_args ())
+                {
+                  /**
+                   * Function uses variable arguments
+                   */
+                  Str arg_a = nf->get_args ()[nf->get_args ().get_size () - 1];
+
+                  /* convert fargs to ArrayObject */
+                  for (Object *&i : fargs)
+                    IR (i); /* transfer back ownership */
+
+                  ArrayObject *ao = new ArrayObject (fargs);
+
+                  char *p = arg_a.c_str ();
+                  fmod->set_variable (p, ao);
+
+                  delete[] p;
+                }
+              else
+                {
+                  size_t j = 0;
+                  for (Str &a : nf->get_args ())
+                    {
+                      char *p = a.c_str ();
+                      fmod->set_variable (p, fargs[j++]);
+
+                      delete[] p;
+                    }
+                }
+
+              Object *ret;
+
+              TC (ret = nf->call (fmod));
+              res = ret;
+
+              delete fmod;
+            }
+
+          default:
+            break;
+          }
+      }
+      break;
+
+    default:
+      break;
+    }
+
+  delete nmod;
+
+  if (res == nullptr)
+    res = static_cast<Object *> (
+        new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+  return res;
 }
 } // namespace sf
