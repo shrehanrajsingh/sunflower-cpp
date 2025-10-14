@@ -10,6 +10,7 @@ add_natives (Vec<Statement *> &m)
   _add_native_write (m);
   _add_native_putln (m);
   _add_native_put (m);
+  _add_native_input (m);
 
   /* string methods */
   _add_native_replace (m);

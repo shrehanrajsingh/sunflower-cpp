@@ -1,14 +1,12 @@
-import '_Native_Thread' as thread
+import '../../lib/thread/_init.sf' as thread
 
-fun test (a, b, c)
-    write ("TEST THREAD")
+fun test ()
     sum = 0
-    for i in 1 to 10000
+    for i in 1 to 100
+        write (i)
         sum = sum + i
-    write ("SUM IS", sum)
+    return sum
 
-th = thread.create (test, [1, 2, 3])
-thread.run (th)
-write ("here")
-
-thread.join_all ()
+a = thread (test, [])
+a.run ()
+a.join ()

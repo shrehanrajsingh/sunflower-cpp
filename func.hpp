@@ -35,6 +35,8 @@ private:
   bool use_va_args = false;
   bool use_self_arg = false;
 
+  Module *parent = nullptr;
+
 public:
   Function () : type (FuncType::Native) {}
   Function (FuncType t) : type (t) {}
@@ -67,6 +69,18 @@ public:
   get_type () const
   {
     return type;
+  }
+
+  inline Module *&
+  get_parent ()
+  {
+    return parent;
+  }
+
+  void
+  set_parent (Module *mod)
+  {
+    get_parent () = mod;
   }
 
   virtual ~Function () {};

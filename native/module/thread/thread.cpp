@@ -94,7 +94,10 @@ run (Module *mod)
   Object *fargs = th->get_fargs ();
   Module *fmod = th->get_mod ();
 
-  Module *nmod = new Module (ModuleType::File);
+  IR (fname);
+  IR (fargs);
+
+  Module *nmod = new Module (ModuleType::Function);
   nmod->set_parent (fmod);
 
   assert (fargs->get_type () == ObjectType::ArrayObj
@@ -125,6 +128,8 @@ join_all (Module *mod)
       if (i.second->get_th ().joinable ())
         i.second->get_th ().join ();
 
+      DR (i.second->get_fargs ());
+      DR (i.second->get_fname ());
       delete i.second;
     }
 

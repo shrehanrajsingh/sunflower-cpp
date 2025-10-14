@@ -333,3 +333,18 @@ a = File ("../../tests/test.sf", "r")
 write (a.read ())
 a.close ()
 write (a.read ())
+
+import '_Native_Thread' as thread
+
+fun test (a, b, c)
+    write ("TEST THREAD")
+    sum = 0
+    for i in 1 to 10000
+        sum = sum + i
+    write ("SUM IS", sum)
+
+th = thread.create (test, [1, 2, 3])
+thread.run (th)
+write ("here")
+
+thread.join_all ()

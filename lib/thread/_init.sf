@@ -1,0 +1,25 @@
+import '_Native_Thread' as client
+
+class Thread
+    id = -1
+
+    fun _init (self, fn, args)
+        self.id = client.create (fn, args)
+    
+    fun run (self)
+        if self.id == -1
+            return? "Thread has not been initialized or is closed"
+
+        client.run (self.id)
+    
+    fun join (self)
+        if self.id == -1
+            return? "Thread has not been initialized or is closed"
+
+        client.join (self.id)
+
+fun _init (fn, args)
+    return Thread (fn, args)
+
+fun join_all ()
+    client.join_all ()

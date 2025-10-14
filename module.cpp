@@ -505,15 +505,39 @@ mod_exec (Module &mod)
                           assert (nf->get_args ().get_size ()
                                   > 0); /* at least one arg */
 
+                        Object *self_arg = nullptr;
                         if (fv->get_self_arg ())
                           {
                             assert (name_eval->get_self_arg () != nullptr);
                             args_eval.insert (0, name_eval->get_self_arg ());
+                            self_arg = name_eval->get_self_arg ();
+                            IR (self_arg);
                           }
 
                         Module *fmod = new Module (ModuleType::Function,
                                                    Vec<Statement *> ());
-                        fmod->set_parent (&mod);
+
+                        if (fv->get_self_arg ())
+                          {
+                            switch (self_arg->get_type ())
+                              {
+                              case ObjectType::ClassObj:
+                                {
+                                  ClassObject *co
+                                      = static_cast<ClassObject *> (self_arg);
+
+                                  fmod->set_parent (
+                                      co->get_mod ()->get_parent ());
+                                }
+                                break;
+
+                              default:
+                                assert (0 && "TODO");
+                                break;
+                              }
+                          }
+                        else
+                          fmod->set_parent (nf->get_parent ());
 
                         if (nf->get_va_args ())
                           {
@@ -557,6 +581,9 @@ mod_exec (Module &mod)
                               st->get_line_number ());
                         });
 
+                        if (fv->get_self_arg ())
+                          DR (self_arg);
+
                         DR (ret);
                         delete fmod;
                       }
@@ -565,7 +592,6 @@ mod_exec (Module &mod)
                     case FuncType::Coded:
                       {
                         CodedFunction *cf = static_cast<CodedFunction *> (fv);
-
                         // printf ("%d %d\n", cf->get_args ().get_size (),
                         //         args_eval.get_size ());
                         if (!cf->get_va_args ())
@@ -576,15 +602,41 @@ mod_exec (Module &mod)
                           assert (cf->get_args ().get_size ()
                                   > 0); /* at least one arg */
 
+                        Object *self_arg = nullptr;
+
                         if (fv->get_self_arg ())
                           {
                             assert (name_eval->get_self_arg () != nullptr);
                             args_eval.insert (0, name_eval->get_self_arg ());
+                            self_arg = name_eval->get_self_arg ();
+
+                            IR (self_arg);
                           }
 
                         Module *fmod = new Module (ModuleType::Function,
                                                    cf->get_body ());
-                        fmod->set_parent (&mod);
+
+                        if (fv->get_self_arg ())
+                          {
+                            switch (self_arg->get_type ())
+                              {
+                              case ObjectType::ClassObj:
+                                {
+                                  ClassObject *co
+                                      = static_cast<ClassObject *> (self_arg);
+
+                                  fmod->set_parent (
+                                      co->get_mod ()->get_parent ());
+                                }
+                                break;
+
+                              default:
+                                assert (0 && "TODO");
+                                break;
+                              }
+                          }
+                        else
+                          fmod->set_parent (cf->get_parent ());
 
                         size_t j = 0;
                         for (Expr *&a : cf->get_args ())
@@ -645,6 +697,9 @@ mod_exec (Module &mod)
                             });
                           }
 
+                        if (fv->get_self_arg ())
+                          DR (self_arg);
+
                         delete fmod;
                       }
                       break;
@@ -704,7 +759,7 @@ mod_exec (Module &mod)
 
                                   Module *fmod = new Module (
                                       ModuleType::Function, cf->get_body ());
-                                  fmod->set_parent (&mod);
+                                  fmod->set_parent (sm->get_parent ());
 
                                   size_t j = 0;
                                   for (Expr *&a : cf->get_args ())
@@ -771,7 +826,7 @@ mod_exec (Module &mod)
                                   Module *fmod
                                       = new Module (ModuleType::Function,
                                                     Vec<Statement *> ());
-                                  fmod->set_parent (&mod);
+                                  fmod->set_parent (sm->get_parent ());
 
                                   if (nf->get_va_args ())
                                     {
@@ -891,7 +946,7 @@ mod_exec (Module &mod)
 
                             Module *fmod = new Module (ModuleType::Function,
                                                        Vec<Statement *> ());
-                            fmod->set_parent (&mod);
+                            fmod->set_parent (mo_mod);
 
                             if (nf->get_va_args ())
                               {
@@ -961,7 +1016,7 @@ mod_exec (Module &mod)
 
                             Module *fmod = new Module (ModuleType::Function,
                                                        cf->get_body ());
-                            fmod->set_parent (&mod);
+                            fmod->set_parent (mo_mod);
 
                             size_t j = 0;
                             for (Expr *&a : cf->get_args ())
@@ -1284,6 +1339,7 @@ mod_exec (Module &mod)
 
             CodedFunction *cd
                 = new CodedFunction (fds->get_body (), fds->get_args ());
+            cd->set_parent (&mod);
 
             if (mod.get_type () == ModuleType::Class)
               cd->set_self_arg (true);
@@ -1360,6 +1416,7 @@ mod_exec (Module &mod)
                   }
                 else
                   {
+                    std::cout << "return_used_outside_function\n";
                     throw "return_used_outside_function";
                   }
 
@@ -1506,6 +1563,12 @@ mod_exec (Module &mod)
                       }
                   }
               }
+            else
+              {
+                file_opened = true;
+                mfp.close ();
+                main_f = std::ifstream (path.get_internal_buffer ());
+              }
 
             Module *m;
 
@@ -1552,6 +1615,9 @@ mod_exec (Module &mod)
 
                 Vec<Statement *> ast = stmt_gen (r);
                 // Vec<Statement *> ast;
+
+                // for (Statement *&i : ast)
+                //   i->print ();
 
                 native::add_natives (ast);
 
@@ -2727,7 +2793,7 @@ expr_eval (Module &mod, Expr *e)
 
                               Module *fmod = new Module (ModuleType::Function,
                                                          cf->get_body ());
-                              fmod->set_parent (&mod);
+                              fmod->set_parent (objm->get_parent ());
 
                               size_t j = 0;
                               for (Expr *&a : cf->get_args ())
@@ -2807,7 +2873,7 @@ expr_eval (Module &mod, Expr *e)
 
                               Module *fmod = new Module (ModuleType::Function,
                                                          Vec<Statement *> ());
-                              fmod->set_parent (&mod);
+                              fmod->set_parent (sm->get_parent ());
 
                               if (nf->get_va_args ())
                                 {
@@ -2932,7 +2998,7 @@ expr_eval (Module &mod, Expr *e)
 
                         Module *fmod = new Module (ModuleType::Function,
                                                    Vec<Statement *> ());
-                        fmod->set_parent (&mod);
+                        fmod->set_parent (mo_mod);
 
                         if (nf->get_va_args ())
                           {
@@ -3012,7 +3078,7 @@ expr_eval (Module &mod, Expr *e)
 
                         Module *fmod = new Module (ModuleType::Function,
                                                    cf->get_body ());
-                        fmod->set_parent (&mod);
+                        fmod->set_parent (mo_mod);
 
                         size_t j = 0;
                         for (Expr *&a : cf->get_args ())
@@ -3075,21 +3141,17 @@ expr_eval (Module &mod, Expr *e)
                           }
                         else
                           {
-                            Constant *p;
-                            Expr *t = static_cast<Expr *> (
-                                new ConstantExpr (static_cast<Constant *> (
-                                    p = new NoneConstant ())));
-                            res = expr_eval (mod, t);
-                            AMBIG_CHECK (res, {
-                              DR (name_eval);
-                              delete p;
-                              delete t;
+                            res = static_cast<Object *> (
+                                new ConstantObject (static_cast<Constant *> (
+                                    new NoneConstant ())));
+                            IR (res);
+                            // AMBIG_CHECK (res, {
+                            //   DR (name_eval);
+                            //   delete p;
+                            //   delete t;
 
-                              delete fmod;
-                            });
-
-                            delete p;
-                            delete t;
+                            //   delete fmod;
+                            // });
                           }
 
                         /**
@@ -3951,7 +4013,10 @@ expr_eval (Module &mod, Expr *e)
     }
 
   if (res == nullptr)
-    throw "res_expr_is_null";
+    {
+      std::cout << "res_expr_is_null";
+      throw "res_expr_is_null";
+    }
 
   if (!res->get_ref_count ())
     {
@@ -4018,7 +4083,7 @@ Module::has_variable (std::string rhs)
 Object *
 call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
 {
-  Module *nmod = new Module (ModuleType::File);
+  Module *nmod = new Module (ModuleType::Function);
   Object *res = nullptr;
 
   switch (fname->get_type ())
@@ -4040,13 +4105,35 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
                 assert (cf->get_args ().get_size ()
                         > 0); /* at least one arg */
 
+              Object *self_arg = nullptr;
+
               if (fv->get_self_arg ())
                 {
                   assert (fname->get_self_arg () != nullptr);
                   fargs.insert (0, fname->get_self_arg ());
-                }
+                  self_arg = fname->get_self_arg ();
+                  IR (self_arg);
 
-              nmod->set_parent (&mod);
+                  switch (self_arg->get_type ())
+                    {
+                    case ObjectType::ClassObj:
+                      {
+                        ClassObject *co
+                            = static_cast<ClassObject *> (self_arg);
+
+                        Module *co_mod = co->get_mod ();
+                        nmod->set_parent (co_mod->get_parent ());
+                      }
+                      break;
+
+                    default:
+                      assert (0 && "TODO");
+                      break;
+                    }
+                }
+              else
+                nmod->set_parent (cf->get_parent ());
+
               nmod->get_stmts () = cf->get_body ();
 
               size_t j = 0;
@@ -4095,8 +4182,12 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
                   // DR (mod.get_ambig ());
                 }
 
+              if (fv->get_self_arg ())
+                DR (self_arg);
+
               Object *ret = nmod->get_ret ();
               res = ret;
+              IR (res);
             }
             break;
 
@@ -4113,11 +4204,34 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
                 assert (nf->get_args ().get_size ()
                         > 0); /* at least one arg */
 
+              Object *self_arg = nullptr;
+
               if (fv->get_self_arg ())
                 {
                   assert (fname->get_self_arg () != nullptr);
                   fargs.insert (0, fname->get_self_arg ());
+                  self_arg = fname->get_self_arg ();
+                  IR (self_arg);
+
+                  switch (self_arg->get_type ())
+                    {
+                    case ObjectType::ClassObj:
+                      {
+                        ClassObject *co
+                            = static_cast<ClassObject *> (self_arg);
+
+                        Module *co_mod = co->get_mod ();
+                        nmod->set_parent (co_mod->get_parent ());
+                      }
+                      break;
+
+                    default:
+                      assert (0 && "TODO");
+                      break;
+                    }
                 }
+              else
+                nmod->set_parent (nf->get_parent ());
 
               Module *fmod
                   = new Module (ModuleType::Function, Vec<Statement *> ());
@@ -4157,6 +4271,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
 
               TC (ret = nf->call (fmod));
               res = ret;
+              IR (res);
 
               delete fmod;
             }
@@ -4174,8 +4289,12 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
   delete nmod;
 
   if (res == nullptr)
-    res = static_cast<Object *> (
-        new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+    {
+      res = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+      IR (res);
+    }
 
   return res;
 }
