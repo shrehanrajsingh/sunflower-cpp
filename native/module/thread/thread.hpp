@@ -15,6 +15,8 @@ private:
   Object *fname;
   Object *fargs;
   Module *mod;
+  bool has_result = false;
+  Object *ret = nullptr;
 
   std::promise<Object *> promise;
   std::thread th_handle;
@@ -46,6 +48,24 @@ public:
     return mod;
   }
 
+  inline bool &
+  get_has_result ()
+  {
+    return has_result;
+  }
+
+  void
+  set_has_result (bool b)
+  {
+    get_has_result () = b;
+  }
+
+  inline Object *&
+  get_ret ()
+  {
+    return ret;
+  }
+
   inline std::thread &
   get_th ()
   {
@@ -67,11 +87,21 @@ public:
   inline Object *
   get_return ()
   {
-    return get_future ().get ();
+    if (get_ret () == nullptr)
+      get_ret () = get_future ().get ();
+    return get_ret ();
   }
 
   ~ThreadHandle ()
   {
+    if (get_has_result ())
+      {
+        if (get_ret () != nullptr)
+          {
+            DR (get_ret ());
+          }
+      }
+
     DR (fname);
     DR (fargs);
   }
@@ -82,6 +112,7 @@ SF_API Object *join (Module *);
 SF_API Object *run (Module *);
 SF_API Object *detach (Module *);
 SF_API Object *join_all (Module *);
+SF_API Object *close (Module *);
 } // namespace Thread
 } // namespace native_mod
 } // namespace sf

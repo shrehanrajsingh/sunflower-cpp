@@ -17,6 +17,9 @@ class Thread
             return? "Thread has not been initialized or is closed"
 
         client.join (self.id)
+    
+    fun _kill (self)
+        client.close (self.id)
 
 fun _init (fn, args)
     return Thread (fn, args)

@@ -18,6 +18,9 @@
 /* integer methods */
 #include "int/base.hpp"
 
+/* list methods */
+#include "list/push.hpp"
+
 namespace sf
 {
 namespace native

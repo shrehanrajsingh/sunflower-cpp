@@ -19,6 +19,9 @@ add_natives (Vec<Statement *> &m)
 
   /* integer methods */
   _add_native_int_base (m);
+
+  /* list methods */
+  _add_native_list_push (m);
 }
 } // namespace native
 } // namespace sf

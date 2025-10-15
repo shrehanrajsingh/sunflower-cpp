@@ -26,6 +26,8 @@ create (Module *mod)
       fname, fargs,
       mod->get_parent ()); /* TODO: mod instance might be different */
 
+  th->get_future () = th->get_promise ().get_future ();
+
   size_t mapid = tmap_id;
   threadmap[tmap_id++] = th;
 
@@ -38,10 +40,12 @@ create (Module *mod)
 }
 
 void
-_run_cf_rt (std::promise<Object *> &prm, Module *m, Object *fname,
-            Vec<Object *> &vobj)
+_run_cf_rt (ThreadHandle *th, std::promise<Object *> &prm, Module *m,
+            Object *fname, Vec<Object *> &vobj)
 {
-  prm.set_value (call_func (*m, fname, vobj));
+  prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
+  th->set_has_result (true);
+  delete m;
 }
 
 SF_API Object *
@@ -60,12 +64,19 @@ join (Module *mod)
 
   ThreadHandle *th = threadmap[id];
 
-  assert (th->get_th ().joinable () && "thread is not joinable");
+  //   assert (th->get_th ().joinable () && "thread is not joinable");
+  if (!th->get_th ().joinable ())
+    {
+      Object *o = new ConstantObject (new NoneConstant ());
+      IR (o);
+
+      return o;
+    }
 
   th->get_th ().join ();
   Object *ret = th->get_return ();
-
   IR (ret);
+
   return ret;
 
   //   Object *o = new ConstantObject (new NoneConstant ());
@@ -94,9 +105,6 @@ run (Module *mod)
   Object *fargs = th->get_fargs ();
   Module *fmod = th->get_mod ();
 
-  IR (fname);
-  IR (fargs);
-
   Module *nmod = new Module (ModuleType::Function);
   nmod->set_parent (fmod);
 
@@ -107,11 +115,9 @@ run (Module *mod)
   //                            static_cast<ArrayObject *> (fargs)->get_vals
   //                            ());
 
-  th->get_future () = th->get_promise ().get_future ();
-
   Vec<Object *> &vals = static_cast<ArrayObject *> (fargs)->get_vals ();
-  th->get_th () = std::thread (_run_cf_rt, std::ref (th->get_promise ()), nmod,
-                               fname, std::ref (vals));
+  th->get_th () = std::thread (_run_cf_rt, th, std::ref (th->get_promise ()),
+                               nmod, fname, std::ref (vals));
 
   Object *ret = static_cast<Object *> (
       new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
@@ -125,13 +131,49 @@ join_all (Module *mod)
 {
   for (std::map<size_t, ThreadHandle *>::iterator::value_type &i : threadmap)
     {
+      if (i.second == nullptr)
+        continue;
+
       if (i.second->get_th ().joinable ())
         i.second->get_th ().join ();
 
-      DR (i.second->get_fargs ());
-      DR (i.second->get_fname ());
       delete i.second;
     }
+
+  threadmap.clear ();
+
+  Object *ret = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+  IR (ret);
+  return ret;
+}
+
+SF_API Object *
+close (Module *mod)
+{
+  Object *o_id = mod->get_variable ("id");
+
+  assert (OBJ_IS_INT (o_id) && "thread id must be an integer");
+
+  size_t id = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (o_id)->get_c ().get ())
+          ->get_value ());
+
+  if (!threadmap.count (id))
+    {
+      Object *ret = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+      IR (ret);
+      return ret;
+    }
+
+  ThreadHandle *th = threadmap[id];
+  delete th;
+
+  threadmap.erase (id);
 
   Object *ret = static_cast<Object *> (
       new ConstantObject (static_cast<Constant *> (new NoneConstant ())));

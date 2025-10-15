@@ -224,5 +224,6 @@ public:
 
 void mod_exec (Module &);
 Object *expr_eval (Module &, Expr *);
-Object *call_func (Module &_ModRef, Object *_FName, Vec<Object *> &_FArgs);
+Object *call_func (Module &_ModRef, Object *_FName, Vec<Object *> &_FArgs,
+                   Object *_Self_Arg = nullptr);
 } // namespace sf

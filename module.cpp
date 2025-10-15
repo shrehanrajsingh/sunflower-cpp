@@ -57,6 +57,7 @@ mod_exec (Module &mod)
 
             Object *val_eval;
             TC (val_eval = expr_eval (mod, nv));
+            assert (val_eval != nullptr);
 
             AMBIG_CHECK (val_eval, {
               mod.get_backtrace ().push_back (st->get_line_number ());
@@ -483,233 +484,241 @@ mod_exec (Module &mod)
               {
               case ObjectType::FuncObject:
                 {
-                  FunctionObject *fo
-                      = static_cast<FunctionObject *> (name_eval);
+                  Object *ret = call_func (mod, name_eval, args_eval);
+                  DR (ret);
+                  // FunctionObject *fo
+                  //     = static_cast<FunctionObject *> (name_eval);
 
-                  Function *fv = fo->get_v ();
+                  // Function *fv = fo->get_v ();
 
-                  switch (fv->get_type ())
-                    {
-                    case FuncType::Native:
-                      {
-                        NativeFunction *nf
-                            = static_cast<NativeFunction *> (fv);
+                  // switch (fv->get_type ())
+                  //   {
+                  //   case FuncType::Native:
+                  //     {
+                  //       NativeFunction *nf
+                  //           = static_cast<NativeFunction *> (fv);
 
-                        if (!nf->get_va_args ())
-                          {
-                            assert (nf->get_args ().get_size ()
-                                    == args_eval.get_size ()
-                                           + fv->get_self_arg ());
-                          }
-                        else
-                          assert (nf->get_args ().get_size ()
-                                  > 0); /* at least one arg */
+                  //       if (!nf->get_va_args ())
+                  //         {
+                  //           assert (nf->get_args ().get_size ()
+                  //                   == args_eval.get_size ()
+                  //                          + fv->get_self_arg ());
+                  //         }
+                  //       else
+                  //         assert (nf->get_args ().get_size ()
+                  //                 > 0); /* at least one arg */
 
-                        Object *self_arg = nullptr;
-                        if (fv->get_self_arg ())
-                          {
-                            assert (name_eval->get_self_arg () != nullptr);
-                            args_eval.insert (0, name_eval->get_self_arg ());
-                            self_arg = name_eval->get_self_arg ();
-                            IR (self_arg);
-                          }
+                  //       Object *self_arg = nullptr;
+                  //       if (fv->get_self_arg ())
+                  //         {
+                  //           assert (name_eval->get_self_arg () != nullptr);
+                  //           args_eval.insert (0, name_eval->get_self_arg
+                  //           ()); self_arg = name_eval->get_self_arg (); IR
+                  //           (self_arg);
+                  //         }
 
-                        Module *fmod = new Module (ModuleType::Function,
-                                                   Vec<Statement *> ());
+                  //       Module *fmod = new Module (ModuleType::Function,
+                  //                                  Vec<Statement *> ());
 
-                        if (fv->get_self_arg ())
-                          {
-                            switch (self_arg->get_type ())
-                              {
-                              case ObjectType::ClassObj:
-                                {
-                                  ClassObject *co
-                                      = static_cast<ClassObject *> (self_arg);
+                  //       if (fv->get_self_arg ())
+                  //         {
+                  //           switch (self_arg->get_type ())
+                  //             {
+                  //             case ObjectType::ClassObj:
+                  //               {
+                  //                 ClassObject *co
+                  //                     = static_cast<ClassObject *>
+                  //                     (self_arg);
 
-                                  fmod->set_parent (
-                                      co->get_mod ()->get_parent ());
-                                }
-                                break;
+                  //                 fmod->set_parent (
+                  //                     co->get_mod ()->get_parent ());
+                  //               }
+                  //               break;
 
-                              default:
-                                assert (0 && "TODO");
-                                break;
-                              }
-                          }
-                        else
-                          fmod->set_parent (nf->get_parent ());
+                  //             default:
+                  //               assert (0 && "TODO");
+                  //               break;
+                  //             }
+                  //         }
+                  //       else
+                  //         fmod->set_parent (nf->get_parent ());
 
-                        if (nf->get_va_args ())
-                          {
-                            /**
-                             * Function uses variable arguments
-                             */
-                            Str arg_a
-                                = nf->get_args ()[nf->get_args ().get_size ()
-                                                  - 1];
+                  //       if (nf->get_va_args ())
+                  //         {
+                  //           /**
+                  //            * Function uses variable arguments
+                  //            */
+                  //           Str arg_a
+                  //               = nf->get_args ()[nf->get_args ().get_size
+                  //               ()
+                  //                                 - 1];
 
-                            /* convert args_eval to ArrayObject */
-                            for (Object *&i : args_eval)
-                              IR (i); /* transfer back ownership */
+                  //           /* convert args_eval to ArrayObject */
+                  //           for (Object *&i : args_eval)
+                  //             IR (i); /* transfer back ownership */
 
-                            ArrayObject *ao = new ArrayObject (args_eval);
+                  //           ArrayObject *ao = new ArrayObject (args_eval);
 
-                            char *p = arg_a.c_str ();
-                            fmod->set_variable (p, ao);
+                  //           char *p = arg_a.c_str ();
+                  //           fmod->set_variable (p, ao);
 
-                            delete[] p;
-                          }
-                        else
-                          {
-                            size_t j = 0;
-                            for (Str &a : nf->get_args ())
-                              {
-                                char *p = a.c_str ();
-                                fmod->set_variable (p, args_eval[j++]);
+                  //           delete[] p;
+                  //         }
+                  //       else
+                  //         {
+                  //           size_t j = 0;
+                  //           for (Str &a : nf->get_args ())
+                  //             {
+                  //               char *p = a.c_str ();
+                  //               fmod->set_variable (p, args_eval[j++]);
 
-                                delete[] p;
-                              }
-                          }
+                  //               delete[] p;
+                  //             }
+                  //         }
 
-                        Object *ret;
+                  //       Object *ret;
 
-                        TC (ret = nf->call (fmod));
-                        AMBIG_CHECK (ret, {
-                          delete fmod;
-                          DR (name_eval);
-                          mod.get_backtrace ().push_back (
-                              st->get_line_number ());
-                        });
+                  //       TC (ret = nf->call (fmod));
+                  //       AMBIG_CHECK (ret, {
+                  //         delete fmod;
+                  //         DR (name_eval);
+                  //         mod.get_backtrace ().push_back (
+                  //             st->get_line_number ());
+                  //       });
 
-                        if (fv->get_self_arg ())
-                          DR (self_arg);
+                  //       if (fv->get_self_arg ())
+                  //         DR (self_arg);
 
-                        DR (ret);
-                        delete fmod;
-                      }
-                      break;
+                  //       DR (ret);
+                  //       delete fmod;
+                  //     }
+                  //     break;
 
-                    case FuncType::Coded:
-                      {
-                        CodedFunction *cf = static_cast<CodedFunction *> (fv);
-                        // printf ("%d %d\n", cf->get_args ().get_size (),
-                        //         args_eval.get_size ());
-                        if (!cf->get_va_args ())
-                          assert (cf->get_args ().get_size ()
-                                  == args_eval.get_size ()
-                                         + fv->get_self_arg ());
-                        else
-                          assert (cf->get_args ().get_size ()
-                                  > 0); /* at least one arg */
+                  //   case FuncType::Coded:
+                  //     {
+                  //       CodedFunction *cf = static_cast<CodedFunction *>
+                  //       (fv);
+                  //       // printf ("%d %d\n", cf->get_args ().get_size (),
+                  //       //         args_eval.get_size ());
+                  //       if (!cf->get_va_args ())
+                  //         assert (cf->get_args ().get_size ()
+                  //                 == args_eval.get_size ()
+                  //                        + fv->get_self_arg ());
+                  //       else
+                  //         assert (cf->get_args ().get_size ()
+                  //                 > 0); /* at least one arg */
 
-                        Object *self_arg = nullptr;
+                  //       Object *self_arg = nullptr;
 
-                        if (fv->get_self_arg ())
-                          {
-                            assert (name_eval->get_self_arg () != nullptr);
-                            args_eval.insert (0, name_eval->get_self_arg ());
-                            self_arg = name_eval->get_self_arg ();
+                  //       if (fv->get_self_arg ())
+                  //         {
+                  //           assert (name_eval->get_self_arg () != nullptr);
+                  //           args_eval.insert (0, name_eval->get_self_arg
+                  //           ()); self_arg = name_eval->get_self_arg ();
 
-                            IR (self_arg);
-                          }
+                  //           IR (self_arg);
+                  //         }
 
-                        Module *fmod = new Module (ModuleType::Function,
-                                                   cf->get_body ());
+                  //       Module *fmod = new Module (ModuleType::Function,
+                  //                                  cf->get_body ());
 
-                        if (fv->get_self_arg ())
-                          {
-                            switch (self_arg->get_type ())
-                              {
-                              case ObjectType::ClassObj:
-                                {
-                                  ClassObject *co
-                                      = static_cast<ClassObject *> (self_arg);
+                  //       if (fv->get_self_arg ())
+                  //         {
+                  //           switch (self_arg->get_type ())
+                  //             {
+                  //             case ObjectType::ClassObj:
+                  //               {
+                  //                 ClassObject *co
+                  //                     = static_cast<ClassObject *>
+                  //                     (self_arg);
 
-                                  fmod->set_parent (
-                                      co->get_mod ()->get_parent ());
-                                }
-                                break;
+                  //                 fmod->set_parent (
+                  //                     co->get_mod ()->get_parent ());
+                  //               }
+                  //               break;
 
-                              default:
-                                assert (0 && "TODO");
-                                break;
-                              }
-                          }
-                        else
-                          fmod->set_parent (cf->get_parent ());
+                  //             default:
+                  //               assert (0 && "TODO");
+                  //               break;
+                  //             }
+                  //         }
+                  //       else
+                  //         fmod->set_parent (cf->get_parent ());
 
-                        size_t j = 0;
-                        for (Expr *&a : cf->get_args ())
-                          {
-                            switch (a->get_type ())
-                              {
-                              case ExprType::Variable:
-                                {
-                                  char *p = static_cast<VariableExpr *> (a)
-                                                ->get_name ()
-                                                .c_str ();
-                                  fmod->set_variable (p, args_eval[j++]);
+                  //       size_t j = 0;
+                  //       for (Expr *&a : cf->get_args ())
+                  //         {
+                  //           switch (a->get_type ())
+                  //             {
+                  //             case ExprType::Variable:
+                  //               {
+                  //                 char *p = static_cast<VariableExpr *> (a)
+                  //                               ->get_name ()
+                  //                               .c_str ();
+                  //                 fmod->set_variable (p, args_eval[j++]);
 
-                                  delete[] p;
-                                }
-                                break;
+                  //                 delete[] p;
+                  //               }
+                  //               break;
 
-                              default:
-                                break;
-                              }
-                          }
+                  //             default:
+                  //               break;
+                  //             }
+                  //         }
 
-                        mod_exec (*fmod);
+                  //       mod_exec (*fmod);
 
-                        if (fmod->get_saw_ambig ())
-                          {
-                            // here;
-                            // std::cout << fmod->get_ambig ()->get_ref_count
-                            // ()
-                            //           << '\n';
-                            mod.get_ambig () = fmod->get_ambig ();
+                  //       if (fmod->get_saw_ambig ())
+                  //         {
+                  //           // here;
+                  //           // std::cout << fmod->get_ambig
+                  //           ()->get_ref_count
+                  //           // ()
+                  //           //           << '\n';
+                  //           mod.get_ambig () = fmod->get_ambig ();
 
-                            for (int i : fmod->get_backtrace ())
-                              {
-                                mod.get_backtrace ().push_back (i);
-                              }
+                  //           for (int i : fmod->get_backtrace ())
+                  //             {
+                  //               mod.get_backtrace ().push_back (i);
+                  //             }
 
-                            IR (mod.get_ambig ());
-                            mod.get_saw_ambig () = true;
+                  //           IR (mod.get_ambig ());
+                  //           mod.get_saw_ambig () = true;
 
-                            delete fmod;
-                            // here;
-                            // std::cout << mod.get_ambig ()->get_ref_count ()
-                            //           << '\n';
-                            // DR (mod.get_ambig ());
-                            DR (name_eval);
-                            goto ambig_test;
-                          }
+                  //           delete fmod;
+                  //           // here;
+                  //           // std::cout << mod.get_ambig ()->get_ref_count
+                  //           ()
+                  //           //           << '\n';
+                  //           // DR (mod.get_ambig ());
+                  //           DR (name_eval);
+                  //           goto ambig_test;
+                  //         }
 
-                        Object *ret = fmod->get_ret ();
-                        if (ret != nullptr)
-                          {
-                            AMBIG_CHECK (ret, {
-                              delete fmod;
-                              DR (name_eval);
-                              mod.get_backtrace ().push_back (
-                                  st->get_line_number ());
-                            });
-                          }
+                  //       Object *ret = fmod->get_ret ();
+                  //       if (ret != nullptr)
+                  //         {
+                  //           AMBIG_CHECK (ret, {
+                  //             delete fmod;
+                  //             DR (name_eval);
+                  //             mod.get_backtrace ().push_back (
+                  //                 st->get_line_number ());
+                  //           });
+                  //         }
 
-                        if (fv->get_self_arg ())
-                          DR (self_arg);
+                  //       if (fv->get_self_arg ())
+                  //         DR (self_arg);
 
-                        delete fmod;
-                      }
-                      break;
+                  //       delete fmod;
+                  //     }
+                  //     break;
 
-                    default:
-                      /* unreachable */
-                      here;
-                      exit (__LINE__);
-                      break;
-                    }
+                  //   default:
+                  //     /* unreachable */
+                  //     here;
+                  //     exit (__LINE__);
+                  //     break;
+                  //   }
                 }
                 break;
               case ObjectType::SfClass:
@@ -732,165 +741,172 @@ mod_exec (Module &mod)
                         throw std::runtime_error (
                             "class._init is not callable");
 
-                      args_eval.insert (0, co);
+                      // args_eval.insert (0, co);
                       objm->set_parent (sm->get_parent ());
 
-                      switch (f_init->get_type ())
-                        {
-                        case ObjectType::FuncObject:
-                          {
-                            FunctionObject *fo
-                                = static_cast<FunctionObject *> (f_init);
+                      Object *ret = call_func (*sm->get_parent (), f_init,
+                                               args_eval, co);
+                      DR (ret);
 
-                            Function *fo_f = fo->get_v ();
+                      // switch (f_init->get_type ())
+                      //   {
+                      //   case ObjectType::FuncObject:
+                      //     {
+                      //       FunctionObject *fo
+                      //           = static_cast<FunctionObject *> (f_init);
 
-                            switch (fo_f->get_type ())
-                              {
-                              case FuncType::Coded:
-                                {
-                                  CodedFunction *cf
-                                      = static_cast<CodedFunction *> (fo_f);
+                      //       Function *fo_f = fo->get_v ();
 
-                                  // printf ("%d %d\n", cf->get_args
-                                  // ().get_size (),
-                                  //         args_eval.get_size ());
-                                  assert (cf->get_args ().get_size ()
-                                          == args_eval.get_size ());
+                      //       switch (fo_f->get_type ())
+                      //         {
+                      //         case FuncType::Coded:
+                      //           {
+                      //             CodedFunction *cf
+                      //                 = static_cast<CodedFunction *> (fo_f);
 
-                                  Module *fmod = new Module (
-                                      ModuleType::Function, cf->get_body ());
-                                  fmod->set_parent (sm->get_parent ());
+                      //             // printf ("%d %d\n", cf->get_args
+                      //             // ().get_size (),
+                      //             //         args_eval.get_size ());
+                      //             assert (cf->get_args ().get_size ()
+                      //                     == args_eval.get_size ());
 
-                                  size_t j = 0;
-                                  for (Expr *&a : cf->get_args ())
-                                    {
-                                      switch (a->get_type ())
-                                        {
-                                        case ExprType::Variable:
-                                          {
-                                            char *p
-                                                = static_cast<VariableExpr *> (
-                                                      a)
-                                                      ->get_name ()
-                                                      .c_str ();
-                                            fmod->set_variable (
-                                                p, args_eval[j++]);
+                      //             Module *fmod = new Module (
+                      //                 ModuleType::Function, cf->get_body
+                      //                 ());
+                      //             fmod->set_parent (sm->get_parent ());
 
-                                            delete[] p;
-                                          }
-                                          break;
+                      //             size_t j = 0;
+                      //             for (Expr *&a : cf->get_args ())
+                      //               {
+                      //                 switch (a->get_type ())
+                      //                   {
+                      //                   case ExprType::Variable:
+                      //                     {
+                      //                       char *p
+                      //                           = static_cast<VariableExpr
+                      //                           *> (
+                      //                                 a)
+                      //                                 ->get_name ()
+                      //                                 .c_str ();
+                      //                       fmod->set_variable (
+                      //                           p, args_eval[j++]);
 
-                                        default:
-                                          break;
-                                        }
-                                    }
+                      //                       delete[] p;
+                      //                     }
+                      //                     break;
 
-                                  mod_exec (*fmod);
+                      //                   default:
+                      //                     break;
+                      //                   }
+                      //               }
 
-                                  /**
-                                   * In statement side we
-                                   * do not really care about
-                                   * the return value of the function
-                                   */
-                                  if (fmod->get_ambig ())
-                                    AMBIG_CHECK (fmod->get_ambig (), {
-                                      mod.get_continue_exec () = false;
-                                      mod.get_saw_ambig () = true;
-                                      mod.get_ambig () = fmod->get_ambig ();
-                                      IR (fmod->get_ambig ());
+                      //             mod_exec (*fmod);
 
-                                      // IR (fmod->get_ambig ());
-                                      DR (name_eval);
-                                      DR (co);
-                                      delete fmod;
-                                      mod.get_backtrace ().push_back (
-                                          st->get_line_number ());
-                                    });
+                      //             /**
+                      //              * In statement side we
+                      //              * do not really care about
+                      //              * the return value of the function
+                      //              */
+                      //             if (fmod->get_ambig ())
+                      //               AMBIG_CHECK (fmod->get_ambig (), {
+                      //                 mod.get_continue_exec () = false;
+                      //                 mod.get_saw_ambig () = true;
+                      //                 mod.get_ambig () = fmod->get_ambig ();
+                      //                 IR (fmod->get_ambig ());
 
-                                  delete fmod;
-                                }
-                                break;
+                      //                 // IR (fmod->get_ambig ());
+                      //                 DR (name_eval);
+                      //                 DR (co);
+                      //                 delete fmod;
+                      //                 mod.get_backtrace ().push_back (
+                      //                     st->get_line_number ());
+                      //               });
 
-                              case FuncType::Native:
-                                {
-                                  NativeFunction *nf
-                                      = static_cast<NativeFunction *> (fo_f);
+                      //             delete fmod;
+                      //           }
+                      //           break;
 
-                                  if (!nf->get_va_args ())
-                                    assert (nf->get_args ().get_size ()
-                                            == args_eval.get_size ());
-                                  else
-                                    assert (nf->get_args ().get_size ()
-                                            > 0); /* at least one arg */
+                      //         case FuncType::Native:
+                      //           {
+                      //             NativeFunction *nf
+                      //                 = static_cast<NativeFunction *>
+                      //                 (fo_f);
 
-                                  Module *fmod
-                                      = new Module (ModuleType::Function,
-                                                    Vec<Statement *> ());
-                                  fmod->set_parent (sm->get_parent ());
+                      //             if (!nf->get_va_args ())
+                      //               assert (nf->get_args ().get_size ()
+                      //                       == args_eval.get_size ());
+                      //             else
+                      //               assert (nf->get_args ().get_size ()
+                      //                       > 0); /* at least one arg */
 
-                                  if (nf->get_va_args ())
-                                    {
-                                      /**
-                                       * Function uses variable arguments
-                                       */
-                                      Str arg_a = nf->get_args ()[0];
+                      //             Module *fmod
+                      //                 = new Module (ModuleType::Function,
+                      //                               Vec<Statement *> ());
+                      //             fmod->set_parent (sm->get_parent ());
 
-                                      /* convert args_eval to ArrayObject */
-                                      for (Object *&i : args_eval)
-                                        IR (i); /* transfer back ownership
-                                                 */
+                      //             if (nf->get_va_args ())
+                      //               {
+                      //                 /**
+                      //                  * Function uses variable arguments
+                      //                  */
+                      //                 Str arg_a = nf->get_args ()[0];
 
-                                      ArrayObject *ao
-                                          = new ArrayObject (args_eval);
+                      //                 /* convert args_eval to ArrayObject */
+                      //                 for (Object *&i : args_eval)
+                      //                   IR (i); /* transfer back ownership
+                      //                            */
 
-                                      char *p = arg_a.c_str ();
-                                      fmod->set_variable (p, ao);
+                      //                 ArrayObject *ao
+                      //                     = new ArrayObject (args_eval);
 
-                                      delete[] p;
-                                    }
-                                  else
-                                    {
-                                      size_t j = 0;
-                                      for (Str &a : nf->get_args ())
-                                        {
-                                          char *p = a.c_str ();
-                                          fmod->set_variable (p,
-                                                              args_eval[j++]);
+                      //                 char *p = arg_a.c_str ();
+                      //                 fmod->set_variable (p, ao);
 
-                                          delete[] p;
-                                        }
-                                    }
+                      //                 delete[] p;
+                      //               }
+                      //             else
+                      //               {
+                      //                 size_t j = 0;
+                      //                 for (Str &a : nf->get_args ())
+                      //                   {
+                      //                     char *p = a.c_str ();
+                      //                     fmod->set_variable (p,
+                      //                                         args_eval[j++]);
 
-                                  Object *ret;
+                      //                     delete[] p;
+                      //                   }
+                      //               }
 
-                                  TC (ret = nf->call (fmod));
-                                  AMBIG_CHECK (ret, {
-                                    mod.get_continue_exec () = false;
-                                    mod.get_saw_ambig () = true;
-                                    mod.get_ambig () = ret;
-                                    IR (ret);
+                      //             Object *ret;
 
-                                    DR (co);
-                                    DR (name_eval);
-                                    delete fmod;
-                                    mod.get_backtrace ().push_back (
-                                        st->get_line_number ());
-                                  });
-                                  DR (ret);
+                      //             TC (ret = nf->call (fmod));
+                      //             AMBIG_CHECK (ret, {
+                      //               mod.get_continue_exec () = false;
+                      //               mod.get_saw_ambig () = true;
+                      //               mod.get_ambig () = ret;
+                      //               IR (ret);
 
-                                  delete fmod;
-                                }
-                                break;
+                      //               DR (co);
+                      //               DR (name_eval);
+                      //               delete fmod;
+                      //               mod.get_backtrace ().push_back (
+                      //                   st->get_line_number ());
+                      //             });
+                      //             DR (ret);
 
-                              default:
-                                break;
-                              }
-                          }
-                          break;
+                      //             delete fmod;
+                      //           }
+                      //           break;
 
-                        default:
-                          break;
-                        }
+                      //         default:
+                      //           break;
+                      //         }
+                      //   }
+                      //   break;
+
+                      // default:
+                      //   break;
+                      // }
                     }
 
                   /* in statement side, a class declaration is a dangling class
@@ -2530,221 +2546,221 @@ expr_eval (Module &mod, Expr *e)
           {
           case ObjectType::FuncObject:
             {
-              FunctionObject *fo = static_cast<FunctionObject *> (name_eval);
+              res = call_func (mod, name_eval, args_eval);
+              // FunctionObject *fo = static_cast<FunctionObject *>
+              // (name_eval);
 
-              Function *fv = fo->get_v ();
+              // Function *fv = fo->get_v ();
 
-              switch (fv->get_type ())
-                {
-                case FuncType::Native:
-                  {
-                    NativeFunction *nf = static_cast<NativeFunction *> (fv);
+              // switch (fv->get_type ())
+              //   {
+              //   case FuncType::Native:
+              //     {
+              //       NativeFunction *nf = static_cast<NativeFunction *> (fv);
 
-                    if (!nf->get_va_args ())
-                      assert (nf->get_args ().get_size ()
-                              == args_eval.get_size () + fv->get_self_arg ());
-                    else
-                      assert (nf->get_args ().get_size ()
-                              > 0); /* at least one arg */
+              //       if (!nf->get_va_args ())
+              //         assert (nf->get_args ().get_size ()
+              //                 == args_eval.get_size () + fv->get_self_arg
+              //                 ());
+              //       else
+              //         assert (nf->get_args ().get_size ()
+              //                 > 0); /* at least one arg */
 
-                    if (fv->get_self_arg ())
-                      {
-                        assert (name_eval->get_self_arg () != nullptr);
-                        args_eval.insert (0, name_eval->get_self_arg ());
-                      }
+              //       if (fv->get_self_arg ())
+              //         {
+              //           assert (name_eval->get_self_arg () != nullptr);
+              //           args_eval.insert (0, name_eval->get_self_arg ());
+              //         }
 
-                    Module *fmod = new Module (ModuleType::Function,
-                                               Vec<Statement *> ());
-                    fmod->set_parent (&mod);
+              //       Module *fmod = new Module (ModuleType::Function,
+              //                                  Vec<Statement *> ());
+              //       fmod->set_parent (&mod);
 
-                    if (nf->get_va_args ())
-                      {
-                        /**
-                         * Function uses variable arguments
-                         */
-                        Str arg_a = nf->get_args ()[0];
+              //       if (nf->get_va_args ())
+              //         {
+              //           /**
+              //            * Function uses variable arguments
+              //            */
+              //           Str arg_a = nf->get_args ()[0];
 
-                        /* convert args_eval to ArrayObject */
-                        for (Object *&i : args_eval)
-                          IR (i); /* transfer back ownership */
+              //           /* convert args_eval to ArrayObject */
+              //           for (Object *&i : args_eval)
+              //             IR (i); /* transfer back ownership */
 
-                        ArrayObject *ao = new ArrayObject (args_eval);
+              //           ArrayObject *ao = new ArrayObject (args_eval);
 
-                        char *p = arg_a.c_str ();
-                        fmod->set_variable (p, ao);
+              //           char *p = arg_a.c_str ();
+              //           fmod->set_variable (p, ao);
 
-                        delete[] p;
-                      }
-                    else
-                      {
-                        size_t j = 0;
-                        for (Str &a : nf->get_args ())
-                          {
-                            char *p = a.c_str ();
-                            fmod->set_variable (p, args_eval[j++]);
+              //           delete[] p;
+              //         }
+              //       else
+              //         {
+              //           size_t j = 0;
+              //           for (Str &a : nf->get_args ())
+              //             {
+              //               char *p = a.c_str ();
+              //               fmod->set_variable (p, args_eval[j++]);
 
-                            delete[] p;
-                          }
-                      }
+              //               delete[] p;
+              //             }
+              //         }
 
-                    Object *ret;
+              //       Object *ret;
 
-                    TC (ret = nf->call (fmod));
-                    // DR (ret);
+              //       TC (ret = nf->call (fmod));
+              //       // DR (ret);
 
-                    AMBIG_CHECK (ret, {
-                      DR (name_eval);
-                      DR (ret);
-                      res = ret;
-                      delete fmod;
-                    });
+              //       AMBIG_CHECK (ret, {
+              //         DR (name_eval);
+              //         DR (ret);
+              //         res = ret;
+              //         delete fmod;
+              //       });
 
-                    res = ret;
+              //       res = ret;
 
-                    /**
-                     * nf->call returns an object with
-                     * an increased refcount (to save ownership
-                     * transfer during return)
-                     * we will use that refcount for res.
-                     * So we will not call an IR(X)/I(X) here
-                     */
+              //       /**
+              //        * nf->call returns an object with
+              //        * an increased refcount (to save ownership
+              //        * transfer during return)
+              //        * we will use that refcount for res.
+              //        * So we will not call an IR(X)/I(X) here
+              //        */
 
-                    delete fmod;
-                  }
-                  break;
+              //       delete fmod;
+              //     }
+              //     break;
 
-                case FuncType::Coded:
-                  {
-                    CodedFunction *cf = static_cast<CodedFunction *> (fv);
+              //   case FuncType::Coded:
+              //     {
+              //       CodedFunction *cf = static_cast<CodedFunction *> (fv);
 
-                    // printf ("%d %d\n", cf->get_args ().get_size (),
-                    //         args_eval.get_size ());
-                    if (!cf->get_va_args ())
-                      assert (cf->get_args ().get_size ()
-                              == args_eval.get_size () + fv->get_self_arg ());
-                    else
-                      assert (cf->get_args ().get_size ()
-                              > 0); /* at least one arg */
+              //       // printf ("%d %d\n", cf->get_args ().get_size (),
+              //       //         args_eval.get_size ());
+              //       if (!cf->get_va_args ())
+              //         assert (cf->get_args ().get_size ()
+              //                 == args_eval.get_size () + fv->get_self_arg
+              //                 ());
+              //       else
+              //         assert (cf->get_args ().get_size ()
+              //                 > 0); /* at least one arg */
 
-                    if (fv->get_self_arg ())
-                      {
-                        assert (name_eval->get_self_arg () != nullptr);
-                        args_eval.insert (0, name_eval->get_self_arg ());
-                      }
+              //       if (fv->get_self_arg ())
+              //         {
+              //           assert (name_eval->get_self_arg () != nullptr);
+              //           args_eval.insert (0, name_eval->get_self_arg ());
+              //         }
 
-                    Module *fmod
-                        = new Module (ModuleType::Function, cf->get_body ());
-                    fmod->set_parent (&mod);
+              //       Module *fmod
+              //           = new Module (ModuleType::Function, cf->get_body
+              //           ());
+              //       fmod->set_parent (&mod);
 
-                    size_t j = 0;
-                    for (Expr *&a : cf->get_args ())
-                      {
-                        switch (a->get_type ())
-                          {
-                          case ExprType::Variable:
-                            {
-                              char *p = static_cast<VariableExpr *> (a)
-                                            ->get_name ()
-                                            .c_str ();
-                              fmod->set_variable (p, args_eval[j++]);
+              //       size_t j = 0;
+              //       for (Expr *&a : cf->get_args ())
+              //         {
+              //           switch (a->get_type ())
+              //             {
+              //             case ExprType::Variable:
+              //               {
+              //                 char *p = static_cast<VariableExpr *> (a)
+              //                               ->get_name ()
+              //                               .c_str ();
+              //                 fmod->set_variable (p, args_eval[j++]);
 
-                              delete[] p;
-                            }
-                            break;
+              //                 delete[] p;
+              //               }
+              //               break;
 
-                          default:
-                            break;
-                          }
-                      }
+              //             default:
+              //               break;
+              //             }
+              //         }
 
-                    mod_exec (*fmod);
+              //       mod_exec (*fmod);
 
-                    if (fmod->get_saw_ambig ())
-                      {
-                        res = fmod->get_ambig ();
+              //       if (fmod->get_saw_ambig ())
+              //         {
+              //           res = fmod->get_ambig ();
 
-                        for (int i = 0; i < fmod->get_backtrace ().get_size ();
-                             i++)
-                          {
-                            mod.get_backtrace ().push_back (
-                                fmod->get_backtrace ()[i]);
-                          }
+              //           for (int i = 0; i < fmod->get_backtrace ().get_size
+              //           ();
+              //                i++)
+              //             {
+              //               mod.get_backtrace ().push_back (
+              //                   fmod->get_backtrace ()[i]);
+              //             }
 
-                        /**
-                         * ! DO NOT UNCOMMENT THE NEXT LINE
-                         * ! IT RESULTS IN A MEMORY LEAK
-                         */
-                        // IR (res);
-                        DR (name_eval);
+              //           /**
+              //            * ! DO NOT UNCOMMENT THE NEXT LINE
+              //            * ! IT RESULTS IN A MEMORY LEAK
+              //            */
+              //           // IR (res);
+              //           DR (name_eval);
 
-                        delete fmod;
-                        goto ambig_test;
-                      }
+              //           delete fmod;
+              //           goto ambig_test;
+              //         }
 
-                    if (fmod->get_ret () != nullptr)
-                      {
-                        res = fmod->get_ret ();
-                        AMBIG_CHECK (res, {
-                          for (int i = 0;
-                               i < fmod->get_backtrace ().get_size (); i++)
-                            {
-                              mod.get_backtrace ().push_back (
-                                  fmod->get_backtrace ()[i]);
-                            }
+              //       if (fmod->get_ret () != nullptr)
+              //         {
+              //           res = fmod->get_ret ();
+              //           AMBIG_CHECK (res, {
+              //             for (int i = 0;
+              //                  i < fmod->get_backtrace ().get_size (); i++)
+              //               {
+              //                 mod.get_backtrace ().push_back (
+              //                     fmod->get_backtrace ()[i]);
+              //               }
 
-                          delete fmod;
-                        });
-                      }
-                    else
-                      {
-                        Constant *p;
-                        Expr *t = static_cast<Expr *> (
-                            new ConstantExpr (static_cast<Constant *> (
-                                p = new NoneConstant ())));
-                        res = expr_eval (mod, t);
-                        AMBIG_CHECK (res, {
-                          DR (name_eval);
-                          delete p;
-                          delete t;
+              //             delete fmod;
+              //           });
+              //         }
+              //       else
+              //         {
+              //           res = static_cast<Object *> (new ConstantObject (
+              //               static_cast<Constant *> (new NoneConstant ())));
 
-                          delete fmod;
-                        });
+              //           IR (res);
+              //           // AMBIG_CHECK (res, {
+              //           //   DR (name_eval);
 
-                        delete p;
-                        delete t;
-                      }
+              //           //   delete fmod;
+              //           // });
+              //         }
 
-                    /**
-                     * TODO: check whether coded functions
-                     * return an increased refcount which
-                     * we could possibly use.
-                     *
-                     * ? Check:
-                     * ?  So I checked the code for ReturnStmt rule
-                     * ?  and it uses expr_eval to evaluate return
-                     * ?  object, so we can use that extra RCI
-                     * ?  here.
-                     *
-                     * ! But:
-                     * !  when we delete fmod the RCI is lost
-                     * !  so we need proper ownership for res
-                     * !  in this scope
-                     *
-                     * * Conclusion:
-                     * *  Do call IR(res)/I(res) here
-                     */
-                    IR (res);
+              //       /**
+              //        * TODO: check whether coded functions
+              //        * return an increased refcount which
+              //        * we could possibly use.
+              //        *
+              //        * ? Check:
+              //        * ?  So I checked the code for ReturnStmt rule
+              //        * ?  and it uses expr_eval to evaluate return
+              //        * ?  object, so we can use that extra RCI
+              //        * ?  here.
+              //        *
+              //        * ! But:
+              //        * !  when we delete fmod the RCI is lost
+              //        * !  so we need proper ownership for res
+              //        * !  in this scope
+              //        *
+              //        * * Conclusion:
+              //        * *  Do call IR(res)/I(res) here
+              //        */
+              //       IR (res);
 
-                    delete fmod;
-                  }
-                  break;
+              //       delete fmod;
+              //     }
+              //     break;
 
-                default:
-                  /* unreachable */
-                  here;
-                  exit (__LINE__);
-                  break;
-                }
+              //   default:
+              //     /* unreachable */
+              //     here;
+              //     exit (__LINE__);
+              //     break;
+              //   }
             }
             break;
           case ObjectType::SfClass:
@@ -3300,6 +3316,39 @@ expr_eval (Module &mod, Expr *e)
 
               IR (res);
               AMBIG_CHECK (res, {});
+            }
+            break;
+
+          case ObjectType::ArrayObj:
+            {
+              Str meth_name = Str{ "[]." } + member;
+
+              if (!mod.has_variable (meth_name.get_internal_buffer ()))
+                {
+                  throw std::runtime_error (
+                      (Str{ "No such native method found: " } + meth_name)
+                          .get_internal_buffer ());
+                }
+
+              res = mod.get_variable (meth_name.get_internal_buffer ());
+
+              IR (res);
+              AMBIG_CHECK (res, {});
+
+              if (res->get_type () == ObjectType::FuncObject
+                  && static_cast<FunctionObject *> (res)
+                         ->get_v ()
+                         ->get_self_arg ())
+                {
+                  if (res->get_self_arg () != nullptr)
+                    {
+                      DR (res->get_self_arg ());
+                      res->get_self_arg () = nullptr;
+                    }
+
+                  res->get_self_arg () = o_parent;
+                  IR (o_parent);
+                }
             }
             break;
 
@@ -4081,7 +4130,8 @@ Module::has_variable (std::string rhs)
 }
 
 Object *
-call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
+call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
+           Object *__self_Arg)
 {
   Module *nmod = new Module (ModuleType::Function);
   Object *res = nullptr;
@@ -4099,20 +4149,26 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
             {
               CodedFunction *cf = static_cast<CodedFunction *> (fv);
               if (!cf->get_va_args ())
-                assert (cf->get_args ().get_size ()
-                        == fargs.get_size () + fv->get_self_arg ());
+                {
+                  if (__self_Arg == nullptr)
+                    assert (cf->get_args ().get_size ()
+                            == fargs.get_size () + fv->get_self_arg ());
+                  else
+                    {
+                      assert (cf->get_args ().get_size ()
+                              == fargs.get_size () + 1);
+                    }
+                }
               else
                 assert (cf->get_args ().get_size ()
                         > 0); /* at least one arg */
 
-              Object *self_arg = nullptr;
+              Object *self_arg = __self_Arg;
 
-              if (fv->get_self_arg ())
+              if (self_arg != nullptr)
                 {
-                  assert (fname->get_self_arg () != nullptr);
-                  fargs.insert (0, fname->get_self_arg ());
-                  self_arg = fname->get_self_arg ();
                   IR (self_arg);
+                  fargs.insert (0, self_arg);
 
                   switch (self_arg->get_type ())
                     {
@@ -4126,13 +4182,54 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
                       }
                       break;
 
+                    case ObjectType::Constant:
+                    case ObjectType::ArrayObj:
+                      {
+                        nmod->set_parent (cf->get_parent ());
+                      }
+                      break;
+
                     default:
                       assert (0 && "TODO");
                       break;
                     }
                 }
               else
-                nmod->set_parent (cf->get_parent ());
+                {
+                  if (fv->get_self_arg ())
+                    {
+                      assert (fname->get_self_arg () != nullptr);
+                      fargs.insert (0, fname->get_self_arg ());
+                      self_arg = fname->get_self_arg ();
+                      IR (self_arg);
+
+                      switch (self_arg->get_type ())
+                        {
+                        case ObjectType::ClassObj:
+                          {
+                            ClassObject *co
+                                = static_cast<ClassObject *> (self_arg);
+
+                            Module *co_mod = co->get_mod ();
+                            nmod->set_parent (co_mod->get_parent ());
+                          }
+                          break;
+
+                        case ObjectType::Constant:
+                        case ObjectType::ArrayObj:
+                          {
+                            nmod->set_parent (cf->get_parent ());
+                          }
+                          break;
+
+                        default:
+                          assert (0 && "TODO");
+                          break;
+                        }
+                    }
+                  else
+                    nmod->set_parent (cf->get_parent ());
+                }
 
               nmod->get_stmts () = cf->get_body ();
 
@@ -4182,12 +4279,28 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
                   // DR (mod.get_ambig ());
                 }
 
-              if (fv->get_self_arg ())
-                DR (self_arg);
+              if (__self_Arg != nullptr)
+                {
+                  DR (self_arg);
+                }
+              else
+                {
+                  if (fv->get_self_arg ())
+                    DR (self_arg);
+                }
 
               Object *ret = nmod->get_ret ();
+
+              if (nmod->get_ret () == nullptr)
+                {
+                  ret = static_cast<Object *> (new ConstantObject (
+                      static_cast<Constant *> (new NoneConstant ())));
+
+                  IR (ret);
+                }
+
               res = ret;
-              IR (res);
+              // IR (res);
             }
             break;
 
@@ -4222,6 +4335,13 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
 
                         Module *co_mod = co->get_mod ();
                         nmod->set_parent (co_mod->get_parent ());
+                      }
+                      break;
+
+                    case ObjectType::Constant:
+                    case ObjectType::ArrayObj:
+                      {
+                        nmod->set_parent (nf->get_parent ());
                       }
                       break;
 
@@ -4271,7 +4391,6 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs)
 
               TC (ret = nf->call (fmod));
               res = ret;
-              IR (res);
 
               delete fmod;
             }

@@ -348,3 +348,39 @@ thread.run (th)
 write ("here")
 
 thread.join_all ()
+
+import '../../lib/thread/_init.sf' as thread
+
+fun test (a)
+    s = 0
+    for i in 1 to 10000 # waste cycles
+        s = s + i
+    write ("hi", a)
+
+a = thread (test, [1])
+b = thread (test, [2])
+c = thread (test, [3])
+d = thread (test, [4])
+
+a.run ()
+b.run ()
+c.run ()
+d.run ()
+
+thread.join_all ()
+
+import '../../lib/thread/_init.sf' as thread
+
+fun test (a)
+    s = 0
+    for i in 1 to 10000 # waste cycles
+        s = s + i
+    write ("hi", a)
+
+ths = []
+
+for i in 1 to 10
+    ths.push (thread (test, [i]))
+    ths[-1].run ()
+
+thread.join_all ()
