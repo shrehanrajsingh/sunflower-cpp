@@ -1,0 +1,56 @@
+import 'file' as file
+
+class Schema
+    fields = none
+
+    fun _init (self, fields)
+        self.fields = fields
+    
+    fun write (self, out)
+        if not self.fields
+            return? "No fields to store"
+        
+        out.write (self.fields)
+
+
+## SmallDB is a basic database which
+## stores data as tuples in a schema.
+## Each file acts like a table with 
+## a schema and tuples representing
+## data
+## example schema
+## test.sdb
+## [id, name, email, pwd, joined_at]
+## ...other headers
+## end headers
+## [0, "name_1", "email_1", date_1]
+## [1, "name_2", "email_2", date_2 ]
+class SmallDB
+    target = none
+    schema = none
+    tuples = none
+
+    fun _init (self, target_path)
+        self.target = file (target_path, 'w')
+        self.tuples = []
+    
+    fun set_schema (self, schema)
+        self.schema = schema
+    
+    fun commit_schema (self)
+        self.target.write (bytes (self.schema))
+    
+    fun add_tuple (self, tup)
+        self.tuples.push (tup)
+    
+    fun commit_tuples (self)
+        for i in self.tuples
+            self.target.write (bytes (i))
+        
+        self.tuples.clear ()
+    
+    fun _kill (self)
+        self.target.close ()
+
+fun _init (db_path)
+    return SmallDB (db_path)
