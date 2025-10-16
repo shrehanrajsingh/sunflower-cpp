@@ -1,15 +1,12 @@
 import '../../lib/thread/_init.sf' as thread
 
 fun test (a)
-    s = 0
-    for i in 1 to 10000 # waste cycles
-        s = s + i
-    write ("hi", a)
+    write (a)
 
-ths = []
-
-for i in 1 to 10
-    ths.push (thread (test, [i]))
-    ths[-1].run ()
-
-thread.join_all ()
+while 1
+    a = []
+    for i in 1 to 10
+        a.push (thread (test, [1]))
+        a[-1].run ()
+    
+    thread.join_all ()

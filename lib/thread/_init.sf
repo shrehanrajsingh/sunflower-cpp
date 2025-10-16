@@ -16,9 +16,10 @@ class Thread
         if self.id == -1
             return? "Thread has not been initialized or is closed"
 
-        client.join (self.id)
+        return client.join (self.id)
     
     fun _kill (self)
+        write ("_kill")
         client.close (self.id)
 
 fun _init (fn, args)

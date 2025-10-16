@@ -45,6 +45,7 @@ _run_cf_rt (ThreadHandle *th, std::promise<Object *> &prm, Module *m,
 {
   prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
   th->set_has_result (true);
+  IR (th->get_ret ());
   delete m;
 }
 
@@ -74,8 +75,8 @@ join (Module *mod)
     }
 
   th->get_th ().join ();
-  Object *ret = th->get_return ();
-  IR (ret);
+  Object *ret = th->get_ret ();
+  assert (ret != nullptr);
 
   return ret;
 

@@ -85,7 +85,6 @@ public:
   {
     if (self_arg != nullptr)
       {
-        here;
         DR (self_arg);
         self_arg = nullptr;
       }

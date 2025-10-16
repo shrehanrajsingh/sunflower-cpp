@@ -384,3 +384,16 @@ for i in 1 to 10
     ths[-1].run ()
 
 thread.join_all ()
+
+import '../../lib/thread/_init.sf' as thread
+
+fun test (a)
+    write (a)
+
+while 1
+    a = []
+    for i in 1 to 10
+        a.push (thread (test, [1]))
+        a[-1].run ()
+    
+    thread.join_all ()
