@@ -947,6 +947,10 @@ mod_exec (Module &mod)
                       {
                         Str np = pt + path;
 
+                        if (std::filesystem::is_directory (
+                                np.get_internal_buffer ()))
+                          np = np + "/_init.sf";
+
                         std::ifstream file_np (np.get_internal_buffer ());
 
                         if (!!file_np)

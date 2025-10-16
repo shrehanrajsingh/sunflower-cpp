@@ -136,9 +136,10 @@ join_all (Module *mod)
         continue;
 
       if (i.second->get_th ().joinable ())
-        i.second->get_th ().join ();
-
-      delete i.second;
+        {
+          i.second->get_th ().join ();
+          delete i.second;
+        }
     }
 
   threadmap.clear ();

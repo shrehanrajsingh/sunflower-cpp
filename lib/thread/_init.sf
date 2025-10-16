@@ -19,7 +19,7 @@ class Thread
         return client.join (self.id)
     
     fun _kill (self)
-        write ("_kill")
+        write ("called thread::_kill")
         client.close (self.id)
 
 fun _init (fn, args)
