@@ -1,0 +1,15 @@
+# TODO
+
+d = 0
+global = mod
+
+fun test ()
+    d = 20
+    write (d)
+
+fun test2 ()
+    global.d = 20
+    write (d)
+
+test ()
+write (d)
