@@ -8,6 +8,7 @@
 #include "input.hpp"
 #include "put.hpp"
 #include "putln.hpp"
+#include "sleep.hpp"
 #include "write.hpp"
 
 /* string methods */

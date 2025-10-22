@@ -19,8 +19,9 @@ class Thread
         return client.join (self.id)
     
     fun _kill (self)
-        write ("called thread::_kill")
-        client.close (self.id)
+        # write ("called thread::_kill")
+        if self.id != -1
+            client.close (self.id)
 
 fun _init (fn, args)
     return Thread (fn, args)

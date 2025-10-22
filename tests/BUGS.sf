@@ -6,3 +6,80 @@ class test
 
 
 a = test ()
+
+import 'thread' as thread
+
+fun test (a)
+    for i in 1 to 1000
+        t = none
+    write (a)
+
+# seg fault
+if 0
+    while 1
+        a = [thread (test, [0]), thread (test, [1])]
+        a[0].run ()
+        a[1].run ()
+
+        a[0].join ()
+        a[1].join ()
+
+# seg fault
+if 0
+    while 1
+        a = [thread (test, [0]), thread (test, [1])]
+        a[0].run ()
+        a[1].run ()
+
+        thread.join_all ()
+
+# seg fault
+if 0
+    while 1
+        a = [thread (test, [0]), thread (test, [1])]
+        a[0].run ()
+        a[1].run ()
+
+# seg fault
+if 0
+    while 1
+        a = [thread (test, [0]), thread (test, [1]), thread (test, [2]), thread (test, [3]), thread (test, [4]), thread (test, [5])]
+        a[0].run ()
+        a[1].run ()
+        a[2].run ()
+        a[3].run ()
+        a[4].run ()
+        a[5].run ()
+
+        a[0].join ()
+        a[1].join ()
+        a[2].join ()
+        a[3].join ()
+        a[4].join ()
+        a[5].join ()
+
+
+# seg fault
+if 1
+    while 1
+        t0 = thread (test, [0])
+        t1 = thread (test, [1])
+        t2 = thread (test, [2])
+        t3 = thread (test, [3])
+        t4 = thread (test, [4])
+        t5 = thread (test, [5])
+
+        t0.run ()
+        t1.run ()
+        t2.run ()
+        t3.run ()
+        t4.run ()
+        t5.run ()
+
+        t0.join ()
+        t1.join ()
+        t2.join ()
+        t3.join ()
+        t4.join ()
+        t5.join ()
+

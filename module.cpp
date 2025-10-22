@@ -35,6 +35,7 @@ Module::set_variable (std::string n, Object *v)
   IR (v);
 
   vtable[n] = v;
+  vhist[n] = var_priority_counter++;
 }
 
 void

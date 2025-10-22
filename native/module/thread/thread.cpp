@@ -6,15 +6,30 @@ namespace native_mod
 {
 namespace Thread
 {
+static std::mutex threadmap_mutex;
 static std::map<size_t, ThreadHandle *> threadmap;
 static size_t tmap_id = 0;
 
 SF_API Object *
 create (Module *mod)
 {
+  std::lock_guard<std::mutex> lock (threadmap_mutex);
+
   /**
    * create (function_name, array_containing_function_args)
    */
+
+  if (threadmap.size () >= SF_MOD_THREAD_LIMIT)
+    {
+      std::cout << "thread creation failed. Too many threads" << std::endl;
+
+      Object *res = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (
+              new IntegerConstant (static_cast<int> (-1)))));
+
+      IR (res);
+      return res;
+    }
 
   Object *fname = mod->get_variable ("fname");
   Object *fargs = mod->get_variable ("fargs");
@@ -28,8 +43,9 @@ create (Module *mod)
 
   th->get_future () = th->get_promise ().get_future ();
 
-  size_t mapid = tmap_id;
-  threadmap[tmap_id++] = th;
+  size_t mapid = tmap_id++;
+
+  threadmap[mapid] = th;
 
   Object *res
       = static_cast<Object *> (new ConstantObject (static_cast<Constant *> (
@@ -43,15 +59,29 @@ void
 _run_cf_rt (ThreadHandle *th, std::promise<Object *> &prm, Module *m,
             Object *fname, Vec<Object *> &vobj)
 {
-  prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
-  th->set_has_result (true);
-  IR (th->get_ret ());
+  try
+    {
+      prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
+      th->set_has_result (true);
+      // IR (th->get_ret ());
+    }
+  catch (const std::exception &e)
+    {
+      std::cerr << e.what () << '\n';
+    }
+  catch (const char *&e)
+    {
+      std::cerr << e << '\n';
+    }
+
+  m->set_parent (nullptr);
   delete m;
 }
 
 SF_API Object *
 join (Module *mod)
 {
+  // std::lock_guard<std::mutex> lock (threadmap_mutex);
   Object *o_id = mod->get_variable ("id");
 
   assert (OBJ_IS_INT (o_id) && "thread id must be an integer");
@@ -68,7 +98,8 @@ join (Module *mod)
   //   assert (th->get_th ().joinable () && "thread is not joinable");
   if (!th->get_th ().joinable ())
     {
-      Object *o = new ConstantObject (new NoneConstant ());
+      Object *o = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
       IR (o);
 
       return o;
@@ -77,6 +108,8 @@ join (Module *mod)
   th->get_th ().join ();
   Object *ret = th->get_ret ();
   assert (ret != nullptr);
+
+  IR (ret);
 
   return ret;
 
@@ -130,6 +163,7 @@ run (Module *mod)
 SF_API Object *
 join_all (Module *mod)
 {
+  // std::lock_guard<std::mutex> lock (threadmap_mutex);
   for (std::map<size_t, ThreadHandle *>::iterator::value_type &i : threadmap)
     {
       if (i.second == nullptr)
@@ -154,6 +188,7 @@ join_all (Module *mod)
 SF_API Object *
 close (Module *mod)
 {
+  // std::lock_guard<std::mutex> lock (threadmap_mutex);
   Object *o_id = mod->get_variable ("id");
 
   assert (OBJ_IS_INT (o_id) && "thread id must be an integer");
@@ -165,6 +200,7 @@ close (Module *mod)
 
   if (!threadmap.count (id))
     {
+
       Object *ret = static_cast<Object *> (
           new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
 
@@ -173,9 +209,8 @@ close (Module *mod)
     }
 
   ThreadHandle *th = threadmap[id];
-  delete th;
-
   threadmap.erase (id);
+  delete th;
 
   Object *ret = static_cast<Object *> (
       new ConstantObject (static_cast<Constant *> (new NoneConstant ())));

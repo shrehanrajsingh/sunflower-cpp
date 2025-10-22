@@ -1,6 +1,20 @@
-import 'thread' as thread
+import 'thread' as th
 
 fun test (a)
+    sleep (100)
     write (a)
 
-a = thread (test, [1])
+
+a = th (test, [1])
+b = th (test, [2])
+c = th (test, [3])
+d = th (test, [4])
+e = th (test, [5])
+
+a.run ()
+b.run ()
+c.run ()
+d.run ()
+e.run ()
+
+th.join_all ()

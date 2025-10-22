@@ -32,6 +32,9 @@ private:
   Module *parent;
   std::map<std::string, Object *> vtable;
 
+  int var_priority_counter = 0;
+  std::map<std::string, int> vhist;
+
   bool continue_exec;
   bool saw_ambig;
   Object *ret;
@@ -122,10 +125,26 @@ public:
     if (env != nullptr)
       delete env;
 
-    for (auto i : vtable)
+    std::vector<std::pair<std::string, int>> sorted_vars;
+    for (const auto &var : vtable)
       {
-        // std::cout << i.first << '\t' << i.second->get_ref_count () << '\n';
-        DR (i.second);
+        auto it = vhist.find (var.first);
+        int priority = (it != vhist.end ()) ? it->second
+                                            : std::numeric_limits<int>::max ();
+        sorted_vars.push_back ({ var.first, priority });
+      }
+
+    std::sort (sorted_vars.begin (), sorted_vars.end (),
+               [] (const auto &a, const auto &b)
+                 { return a.second > b.second; });
+
+    for (const auto &var : sorted_vars)
+      {
+        auto it = vtable.find (var.first);
+        if (it != vtable.end ())
+          {
+            DR (it->second);
+          }
       }
   }
 
