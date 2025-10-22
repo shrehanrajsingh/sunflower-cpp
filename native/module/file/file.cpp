@@ -105,6 +105,43 @@ read (Module *mod)
 }
 
 SF_API Object *
+write (Module *mod)
+{
+  Object *fileid = mod->get_variable ("fileid");
+  Object *fstr = mod->get_variable ("str");
+
+  assert (OBJ_IS_INT (fileid) && "File id must be an integer");
+
+  size_t id = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (fileid)->get_c ().get ())
+          ->get_value ());
+
+  if (!filemap.count (id))
+    {
+      std::cerr << "File with id " << id << " does not exist." << std::endl;
+      exit (-1);
+    }
+
+  FileHandle *fh = filemap[id];
+  std::fstream &fs = fh->get_fs ();
+
+  assert (fs.is_open () && "File has been closed");
+
+  Str &vl = static_cast<StringConstant *> (
+                static_cast<ConstantObject *> (fstr)->get_c ().get ())
+                ->get_value ();
+
+  fs << vl.get_internal_buffer ();
+
+  Object *r = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+  IR (r);
+  return r;
+}
+
+SF_API Object *
 close (Module *mod)
 {
   Object *fileid = mod->get_variable ("fileid");

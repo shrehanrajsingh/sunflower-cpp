@@ -29,6 +29,12 @@ make ()
 
   mod->set_variable ("close", static_cast<Object *> (fo_close));
 
+  NativeFunction *nf_write = new NativeFunction (write, { "fileid", "str" });
+  FunctionObject *fo_write
+      = new FunctionObject (static_cast<Function *> (nf_write));
+
+  mod->set_variable ("write", static_cast<Object *> (fo_write));
+
   return mod;
 }
 } // namespace File

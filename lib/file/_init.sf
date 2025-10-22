@@ -19,7 +19,16 @@ class File
         
         return file.read (self.id)
     
+    fun write (self, s)
+        if not self.id
+            return ? "File has not been created or is closed"
+        
+        return file.write (self.id, s)
+    
     fun close (self)
         if self.id
             file.close (self.id)
             self.id = 0
+
+fun _init (name, perms)
+    return File (name, perms)

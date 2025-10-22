@@ -1,20 +1,15 @@
-import 'thread' as th
+# TODO
 
-fun test (a)
-    sleep (100)
-    write (a)
+d = 0
+global = mod
 
+fun test ()
+    d = 20
+    write (d)
 
-a = th (test, [1])
-b = th (test, [2])
-c = th (test, [3])
-d = th (test, [4])
-e = th (test, [5])
+fun test2 ()
+    global.d = 20
+    write (d)
 
-a.run ()
-b.run ()
-c.run ()
-d.run ()
-e.run ()
-
-th.join_all ()
+test ()
+write (d)

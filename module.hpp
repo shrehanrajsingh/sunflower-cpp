@@ -134,9 +134,10 @@ public:
         sorted_vars.push_back ({ var.first, priority });
       }
 
-    std::sort (sorted_vars.begin (), sorted_vars.end (),
-               [] (const auto &a, const auto &b)
-                 { return a.second > b.second; });
+    if (sorted_vars.size () > 1)
+      std::sort (sorted_vars.begin (), sorted_vars.end (),
+                 [] (const auto &a, const auto &b)
+                   { return a.second > b.second; });
 
     for (const auto &var : sorted_vars)
       {

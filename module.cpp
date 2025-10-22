@@ -3009,12 +3009,11 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
               mod_exec (*nmod);
 
+              Object *ret;
+
               if (nmod->get_saw_ambig ())
                 {
-                  // here;
-                  // std::cout << nmod->get_ambig ()->get_ref_count
-                  // ()
-                  //           << '\n';
+                  // std::cout << nmod->get_ambig ()->get_ref_count () << '\n';
                   mod.get_ambig () = nmod->get_ambig ();
 
                   for (int i : nmod->get_backtrace ())
@@ -3025,11 +3024,23 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                   IR (mod.get_ambig ());
                   mod.get_saw_ambig () = true;
 
+                  nmod->set_parent (nullptr);
                   delete nmod;
-                  // here;
+                  nmod = nullptr;
+
+                  ret = static_cast<Object *> (new ConstantObject (
+                      static_cast<Constant *> (new NoneConstant ())));
                   // std::cout << mod.get_ambig ()->get_ref_count ()
                   //           << '\n';
                   // DR (mod.get_ambig ());
+                }
+              else
+                {
+                  ret = nmod->get_ret ();
+
+                  if (ret == nullptr)
+                    ret = static_cast<Object *> (new ConstantObject (
+                        static_cast<Constant *> (new NoneConstant ())));
                 }
 
               if (__self_Arg != nullptr)
@@ -3040,14 +3051,6 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 {
                   if (fv->get_self_arg ())
                     DR (self_arg);
-                }
-
-              Object *ret = nmod->get_ret ();
-
-              if (nmod->get_ret () == nullptr)
-                {
-                  ret = static_cast<Object *> (new ConstantObject (
-                      static_cast<Constant *> (new NoneConstant ())));
                 }
 
               res = ret;
@@ -3216,7 +3219,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
       break;
     }
 
-  delete nmod;
+  if (nmod != nullptr)
+    delete nmod;
 
   if (res == nullptr)
     {

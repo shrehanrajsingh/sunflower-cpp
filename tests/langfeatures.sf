@@ -397,3 +397,9 @@ while 1
         a[-1].run ()
     
     thread.join_all ()
+
+import 'file' as file
+
+a = file ('../../tests/test.txt', 'w')
+a.write ("Hello, World!")
+a.close ()
