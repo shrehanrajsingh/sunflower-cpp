@@ -53,6 +53,8 @@ SF_API Object *open (Module *);
 SF_API Object *read (Module *);
 SF_API Object *write (Module *);
 SF_API Object *close (Module *);
+SF_API Object *seek_read (Module *);
+SF_API Object *seek_write (Module *);
 
 SF_API void destroy ();
 } // namespace File

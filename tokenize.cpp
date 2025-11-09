@@ -291,13 +291,28 @@ tokenize (char *p)
 
         case '#':
           {
-            /* single-line comment */
-            do
-              p++;
-            while (*p != '\n');
+            if (*(p + 1) && *(p + 1) == '#')
+              {
+                /* multi-line comment */
+                do
+                  {
+                    if (*p && *(p + 1) && *p == *(p + 1) && *p == '#')
+                      break;
+                    p++;
+                  }
+                while (*p);
+              }
+            else
+              {
 
-            // goto end_skip_inc;
-            continue;
+                /* single-line comment */
+                do
+                  p++;
+                while (*p && *p != '\n');
+
+                // goto end_skip_inc;
+                continue;
+              }
           }
           break;
 

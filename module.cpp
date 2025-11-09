@@ -464,6 +464,9 @@ mod_exec (Module &mod)
                 assert (t != nullptr);
 
                 AMBIG_CHECK (t, {
+                  // for (Object *&k : args_eval)
+                  //   DR (k);
+
                   DR (name_eval);
                   mod.get_backtrace ().push_back (st->get_line_number ());
                 });
@@ -486,6 +489,20 @@ mod_exec (Module &mod)
               case ObjectType::FuncObject:
                 {
                   Object *ret = call_func (mod, name_eval, args_eval);
+
+                  AMBIG_CHECK (ret, {
+                    DR (name_eval);
+                    mod.get_backtrace ().push_back (st->get_line_number ());
+                  });
+
+                  if (mod.get_saw_ambig ())
+                    {
+                      DR (name_eval);
+                      mod.get_backtrace ().push_back (st->get_line_number ());
+                      DR (ret);
+                      goto ambig_test;
+                    }
+
                   DR (ret);
                 }
                 break;
@@ -846,7 +863,7 @@ mod_exec (Module &mod)
               mod.get_backtrace ().push_back (st->get_line_number ());
             });
 
-            while (!_sfobj_isfalse (mod, cond_eval))
+            while (!_sfobj_isfalse (mod, cond_eval) && !mod.get_saw_ambig ())
               {
                 mod_exec (mod);
                 DR (cond_eval);
@@ -1732,19 +1749,39 @@ expr_eval (Module &mod, Expr *e)
 
         Vec<Object *> arr;
 
-        for (int j = lvi; j < rvi; j += stepi)
+        if (stepi > 0)
           {
-            Object *v = static_cast<Object *> (new ConstantObject (
-                static_cast<Constant *> (new IntegerConstant (j))));
+            for (int j = lvi; j < rvi; j += stepi)
+              {
+                Object *v = static_cast<Object *> (new ConstantObject (
+                    static_cast<Constant *> (new IntegerConstant (j))));
 
-            /**
-             * Since we are not using expr_eval
-             * we need to manually increase ref_count
-             * of v
-             */
-            IR (v);
+                /**
+                 * Since we are not using expr_eval
+                 * we need to manually increase ref_count
+                 * of v
+                 */
+                IR (v);
 
-            arr.push_back (v);
+                arr.push_back (v);
+              }
+          }
+        else
+          {
+            for (int j = lvi; j > rvi; j += stepi)
+              {
+                Object *v = static_cast<Object *> (new ConstantObject (
+                    static_cast<Constant *> (new IntegerConstant (j))));
+
+                /**
+                 * Since we are not using expr_eval
+                 * we need to manually increase ref_count
+                 * of v
+                 */
+                IR (v);
+
+                arr.push_back (v);
+              }
           }
 
         if (res != nullptr)
@@ -2025,6 +2062,7 @@ expr_eval (Module &mod, Expr *e)
                   res->get_self_arg () = o_parent;
                   // std::cout << o_parent->get_ref_count () << '\n';
                   IR (o_parent);
+                  // IR (o_parent);
                 }
             }
             break;
@@ -2536,12 +2574,6 @@ expr_eval (Module &mod, Expr *e)
           DR (o_times);
         });
 
-        TC (o_body = expr_eval (mod, body));
-        AMBIG_CHECK (o_body, {
-          res = o_body;
-          DR (o_body);
-        });
-
         assert (o_times && OBJ_IS_INT (o_times));
 
         int t = static_cast<IntegerConstant *> (
@@ -2552,7 +2584,12 @@ expr_eval (Module &mod, Expr *e)
 
         for (int i = 0; i < t; i++)
           {
-            IR (o_body);
+            TC (o_body = expr_eval (mod, body));
+            AMBIG_CHECK (o_body, {
+              res = o_body;
+              DR (o_body);
+            });
+
             vls.push_back (o_body);
           }
 
@@ -2563,7 +2600,6 @@ expr_eval (Module &mod, Expr *e)
         IR (res);
 
         DR (o_times);
-        DR (o_body);
       }
       break;
 
@@ -2809,6 +2845,90 @@ expr_eval (Module &mod, Expr *e)
       }
       break;
 
+    case ExprType::InClause:
+      {
+        InExpr *ine = static_cast<InExpr *> (e);
+        Expr *lhs = ine->get_lhs ();
+        Expr *rhs = ine->get_rhs ();
+
+        Object *o_lhs = expr_eval (mod, lhs);
+
+        AMBIG_CHECK (o_lhs, {
+          res = o_lhs;
+          // DR (o_lhs);
+        });
+
+        Object *o_rhs = expr_eval (mod, rhs);
+
+        AMBIG_CHECK (o_rhs, {
+          res = o_rhs;
+          // DR (o_rhs);
+        });
+
+        bool r = false;
+
+        switch (o_rhs->get_type ())
+          {
+          case ObjectType::ArrayObj:
+            {
+              ArrayObject *ao = static_cast<ArrayObject *> (o_rhs);
+              Vec<Object *> &ao_vals = ao->get_vals ();
+
+              for (Object *&i : ao_vals)
+                {
+                  if (_sfobj_cmp (i, o_lhs, ConditionalType::EqEq))
+                    {
+                      r = true;
+                      break;
+                    }
+                }
+            }
+            break;
+
+          case ObjectType::Constant:
+            {
+              ConstantObject *co = static_cast<ConstantObject *> (o_rhs);
+              Constant *coc = co->get_c ().get ();
+
+              switch (coc->get_type ())
+                {
+                case ConstantType::String:
+                  {
+                    Str &s = static_cast<StringConstant *> (coc)->get_value ();
+
+                    if (OBJ_IS_STR (o_lhs))
+                      {
+                        Str &t = static_cast<StringConstant *> (
+                                     static_cast<ConstantObject *> (o_lhs)
+                                         ->get_c ()
+                                         .get ())
+                                     ->get_value ();
+
+                        if (s.find (t) != -1)
+                          r = true;
+                      }
+                  }
+                  break;
+
+                default:
+                  break;
+                }
+            }
+            break;
+
+          default:
+            break;
+          }
+
+        DR (o_lhs);
+        DR (o_rhs);
+
+        res = static_cast<Object *> (new ConstantObject (
+            static_cast<Constant *> (new BooleanConstant (r))));
+        IR (res);
+      }
+      break;
+
     default:
       std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
       break;
@@ -3013,6 +3133,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
               if (nmod->get_saw_ambig ())
                 {
+                  // nmod->get_ambig ()->print ();
                   // std::cout << nmod->get_ambig ()->get_ref_count () << '\n';
                   mod.get_ambig () = nmod->get_ambig ();
 
@@ -3028,8 +3149,9 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                   delete nmod;
                   nmod = nullptr;
 
-                  ret = static_cast<Object *> (new ConstantObject (
-                      static_cast<Constant *> (new NoneConstant ())));
+                  // ret = static_cast<Object *> (new ConstantObject (
+                  //     static_cast<Constant *> (new NoneConstant ())));
+                  ret = mod.get_ambig ();
                   // std::cout << mod.get_ambig ()->get_ref_count ()
                   //           << '\n';
                   // DR (mod.get_ambig ());

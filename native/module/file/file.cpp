@@ -172,6 +172,116 @@ close (Module *mod)
   return r;
 }
 
+SF_API Object *
+seek_read (Module *mod)
+{
+  Object *fileid = mod->get_variable ("fileid");
+  Object *offset = mod->get_variable ("offset");
+  Object *whence = mod->get_variable ("whence");
+
+  assert (OBJ_IS_INT (fileid) && "File descriptor must be an integer");
+  assert (OBJ_IS_INT (offset) && "offset must be an integer");
+  assert (OBJ_IS_INT (whence) && "whence descriptor must be an integer");
+
+  size_t id = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (fileid)->get_c ().get ())
+          ->get_value ());
+
+  std::streamoff v_offset = static_cast<std::streamoff> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (offset)->get_c ().get ())
+          ->get_value ());
+
+  /**
+   * 0: SEEK_BEG
+   * 1: SEEK_CUR
+   * 2: SEEK_END
+   */
+  int v_whence = static_cast<IntegerConstant *> (
+                     static_cast<ConstantObject *> (whence)->get_c ().get ())
+                     ->get_value ();
+
+  std::ios::seekdir pos = v_whence == 0   ? std::ios::beg
+                          : v_whence == 1 ? std::ios::cur
+                          : v_whence == 2 ? std::ios::end
+                                          : std::ios::beg /* default */;
+
+  if (!filemap.count (id))
+    {
+      std::cerr << "File with id " << id << " does not exist." << std::endl;
+      exit (-1);
+    }
+
+  FileHandle *fh = filemap[id];
+  std::fstream &fs = fh->get_fs ();
+
+  assert (fs.is_open () && "File has been closed");
+  fs.clear ();
+  fs.seekg (v_offset, pos);
+
+  Object *r = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+  IR (r);
+  return r;
+}
+
+SF_API Object *
+seek_write (Module *mod)
+{
+  Object *fileid = mod->get_variable ("fileid");
+  Object *offset = mod->get_variable ("offset");
+  Object *whence = mod->get_variable ("whence");
+
+  assert (OBJ_IS_INT (fileid) && "File descriptor must be an integer");
+  assert (OBJ_IS_INT (offset) && "offset must be an integer");
+  assert (OBJ_IS_INT (whence) && "whence descriptor must be an integer");
+
+  size_t id = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (fileid)->get_c ().get ())
+          ->get_value ());
+
+  std::streamoff v_offset = static_cast<std::streamoff> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (offset)->get_c ().get ())
+          ->get_value ());
+
+  /**
+   * 0: SEEK_BEG
+   * 1: SEEK_CUR
+   * 2: SEEK_END
+   */
+  int v_whence = static_cast<IntegerConstant *> (
+                     static_cast<ConstantObject *> (whence)->get_c ().get ())
+                     ->get_value ();
+
+  std::ios::seekdir pos = v_whence == 0   ? std::ios::beg
+                          : v_whence == 1 ? std::ios::cur
+                          : v_whence == 2 ? std::ios::end
+                                          : std::ios::beg /* default */;
+
+  if (!filemap.count (id))
+    {
+      std::cerr << "File with id " << id << " does not exist." << std::endl;
+      exit (-1);
+    }
+
+  FileHandle *fh = filemap[id];
+  std::fstream &fs = fh->get_fs ();
+
+  assert (fs.is_open () && "File has been closed");
+  fs.clear ();
+  fs.seekp (v_offset, pos);
+
+  Object *r = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+  IR (r);
+  return r;
+}
+
 SF_API void
 destroy ()
 {

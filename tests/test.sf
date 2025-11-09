@@ -1,25 +1,4 @@
-import 'thread' as thread
-
-line = [''] # using an array for global access
-got_line = [false] # mutex
-
-fun get_line ()
-    while 1
-        line[0] = input (">>> ")
-        got_line[0] = true
-
-fun parse ()
-    while 1
-        while not got_line[0]
-            t = 0 # block
-        
-        write ("Input:", line[0])
-        got_line[0] = false
-
-gl_thread = thread (get_line, [])
-p_thread = thread (parse, [])
-
-gl_thread.run ()
-p_thread.run ()
-
-thread.join_all ()
+try
+    write (?)
+catch E
+    write ("error")

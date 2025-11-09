@@ -140,6 +140,7 @@ public:
   void push_back (T &);
   void push_back (T &&);
   T &pop_back ();
+  T &remove (int);
 
   T &
   operator[] (size_t i)
@@ -326,6 +327,20 @@ Vec<T>::pop_back ()
     throw "vec_empty_array";
 
   return vals[--size];
+}
+
+template <typename T>
+T &
+Vec<T>::remove (int idx)
+{
+  if (idx == -1)
+    return pop_back ();
+
+  T &v = vals[idx];
+  int c = idx + 1;
+
+  while (c < size ())
+    vals[c - 1] = vals[c];
 }
 
 template <typename T> Vec<T>::~Vec () { delete[] vals; }

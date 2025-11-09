@@ -29,7 +29,7 @@ _add_native_list_push (Vec<Statement *> &ast)
       = new NativeFunction (_native_list_push, { "self", "a" });
   nv_push->set_self_arg (true);
 
-  // I (nv_push);
+  I (nv_push);
 
   ast.insert (0, static_cast<Statement *> (new VarDeclStatement (
                      static_cast<Expr *> (new VariableExpr ("[].push")),

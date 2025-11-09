@@ -616,6 +616,52 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
       i++;
     }
 
+  /* in clause */
+  i = st;
+  gb = 0;
+  while (i < ed)
+    {
+      Token *c = toks[i];
+
+      switch (c->get_type ())
+        {
+        case TokenType::Operator:
+          {
+            Str &cop = static_cast<OperatorToken *> (c)->get_val ();
+
+            if (cop == '(' || cop == '{' || cop == '[')
+              gb++;
+            if (cop == ')' || cop == '}' || cop == ']')
+              gb--;
+          }
+          break;
+
+        case TokenType::Keyword:
+          {
+            KeywordToken *kt = static_cast<KeywordToken *> (c);
+            Str &ktv = kt->get_val ();
+
+            if (ktv == "in" && !gb)
+              {
+                Expr *lhs = expr_gen (toks, st, i);
+                Expr *rhs = expr_gen (toks, i + 1, ed);
+
+                if (res != nullptr)
+                  delete res;
+
+                res = static_cast<Expr *> (new InExpr (lhs, rhs));
+                goto ret;
+              }
+          }
+          break;
+
+        default:
+          break;
+        }
+
+      i++;
+    }
+
   /* | */
   i = st;
   gb = 0;

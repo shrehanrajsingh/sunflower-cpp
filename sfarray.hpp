@@ -23,9 +23,10 @@ public:
   get_stdout_repr_in_container () override
   {
     // return get_stdout_repr ();
-    std::stringstream ss;
-    ss << "<array " << this << ">";
-    return ss.str ();
+    // std::stringstream ss;
+    // ss << "<array " << this << ">";
+    // return ss.str ();
+    return get_stdout_repr ();
   }
 
   void

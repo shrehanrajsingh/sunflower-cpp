@@ -6,6 +6,7 @@
 
 /* native functions */
 #include "input.hpp"
+#include "len.hpp"
 #include "put.hpp"
 #include "putln.hpp"
 #include "sleep.hpp"
@@ -20,6 +21,7 @@
 #include "int/base.hpp"
 
 /* list methods */
+#include "list/pop.hpp"
 #include "list/push.hpp"
 
 namespace sf

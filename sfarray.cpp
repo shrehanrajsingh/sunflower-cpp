@@ -18,6 +18,9 @@ ArrayObject::get_stdout_repr ()
   std::stringstream s;
 
   s << "[";
+
+  if (!vals.get_size ())
+    s << "]";
   for (size_t i = 0; i < vals.get_size (); i++)
     {
       s << vals[i]->get_stdout_repr_in_container ();

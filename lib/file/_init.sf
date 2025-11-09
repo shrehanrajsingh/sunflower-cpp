@@ -14,16 +14,24 @@ class File
             _ = ? "File could not be opened"
     
     fun read (self)
-        if not self.id
-            return ? "File has not been created or is closed"
-        
+        self._check_state ()
         return file.read (self.id)
     
     fun write (self, s)
+        self._check_state ()
+        return file.write (self.id, s)
+    
+    fun seekr (self, o, w)
+        self._check_state ()
+        return file.seek_read (self.id, o, w)
+
+    fun seekw (self, o, w)
+        self._check_state ()
+        return file.seek_write (self.id, o, w)
+    
+    fun _check_state (self)
         if not self.id
             return ? "File has not been created or is closed"
-        
-        return file.write (self.id, s)
     
     fun close (self)
         if self.id

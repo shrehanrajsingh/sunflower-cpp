@@ -12,6 +12,7 @@ add_natives (Vec<Statement *> &m)
   _add_native_put (m);
   _add_native_input (m);
   _add_native_sleep (m);
+  _add_native_len (m);
 
   /* string methods */
   _add_native_replace (m);
@@ -23,6 +24,7 @@ add_natives (Vec<Statement *> &m)
 
   /* list methods */
   _add_native_list_push (m);
+  _add_native_list_pop (m);
 }
 } // namespace native
 } // namespace sf

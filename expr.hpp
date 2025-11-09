@@ -29,6 +29,7 @@ enum class ExprType
   Repeat = 20,
   InlineFor = 21,
   TryCatch = 22,
+  InClause = 23,
   NoExpr, /* fallback type for default expr inits */
 };
 
@@ -1165,5 +1166,48 @@ public:
     if (catch_expr != nullptr)
       delete catch_expr;
   }
+};
+
+class InExpr : public Expr
+{
+private:
+  Expr *lhs;
+  Expr *rhs;
+
+public:
+  InExpr (Expr *_Lhs, Expr *_Rhs)
+      : Expr (ExprType::InClause), lhs{ _Lhs }, rhs{ _Rhs }
+  {
+  }
+
+  inline Expr *&
+  get_lhs ()
+  {
+    return lhs;
+  }
+
+  inline Expr *&
+  get_rhs ()
+  {
+    return rhs;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "InExpr\nLHS: ";
+    if (lhs != nullptr)
+      lhs->print ();
+    else
+      std::cout << "nullptr\n";
+
+    std::cout << "RHS: ";
+    if (rhs != nullptr)
+      rhs->print ();
+    else
+      std::cout << "nullptr\n";
+  }
+
+  ~InExpr () {}
 };
 } // namespace sf
