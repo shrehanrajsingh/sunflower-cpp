@@ -3193,14 +3193,12 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 assert (nf->get_args ().get_size ()
                         > 0); /* at least one arg */
 
-              Object *self_arg = nullptr;
+              Object *self_arg = __self_Arg;
 
-              if (fv->get_self_arg ())
+              if (self_arg != nullptr)
                 {
-                  assert (fname->get_self_arg () != nullptr);
-                  fargs.insert (0, fname->get_self_arg ());
-                  self_arg = fname->get_self_arg ();
                   IR (self_arg);
+                  fargs.insert (0, self_arg);
 
                   switch (self_arg->get_type ())
                     {
@@ -3227,7 +3225,41 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                     }
                 }
               else
-                nmod->set_parent (nf->get_parent ());
+                {
+                  if (fv->get_self_arg ())
+                    {
+                      assert (fname->get_self_arg () != nullptr);
+                      fargs.insert (0, fname->get_self_arg ());
+                      self_arg = fname->get_self_arg ();
+                      IR (self_arg);
+
+                      switch (self_arg->get_type ())
+                        {
+                        case ObjectType::ClassObj:
+                          {
+                            ClassObject *co
+                                = static_cast<ClassObject *> (self_arg);
+
+                            Module *co_mod = co->get_mod ();
+                            nmod->set_parent (co_mod->get_parent ());
+                          }
+                          break;
+
+                        case ObjectType::Constant:
+                        case ObjectType::ArrayObj:
+                          {
+                            nmod->set_parent (nf->get_parent ());
+                          }
+                          break;
+
+                        default:
+                          assert (0 && "TODO");
+                          break;
+                        }
+                    }
+                  else
+                    nmod->set_parent (nf->get_parent ());
+                }
 
               Module *fmod
                   = new Module (ModuleType::Function, Vec<Statement *> ());

@@ -49,7 +49,8 @@ _sfobj_refcheck (Object *&obj)
               // args.push_back (obj);
               IR (obj);
               kill_fun->get_self_arg () = obj;
-              Object *res = call_func (*mco->get_parent (), kill_fun, args);
+              Object *res
+                  = call_func (*mco->get_parent (), kill_fun, args, obj);
 
               DR (res);
 
@@ -103,6 +104,16 @@ _sfobj_refcheck (Object *&obj)
               //         break;
               //       }
               //   }
+            }
+          /**
+           * remove self_arg from all variables
+           * which have self_arg as this class (obj)
+           */
+          for (auto &&i : mco->get_vtable ())
+            {
+              if (i.second->get_self_arg () != nullptr
+                  && i.second->get_self_arg () == obj)
+                i.second->get_self_arg () = nullptr;
             }
         }
 

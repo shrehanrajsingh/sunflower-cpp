@@ -1,3 +1,5 @@
+# Status
+# Resolved!!
 class test
     fun _init (self)
         write ("init")
@@ -6,6 +8,7 @@ class test
 
 
 a = test ()
+# ----------
 
 import 'thread' as thread
 
