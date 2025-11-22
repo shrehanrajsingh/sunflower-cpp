@@ -1,8 +1,0 @@
-class test
-    fun _init (self)
-        write ("init")
-    
-    _kill = write
-
-
-a = test ()

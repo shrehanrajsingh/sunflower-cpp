@@ -105,16 +105,32 @@ _sfobj_refcheck (Object *&obj)
               //       }
               //   }
             }
+          // /**
+          //  * remove self_arg from all variables
+          //  * which have self_arg as this class (obj)
+          //  */
+          // for (auto &&i : mco->get_vtable ())
+          //   {
+          //     if (i.second->get_self_arg () != nullptr
+          //         && i.second->get_self_arg () == obj)
+          //       i.second->get_self_arg () = nullptr;
+          //   }
+
           /**
-           * remove self_arg from all variables
-           * which have self_arg as this class (obj)
+           * set the ref count to a very
+           * big value so even if
+           * variables exist who have
+           * this class in their reference
+           * they will not trigger a seg fault
+           *
+           * This breaks if there are >INT32_MAX
+           * references. Anyone who writes
+           * programs involving this condition
+           * deserves the seg fault.
+           * Although in the future I might add
+           * some flags to bless such cases
            */
-          for (auto &&i : mco->get_vtable ())
-            {
-              if (i.second->get_self_arg () != nullptr
-                  && i.second->get_self_arg () == obj)
-                i.second->get_self_arg () = nullptr;
-            }
+          obj->get_ref_count () = INT32_MAX;
         }
 
       delete obj;

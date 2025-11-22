@@ -29,6 +29,11 @@ class File
         self._check_state ()
         return file.seek_write (self.id, o, w)
     
+    fun seek (self, o, w)
+        self._check_state ()
+        file.seek_read (self.id, o, w)
+        file.seek_write (self.id, o, w)
+    
     fun _check_state (self)
         if not self.id
             return ? "File has not been created or is closed"
