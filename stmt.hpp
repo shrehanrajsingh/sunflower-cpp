@@ -17,6 +17,8 @@ enum class StatementType
   RepeatStmt = 8,
   ImportStmt = 9,
   TryCatchStmt = 10,
+  BreakStmt = 11,
+  ContinueStmt = 12,
   NoStmt,
 };
 
@@ -680,5 +682,33 @@ public:
     for (Statement *&i : catch_body)
       delete i;
   }
+};
+
+class BreakStmt : public Statement
+{
+public:
+  BreakStmt () : Statement (StatementType::BreakStmt) {}
+
+  void
+  print () override
+  {
+    std::cout << "break_stmt\n";
+  }
+
+  ~BreakStmt () {}
+};
+
+class ContinueStmt : public Statement
+{
+public:
+  ContinueStmt () : Statement (StatementType::ContinueStmt) {}
+
+  void
+  print () override
+  {
+    std::cout << "continue_stmt\n";
+  }
+
+  ~ContinueStmt () {}
 };
 } // namespace sf

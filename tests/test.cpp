@@ -305,12 +305,13 @@ test4 ()
 
         std::cout << "--------------" << std::endl;
 
-        for (auto i : m->get_vtable ())
-          {
-            std::cout << i.first << std::endl;
-            i.second->print ();
-            std::cout << std::endl;
-          }
+        if (0)
+          for (auto i : m->get_vtable ())
+            {
+              std::cout << i.first << std::endl;
+              i.second->print ();
+              std::cout << std::endl;
+            }
 
         delete m;
       }

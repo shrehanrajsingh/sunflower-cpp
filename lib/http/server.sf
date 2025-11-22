@@ -1,0 +1,10 @@
+import '_Native_http' as _http
+
+class Server
+    port = none
+    
+    fun _init (self)
+        self.port = 9121
+    
+    fun set_port (self, port)
+        write ("Inside set_port")

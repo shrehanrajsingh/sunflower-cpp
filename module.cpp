@@ -46,6 +46,10 @@ mod_exec (Module &mod)
 
   while (mod.get_continue_exec () && i < stmts.get_size ())
     {
+      if ((mod.has_signal_break () || mod.has_signal_continue ())
+          && mod.get_inside_loop ())
+        break;
+
       Statement *st = stmts[i];
 
       switch (st->get_type ())
@@ -611,12 +615,16 @@ mod_exec (Module &mod)
             Vec<Statement *> mod_body_pres = mod.get_stmts ();
 
             mod.get_stmts () = fc->get_body ();
+            int es_pres = mod.get_exec_signal ();
 
             Object *it_eval;
             TC (it_eval = expr_eval (mod, fc->get_iterable ()));
             AMBIG_CHECK (it_eval, {
               mod.get_backtrace ().push_back (st->get_line_number ());
             });
+
+            bool gil_pres = mod.get_inside_loop ();
+            mod.get_inside_loop () = true;
 
             switch (it_eval->get_type ())
               {
@@ -627,6 +635,14 @@ mod_exec (Module &mod)
 
                   for (Object *&av : ao_vals)
                     {
+                      if (mod.has_signal_continue ())
+                        {
+                          mod.get_exec_signal () &= ~EXEC_SIGNAL_CONTINUE;
+                        }
+
+                      if (mod.has_signal_break ())
+                        break;
+
                       if (var_list.get_size () == 1)
                         {
                           Expr *v = var_list[0];
@@ -714,6 +730,14 @@ mod_exec (Module &mod)
 
                   for (auto &&i : dobj_vals)
                     {
+                      if (mod.has_signal_continue ())
+                        {
+                          mod.get_exec_signal () &= ~EXEC_SIGNAL_CONTINUE;
+                        }
+
+                      if (mod.has_signal_break ())
+                        break;
+
                       Object *kobj = static_cast<Object *> (
                           new ConstantObject (static_cast<Constant *> (
                               new StringConstant (i.first.c_str ()))));
@@ -750,6 +774,8 @@ mod_exec (Module &mod)
                 break;
               }
 
+            mod.get_exec_signal () = es_pres;
+            mod.get_inside_loop () = gil_pres;
             mod.get_stmts () = mod_body_pres;
             DR (it_eval);
           }
@@ -856,6 +882,10 @@ mod_exec (Module &mod)
             Vec<Statement *> st_pres = mod.get_stmts ();
             mod.get_stmts () = body;
 
+            bool gil_pres = mod.get_inside_loop ();
+            mod.get_inside_loop () = true;
+            int es_pres = mod.get_exec_signal ();
+
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, cond));
             AMBIG_CHECK (cond_eval, {
@@ -865,6 +895,14 @@ mod_exec (Module &mod)
 
             while (!_sfobj_isfalse (mod, cond_eval) && !mod.get_saw_ambig ())
               {
+                if (mod.has_signal_break ())
+                  break;
+
+                if (mod.has_signal_continue ())
+                  {
+                    mod.get_exec_signal () &= ~EXEC_SIGNAL_CONTINUE;
+                  }
+
                 mod_exec (mod);
                 DR (cond_eval);
                 TC (cond_eval = expr_eval (mod, cond));
@@ -875,6 +913,8 @@ mod_exec (Module &mod)
               }
 
             DR (cond_eval);
+            mod.get_inside_loop () = gil_pres;
+            mod.get_exec_signal () = es_pres;
             mod.get_stmts () = st_pres;
           }
           break;
@@ -948,7 +988,7 @@ mod_exec (Module &mod)
             n_env->get_args () = mod.get_env ()->get_args ();
             n_env->get_syspaths () = mod.get_env ()->get_syspaths ();
 
-            if (!mfp)
+            if (!mfp) /* exact path did not yield any file */
               {
                 /* go through env paths */
                 Environment *&env = mod.get_env ();
@@ -971,18 +1011,23 @@ mod_exec (Module &mod)
 
                         std::ifstream file_np (np.get_internal_buffer ());
 
-                        if (!!file_np)
+                        if (!!file_np) /* found file in env */
                           {
                             file_np.close ();
                             main_f = std::ifstream (np.get_internal_buffer ());
 
                             int p_sl = path.find ('/');
+
+                            if (p_sl < 0)
+                              p_sl = path.size ();
                             Str p_dir;
 
                             for (int i = 0; i < p_sl; i++)
                               p_dir.push_back (path[i]);
 
-                            n_env->add_path (pt + p_dir);
+                            // std::cout << pt << '\t' << path << '\t' << p_dir
+                            //           << '\n';
+                            n_env->add_path (pt + p_dir + "/");
                             file_opened = true;
                             break;
                           }
@@ -1048,6 +1093,10 @@ mod_exec (Module &mod)
                 native::add_natives (ast);
 
                 m = new Module (ModuleType::File, ast);
+
+                // std::cout << n_env->get_syspaths ().get_size () << '\n';
+                // for (auto i : n_env->get_syspaths ())
+                //   std::cout << i << '\n';
                 m->get_env () = n_env;
 
                 mod_exec (*m);
@@ -1168,6 +1217,24 @@ mod_exec (Module &mod)
               }
             else
               delete m;
+          }
+          break;
+
+        case StatementType::BreakStmt:
+          {
+            if (!mod.get_inside_loop ())
+              ERRMSG ("Illegal call to break outside of a loop");
+
+            mod.set_signal_break ();
+          }
+          break;
+
+        case StatementType::ContinueStmt:
+          {
+            if (!mod.get_inside_loop ())
+              ERRMSG ("Illegal call to continue outside of a loop");
+
+            mod.set_signal_continue ();
           }
           break;
 

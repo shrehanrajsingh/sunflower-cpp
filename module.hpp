@@ -21,6 +21,9 @@ enum class ModuleType
   Function = 3
 };
 
+static const int EXEC_SIGNAL_BREAK = 1 << 1;
+static const int EXEC_SIGNAL_CONTINUE = 1 << 2;
+
 namespace sf
 {
 class Module
@@ -45,12 +48,17 @@ private:
   Vec<Str> code_lines;
   Vec<int> backtrace;
 
+  int exec_signals; /* break, continue */
+  bool inside_loop;
+
 public:
   Module () : type (ModuleType::File)
   {
     parent = nullptr;
     ret = nullptr;
     continue_exec = true;
+    exec_signals = 0;
+    inside_loop = false;
   }
 
   Module (ModuleType t) : type (t)
@@ -58,31 +66,35 @@ public:
     parent = nullptr;
     ret = nullptr;
     continue_exec = true;
+    exec_signals = 0;
+    inside_loop = false;
   }
 
   Module (ModuleType t, Vec<Statement *> &st)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
-        continue_exec (true), ambig (nullptr), saw_ambig (false)
+        continue_exec (true), ambig (nullptr), saw_ambig (false),
+        exec_signals{ 0 }, inside_loop{ false }
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &st, Vec<Str> &lines)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
-        code_lines (lines)
+        code_lines (lines), exec_signals{ 0 }, inside_loop{ false }
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &&st)
       : type (t), stmts (std::move (st)), parent (nullptr),
-        continue_exec (true), ambig (nullptr), ret (nullptr), saw_ambig (false)
+        continue_exec (true), ambig (nullptr), ret (nullptr),
+        saw_ambig (false), exec_signals{ 0 }, inside_loop{ false }
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &&st, Vec<Str> &lines)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
-        code_lines (lines)
+        code_lines (lines), exec_signals{ 0 }, inside_loop{ false }
   {
   }
 
@@ -90,7 +102,7 @@ public:
           Environment *_Env)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
-        code_lines (lines), env (_Env)
+        code_lines (lines), env (_Env), exec_signals{ 0 }, inside_loop{ false }
   {
   }
 
@@ -98,7 +110,7 @@ public:
           Environment *_Env)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
-        code_lines (lines), env (_Env)
+        code_lines (lines), env (_Env), exec_signals{ 0 }, inside_loop{ false }
   {
   }
 
@@ -232,6 +244,42 @@ public:
   get_backtrace () const
   {
     return backtrace;
+  }
+
+  inline bool
+  has_signal_break ()
+  {
+    return exec_signals & EXEC_SIGNAL_BREAK;
+  }
+
+  inline bool
+  has_signal_continue ()
+  {
+    return exec_signals & EXEC_SIGNAL_CONTINUE;
+  }
+
+  inline int &
+  get_exec_signal ()
+  {
+    return exec_signals;
+  }
+
+  inline void
+  set_signal_break ()
+  {
+    exec_signals |= EXEC_SIGNAL_BREAK;
+  }
+
+  inline void
+  set_signal_continue ()
+  {
+    exec_signals |= EXEC_SIGNAL_CONTINUE;
+  }
+
+  inline bool &
+  get_inside_loop ()
+  {
+    return inside_loop;
   }
 
   Object *get_variable (std::string);

@@ -2109,6 +2109,16 @@ stmt_gen (Vec<Token *> &toks)
                 res.push_back (st);
                 SET_LINE_NUMBER (res, c);
               }
+            else if (kw == "continue")
+              {
+                res.push_back (static_cast<Statement *> (new ContinueStmt ()));
+                SET_LINE_NUMBER (res, c);
+              }
+            else if (kw == "break")
+              {
+                res.push_back (static_cast<Statement *> (new BreakStmt ()));
+                SET_LINE_NUMBER (res, c);
+              }
           }
           break;
 
