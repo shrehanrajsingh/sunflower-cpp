@@ -1,0 +1,15 @@
+import 'socket' as s
+
+socket = s.socket ()
+
+socket.bind ('localhost', 8000)
+socket.listen (1000)
+
+while 1
+    try
+        con = socket.accept ()
+
+        data = con.read ()
+        con.send ("hello")
+    catch E
+        write ("Error:", E)

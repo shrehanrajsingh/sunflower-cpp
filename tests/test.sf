@@ -1,6 +1,15 @@
-for i in 1 to 10
-    for j in 0 to i
-        if i == 4 or i == 8
-            continue
-        put (i)
-    put ("end\n")
+import '_Native_Socket' as s
+
+sock = s.socket ()
+s.bind (sock, 'localhost', 8000)
+s.listen (sock, 10)
+
+while 1
+    try
+        con_sock = s.accept (sock)
+        req = s.read (con_sock)
+
+        s.send (con_sock, "Hello")
+
+    catch E
+        write ("Error:", E)
