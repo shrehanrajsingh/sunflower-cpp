@@ -134,7 +134,6 @@ public:
 SF_API Object *create (Module *);
 SF_API Object *join (Module *);
 SF_API Object *run (Module *);
-SF_API Object *detach (Module *);
 SF_API Object *join_all (Module *);
 SF_API Object *close (Module *);
 } // namespace Thread

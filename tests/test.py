@@ -1,32 +1,36 @@
-write = print
-SHOPPING_CART = 0
+import socket
+import threading
 
-APPLE =     1 << 0
-BANANA =    1 << 1
-CABBAGE =   1 << 2
-ORANGE =    1 << 3
-JUICE =     1 << 4
+# Create socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.bind(("localhost", 8000))
+sock.listen(10)
 
-SHOPPING_CART = SHOPPING_CART | APPLE
-SHOPPING_CART = SHOPPING_CART | BANANA
+def process(con_sock):
+    print("process():", con_sock)
 
-if SHOPPING_CART & APPLE:
-    write ("Apple is in cart")
+    # Blocking read
+    req = con_sock.recv(4096).decode()
+    print(req)
 
-if SHOPPING_CART & BANANA:
-    write ("Banana is in cart")
+    # Send HTTP response
+    response = (
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Length: 13\r\n"
+        "Content-Type: text/plain\r\n"
+        "\r\n"
+        "Hello, World!"
+    )
+    con_sock.sendall(response.encode())
+    con_sock.close()
 
-if not SHOPPING_CART & JUICE:
-    write ("Juice is not in cart")
+while True:
+    try:
+        con_sock, addr = sock.accept()
 
-SHOPPING_CART = SHOPPING_CART | JUICE
+        # Create and start a new thread
+        th = threading.Thread(target=process, args=(con_sock,))
+        th.start()
 
-if SHOPPING_CART & JUICE:
-    write ("Juice is in cart")
-
-SHOPPING_CART = SHOPPING_CART & ~JUICE
-
-if SHOPPING_CART & JUICE:
-    write ("Juice is in cart")
-else:
-    write ("Juice is not in cart")
+    except Exception as e:
+        print("Error:", e)

@@ -1,16 +1,11 @@
-import '_Native_Socket' as s
+import 'thread' as thread
 
-sock = s.socket ()
-s.bind (sock, 'localhost', 8000)
-s.listen (sock, 10)
+fun test ()
+    write ("Starting an infinite thread...")
+    while 1
+        b = 0
 
 while 1
-    try
-        con_sock = s.accept (sock, 'localhost', 8000)
-        req = s.read (con_sock)
-
-        write (con_sock)
-        s.send (con_sock, "Hello")
-
-    catch E
-        write ("Error:", E)
+    input ("(start)")
+    th = thread (test, [])
+    th.run ()

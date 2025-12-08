@@ -13,7 +13,7 @@ static size_t tmap_id = 0;
 SF_API Object *
 create (Module *mod)
 {
-  std::lock_guard<std::mutex> lock (threadmap_mutex);
+  // std::lock_guard<std::mutex> lock (threadmap_mutex);
 
   /**
    * create (function_name, array_containing_function_args)
