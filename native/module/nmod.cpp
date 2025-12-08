@@ -32,6 +32,7 @@ nmod_init ()
 {
   add_mod ("_Native_File", File::make);
   add_mod ("_Native_Thread", Thread::make);
+  add_mod ("_Native_Socket", Socket::make);
 }
 
 SF_API void

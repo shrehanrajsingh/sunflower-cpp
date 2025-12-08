@@ -1,7 +1,6 @@
 #include "sf-win.hpp"
 
 #if defined(_WIN32)
-#define _WIN32
 
 double
 pow (double a, double b)

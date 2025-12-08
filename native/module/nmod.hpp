@@ -5,6 +5,7 @@
 
 /* file module */
 #include "file/main.hpp"
+#include "socket/main.hpp"
 #include "thread/main.hpp"
 
 namespace sf
