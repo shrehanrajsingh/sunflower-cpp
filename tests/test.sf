@@ -1,11 +1,15 @@
 import 'thread' as thread
 
-fun test ()
-    write ("Starting an infinite thread...")
-    while 1
-        b = 0
+fun test (a)
+    repeat 10000
+        c = 0
+    write (a)
 
+a = []
+i = 0
 while 1
-    input ("(start)")
-    th = thread (test, [])
-    th.run ()
+    i = i + 1
+    b = thread (test, [i])
+    b.run ()
+
+thread.join_all ()

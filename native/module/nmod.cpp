@@ -39,6 +39,7 @@ SF_API void
 nmod_destroy ()
 {
   File::destroy ();
+  Thread::__sf_thread_cleanup ();
 }
 
 } // namespace native_mod

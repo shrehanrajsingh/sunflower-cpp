@@ -61,6 +61,7 @@ _run_cf_rt (ThreadHandle *th, std::promise<Object *> &prm, Module *m,
 {
   try
     {
+      // call_func (*m, fname, vobj);
       prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
       th->set_has_result (true);
       // IR (th->get_ret ());
@@ -209,14 +210,23 @@ close (Module *mod)
     }
 
   ThreadHandle *th = threadmap[id];
-  threadmap.erase (id);
-  delete th;
+  th->get_is_deleted () = true;
 
   Object *ret = static_cast<Object *> (
       new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
 
   IR (ret);
   return ret;
+}
+
+SF_API void
+__sf_thread_cleanup ()
+{
+  for (auto &&i : threadmap)
+    {
+      if (i.second->get_is_deleted ())
+        delete i.second;
+    }
 }
 } // namespace Thread
 } // namespace native_mod

@@ -24,10 +24,11 @@ private:
   std::promise<Object *> promise;
   std::thread th_handle;
   std::future<Object *> future;
+  bool is_deleted;
 
 public:
   ThreadHandle (Object *_Fname, Object *_Fargs, Module *_Mod)
-      : fname{ _Fname }, fargs{ _Fargs }, mod{ _Mod }
+      : fname{ _Fname }, fargs{ _Fargs }, mod{ _Mod }, is_deleted{ false }
   {
     IR (fname);
     IR (fargs);
@@ -95,6 +96,12 @@ public:
     return get_ret ();
   }
 
+  inline bool &
+  get_is_deleted ()
+  {
+    return is_deleted;
+  }
+
   ~ThreadHandle ()
   {
     std::lock_guard<std::mutex> thd_lock (th_mutex);
@@ -136,6 +143,8 @@ SF_API Object *join (Module *);
 SF_API Object *run (Module *);
 SF_API Object *join_all (Module *);
 SF_API Object *close (Module *);
+
+SF_API void __sf_thread_cleanup ();
 } // namespace Thread
 } // namespace native_mod
 } // namespace sf
