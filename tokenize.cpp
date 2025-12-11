@@ -332,7 +332,7 @@ tokenize (char *p)
       p++;
 
     end_skip_inc:;
-      res.back ()->get_line_number () = line_number;
+      res.back ()->get_line_number () = line_number - 1;
       res.back ()->get_line_col () = line_col;
     }
 

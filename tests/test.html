@@ -53,6 +53,7 @@
         min-height: 0;
         background: #e9e9e9;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
       }
@@ -61,6 +62,22 @@
         font-size: 3rem;
         position: relative;
         bottom: 2rem;
+      }
+
+      section.hero button {
+        font-size: 1.5rem;
+        border: none;
+        background: #3f21d4;
+        color: #ddd;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        box-shadow: none;
+        padding: 1rem;
+        transition: all 0.25s ease;
+      }
+
+      section.hero button:hover {
+        background: #1d49c3;
       }
     </style>
   </head>
@@ -78,6 +95,8 @@
 
     <section class="hero">
       <h1>Some cool text</h1>
+
+      <button>Cool button</button>
     </section>
   </body>
 </html>

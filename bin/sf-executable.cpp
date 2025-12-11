@@ -52,10 +52,21 @@ parse_cmdline (int argc, char *argv[])
   return args;
 }
 
+sf::Environment *sf_env = nullptr;
+
 int
 main (int argc, char *argv[])
 {
   cmd_line_args args = parse_cmdline (argc, argv);
+
+  sf_env = new sf::Environment ();
+  sf_env->add_path ("../lib/");
+  for (int i = 0; i < argc; i++)
+    {
+      sf_env->add_arg (argv[i]);
+    }
+
+  sf::native_mod::nmod_init ();
 
   if (args.help_requested)
     {
@@ -103,7 +114,7 @@ main (int argc, char *argv[])
 
       sf::native::add_natives (ast);
 
-      sf::Module *m = new sf::Module (ModuleType::File, ast, lines);
+      sf::Module *m = new sf::Module (ModuleType::File, ast, lines, sf_env);
 
       try
         {
@@ -122,6 +133,8 @@ main (int argc, char *argv[])
 
       ifs.close ();
     }
+
+  sf::native_mod::nmod_destroy ();
 
   return 0;
 }

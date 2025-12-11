@@ -46,7 +46,7 @@ private:
   Environment *env;
 
   Vec<Str> code_lines;
-  Vec<int> backtrace;
+  Vec<std::pair<int, Str>> backtrace;
 
   int exec_signals; /* break, continue */
   bool inside_loop;
@@ -234,13 +234,13 @@ public:
     return code_lines;
   }
 
-  inline Vec<int> &
+  inline Vec<std::pair<int, Str>> &
   get_backtrace ()
   {
     return backtrace;
   }
 
-  inline const Vec<int> &
+  inline const Vec<std::pair<int, Str>> &
   get_backtrace () const
   {
     return backtrace;

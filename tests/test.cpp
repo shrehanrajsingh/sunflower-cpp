@@ -426,6 +426,7 @@ main (int argc, char const *argv[])
 {
   sf_env = new sf::Environment ();
   sf_env->add_path ("../../lib/");
+
   for (int i = 0; i < argc; i++)
     {
       sf_env->add_arg (argv[i]);

@@ -64,15 +64,30 @@ mod_exec (Module &mod)
             TC (val_eval = expr_eval (mod, nv));
             assert (val_eval != nullptr);
 
-            AMBIG_CHECK (val_eval, {
-              mod.get_backtrace ().push_back (st->get_line_number ());
-              // std::cout << val_eval->get_ref_count () << '\n';
-              // mod.get_continue_exec () = false;
-              // mod.get_saw_ambig () = true;
-              // mod.get_ambig () = val_eval;
+            if (mod.get_saw_ambig ())
+              {
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+                goto ambig_test;
+              }
+            else
+              {
+                AMBIG_CHECK (val_eval, {
+                  // std::cout << st->get_line_number () << '\t'
+                  //           << mod.get_code_lines ()[st->get_line_number ()]
+                  //           << '\n';
+                  mod.get_backtrace ().push_back (
+                      { st->get_line_number (),
+                        mod.get_code_lines ()[st->get_line_number ()] });
+                  // std::cout << val_eval->get_ref_count () << '\n';
+                  // mod.get_continue_exec () = false;
+                  // mod.get_saw_ambig () = true;
+                  // mod.get_ambig () = val_eval;
 
-              // IR (val_eval);
-            });
+                  // IR (val_eval);
+                });
+              }
 
             /*
               Unless val_eval is nullptr,
@@ -178,15 +193,38 @@ mod_exec (Module &mod)
                   Object *oidx;
 
                   TC (oarr = expr_eval (mod, arr));
-                  AMBIG_CHECK (oarr, {
-                    mod.get_backtrace ().push_back (st->get_line_number ());
-                  });
+
+                  if (mod.get_saw_ambig ())
+                    {
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                      goto ambig_test;
+                    }
+                  else
+                    AMBIG_CHECK (oarr, {
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                    });
 
                   TC (oidx = expr_eval (mod, idx));
-                  AMBIG_CHECK (oidx, {
-                    DR (oarr);
-                    mod.get_backtrace ().push_back (st->get_line_number ());
-                  });
+
+                  if (mod.get_saw_ambig ())
+                    {
+                      DR (oarr);
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                      goto ambig_test;
+                    }
+                  else
+                    AMBIG_CHECK (oidx, {
+                      DR (oarr);
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                    });
 
                   switch (oarr->get_type ())
                     {
@@ -398,9 +436,20 @@ mod_exec (Module &mod)
 
                   Object *o_parent;
                   TC (o_parent = expr_eval (mod, e_parent));
-                  AMBIG_CHECK (o_parent, {
-                    mod.get_backtrace ().push_back (st->get_line_number ());
-                  });
+
+                  if (mod.get_saw_ambig ())
+                    {
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                      goto ambig_test;
+                    }
+                  else
+                    AMBIG_CHECK (o_parent, {
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                    });
 
                   switch (o_parent->get_type ())
                     {
@@ -455,9 +504,20 @@ mod_exec (Module &mod)
             Object *name_eval;
 
             TC (name_eval = expr_eval (mod, fst->get_name ()));
-            AMBIG_CHECK (name_eval, {
-              mod.get_backtrace ().push_back (st->get_line_number ());
-            });
+
+            if (mod.get_saw_ambig ())
+              {
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+                goto ambig_test;
+              }
+            else
+              AMBIG_CHECK (name_eval, {
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+              });
 
             Vec<Object *> args_eval;
 
@@ -467,13 +527,24 @@ mod_exec (Module &mod)
                 TC (t = expr_eval (mod, j));
                 assert (t != nullptr);
 
-                AMBIG_CHECK (t, {
-                  // for (Object *&k : args_eval)
-                  //   DR (k);
+                if (mod.get_saw_ambig ())
+                  {
+                    DR (name_eval);
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                    goto ambig_test;
+                  }
+                else
+                  AMBIG_CHECK (t, {
+                    // for (Object *&k : args_eval)
+                    //   DR (k);
 
-                  DR (name_eval);
-                  mod.get_backtrace ().push_back (st->get_line_number ());
-                });
+                    DR (name_eval);
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                  });
 
                 /**
                  * We could use DR here
@@ -494,15 +565,28 @@ mod_exec (Module &mod)
                 {
                   Object *ret = call_func (mod, name_eval, args_eval);
 
-                  AMBIG_CHECK (ret, {
-                    DR (name_eval);
-                    mod.get_backtrace ().push_back (st->get_line_number ());
-                  });
+                  if (mod.get_saw_ambig ())
+                    {
+                      DR (name_eval);
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                      goto ambig_test;
+                    }
+                  else
+                    AMBIG_CHECK (ret, {
+                      DR (name_eval);
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                    });
 
                   if (mod.get_saw_ambig ())
                     {
                       DR (name_eval);
-                      mod.get_backtrace ().push_back (st->get_line_number ());
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
                       DR (ret);
                       goto ambig_test;
                     }
@@ -519,8 +603,25 @@ mod_exec (Module &mod)
 
               case ObjectType::ModuleObject:
                 {
-                  Object *obj = call_func (mod, name_eval, args_eval);
-                  DR (obj);
+                  Object *ret = call_func (mod, name_eval, args_eval);
+                  AMBIG_CHECK (ret, {
+                    DR (name_eval);
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                  });
+
+                  if (mod.get_saw_ambig ())
+                    {
+                      DR (name_eval);
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                      DR (ret);
+                      goto ambig_test;
+                    }
+
+                  DR (ret);
                 }
                 break;
 
@@ -545,9 +646,20 @@ mod_exec (Module &mod)
 
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, ic->get_cond ()));
-            AMBIG_CHECK (cond_eval, {
-              mod.get_backtrace ().push_back (st->get_line_number ());
-            });
+
+            if (mod.get_saw_ambig ())
+              {
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+                goto ambig_test;
+              }
+            else
+              AMBIG_CHECK (cond_eval, {
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+              });
             /*
               Since expr_eval already returns an object with an incremented
               reference count, we do not need to manually increase ourselves.
@@ -567,11 +679,24 @@ mod_exec (Module &mod)
                       {
                         Object *iv;
                         TC (iv = expr_eval (mod, ifc->get_cond ()));
-                        AMBIG_CHECK (iv, {
-                          DR (cond_eval);
-                          mod.get_backtrace ().push_back (
-                              st->get_line_number ());
-                        });
+
+                        if (mod.get_saw_ambig ())
+                          {
+                            DR (cond_eval);
+                            mod.get_backtrace ().push_back (
+                                { st->get_line_number (),
+                                  mod.get_code_lines ()
+                                      [st->get_line_number ()] });
+                            goto ambig_test;
+                          }
+                        else
+                          AMBIG_CHECK (iv, {
+                            DR (cond_eval);
+                            mod.get_backtrace ().push_back (
+                                { st->get_line_number (),
+                                  mod.get_code_lines ()
+                                      [st->get_line_number ()] });
+                          });
 
                         if (!_sfobj_isfalse (mod, iv))
                           {
@@ -619,9 +744,20 @@ mod_exec (Module &mod)
 
             Object *it_eval;
             TC (it_eval = expr_eval (mod, fc->get_iterable ()));
-            AMBIG_CHECK (it_eval, {
-              mod.get_backtrace ().push_back (st->get_line_number ());
-            });
+
+            if (mod.get_saw_ambig ())
+              {
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+                goto ambig_test;
+              }
+            else
+              AMBIG_CHECK (it_eval, {
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+              });
 
             bool gil_pres = mod.get_inside_loop ();
             mod.get_inside_loop () = true;
@@ -822,7 +958,9 @@ mod_exec (Module &mod)
                   // here;
                   // std::cout << mod.get_ambig ()->get_ref_count () << '\n';
                   mod.get_ret () = nullptr;
-                  mod.get_backtrace ().push_back (st->get_line_number ());
+                  mod.get_backtrace ().push_back (
+                      { st->get_line_number (),
+                        mod.get_code_lines ()[st->get_line_number ()] });
                 });
               }
             else
@@ -849,7 +987,9 @@ mod_exec (Module &mod)
                           mref = mref->get_parent ();
                         }
 
-                      mod.get_backtrace ().push_back (st->get_line_number ());
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
                     });
                     mref->get_continue_exec () = false;
 
@@ -888,10 +1028,22 @@ mod_exec (Module &mod)
 
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, cond));
-            AMBIG_CHECK (cond_eval, {
-              mod.get_stmts () = st_pres;
-              mod.get_backtrace ().push_back (st->get_line_number ());
-            });
+
+            if (mod.get_saw_ambig ())
+              {
+                mod.get_stmts () = st_pres;
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+                goto ambig_test;
+              }
+            else
+              AMBIG_CHECK (cond_eval, {
+                mod.get_stmts () = st_pres;
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+              });
 
             while (!_sfobj_isfalse (mod, cond_eval) && !mod.get_saw_ambig ())
               {
@@ -906,10 +1058,22 @@ mod_exec (Module &mod)
                 mod_exec (mod);
                 DR (cond_eval);
                 TC (cond_eval = expr_eval (mod, cond));
-                AMBIG_CHECK (cond_eval, {
-                  mod.get_stmts () = st_pres;
-                  mod.get_backtrace ().push_back (st->get_line_number ());
-                });
+
+                if (mod.get_saw_ambig ())
+                  {
+                    mod.get_stmts () = st_pres;
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                    goto ambig_test;
+                  }
+                else
+                  AMBIG_CHECK (cond_eval, {
+                    mod.get_stmts () = st_pres;
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                  });
               }
 
             DR (cond_eval);
@@ -935,7 +1099,9 @@ mod_exec (Module &mod)
             if (o_cond)
               AMBIG_CHECK (o_cond, {
                 mod.get_stmts () = st_pres;
-                mod.get_backtrace ().push_back (st->get_line_number ());
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
               });
             assert (o_cond && OBJ_IS_INT (o_cond));
 
@@ -959,6 +1125,7 @@ mod_exec (Module &mod)
           {
             ClassDeclStatement *cds = static_cast<ClassDeclStatement *> (st);
             Module *cmod = new Module (ModuleType::Class);
+            cmod->get_code_lines () = mod.get_code_lines ();
 
             cmod->set_parent (&mod);
             cmod->get_stmts () = cds->get_body ();
@@ -1092,7 +1259,7 @@ mod_exec (Module &mod)
 
                 native::add_natives (ast);
 
-                m = new Module (ModuleType::File, ast);
+                m = new Module (ModuleType::File, ast, lines);
 
                 // std::cout << n_env->get_syspaths ().get_size () << '\n';
                 // for (auto i : n_env->get_syspaths ())
@@ -1108,6 +1275,9 @@ mod_exec (Module &mod)
               {
                 m->get_env () = n_env;
               }
+
+            if (m->get_ambig ())
+              goto ret;
 
             // for (auto &&i : m->get_vtable ())
             //   std::cout << i.first << '\t' << i.second->get_ref_count ()
@@ -1280,27 +1450,32 @@ ambig_test:
         }
       else
         {
+          // for (int i = 0; i < mod.get_backtrace ().get_size (); i++)
+          //   {
+          //     std::cerr << "#" << (i + 1) << " ";
+          //     if (mod.get_backtrace ()[i] < mod.get_code_lines ().get_size
+          //     ()
+          //         && mod.get_backtrace ()[i] - 1
+          //                < mod.get_code_lines ().get_size ())
+          //       {
+
+          //       }
+          //     else
+          //       {
+          //         std::cerr << "Line " << mod.get_backtrace ()[i]
+          //                   << ": <source not available>\n";
+          //       }
+          //   }
+
           for (int i = 0; i < mod.get_backtrace ().get_size (); i++)
             {
-              std::cerr << "#" << (i + 1) << " ";
-              if (mod.get_backtrace ()[i] < mod.get_code_lines ().get_size ()
-                  && mod.get_backtrace ()[i] - 1
-                         < mod.get_code_lines ().get_size ())
-                {
-                  std::string s
-                      = mod.get_code_lines ()[mod.get_backtrace ()[i] - 1]
-                            .get_internal_buffer ();
-                  while (s.front () == ' ' || s.front () == '\t')
-                    s.erase (s.begin ());
+              std::string s
+                  = mod.get_backtrace ()[i].second.get_internal_buffer ();
+              while (s.front () == ' ' || s.front () == '\t')
+                s.erase (s.begin ());
 
-                  std::cerr << "Line " << mod.get_backtrace ()[i] << ": " << s
-                            << "\n";
-                }
-              else
-                {
-                  std::cerr << "Line " << mod.get_backtrace ()[i]
-                            << ": <source not available>\n";
-                }
+              std::cerr << "Line " << (mod.get_backtrace ()[i].first + 1)
+                        << ": " << s << "\n";
             }
         }
       std::cerr << "========================\n\n";
@@ -2879,6 +3054,7 @@ expr_eval (Module &mod, Expr *e)
                                   ->get_name ();
 
                     Module *m = new Module (ModuleType::File);
+                    m->get_code_lines () = mod.get_code_lines ();
                     m->set_variable (vn.get_internal_buffer (), aov);
                     m->set_parent (&mod);
 
@@ -3017,6 +3193,7 @@ expr_eval (Module &mod, Expr *e)
     {
       mod.get_continue_exec () = false;
       mod.get_ambig () = res;
+      mod.get_saw_ambig () = true;
 
       IR (res);
     }
@@ -3074,6 +3251,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
            Object *__self_Arg)
 {
   Module *nmod = new Module (ModuleType::Function);
+  nmod->get_code_lines () = mod.get_code_lines ();
   Object *res = nullptr;
 
   switch (fname->get_type ())
@@ -3204,7 +3382,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                   // std::cout << nmod->get_ambig ()->get_ref_count () << '\n';
                   mod.get_ambig () = nmod->get_ambig ();
 
-                  for (int i : nmod->get_backtrace ())
+                  for (auto &&i : nmod->get_backtrace ())
                     {
                       mod.get_backtrace ().push_back (i);
                     }
@@ -3329,7 +3507,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 }
 
               Module *fmod
-                  = new Module (ModuleType::Function, Vec<Statement *> ());
+                  = new Module (ModuleType::Function, Vec<Statement *> (),
+                                mod.get_code_lines ());
               fmod->set_parent (&mod);
 
               if (nf->get_va_args ())
@@ -3382,6 +3561,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
         Module *&sm = sfc->get_mod ();
 
         Module *objm = new Module (ModuleType::Class);
+        objm->get_code_lines () = mod.get_code_lines ();
         Object *co = static_cast<Object *> (new ClassObject (objm));
         IR (co); /* prevent from deallocation in _init */
 
@@ -3427,6 +3607,23 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
             Function *fv = fo->get_v ();
 
             Object *o_init = call_func (*mo_mod, mo_init, fargs);
+
+            if (mo_mod->get_saw_ambig ())
+              {
+                // nmod->get_ambig ()->print ();
+                // std::cout << nmod->get_ambig ()->get_ref_count () << '\n';
+                mod.get_ambig () = mo_mod->get_ambig ();
+                // mod.get_ambig ()->print ();
+
+                for (auto &&i : mo_mod->get_backtrace ())
+                  {
+                    mod.get_backtrace ().push_back (i);
+                  }
+
+                IR (mod.get_ambig ());
+                mod.get_saw_ambig () = true;
+              }
+
             res = o_init;
           }
         else

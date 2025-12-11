@@ -1,6 +1,6 @@
 import '_Native_Socket' as s
-import 'thread' as thread
 import 'file' as file
+import 'thread' as thread
 
 a = file ('../../tests/test.html', 'r')
 r = a.read ()
