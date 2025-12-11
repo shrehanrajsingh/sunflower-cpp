@@ -1,5 +1,10 @@
 import '_Native_Socket' as s
 import 'thread' as thread
+import 'file' as file
+
+a = file ('../../tests/test.html', 'r')
+r = a.read ()
+a.close ()
 
 sock = s.socket ()
 s.bind (sock, 'localhost', 8000)
@@ -13,10 +18,12 @@ fun process (con_sock)
     s.send (
         con_sock, 
         "HTTP/1.1 200 OK\r\n" +
-        "Content-Length: 13\r\n" +
-        "Content-Type: text/plain\r\n\r\n" +
-        "Hello, World!"
+        "Content-Length: " + len (r).to_string () + "\r\n" +
+        "Content-Type: text/html\r\n\r\n" +
+        r
     )
+
+    s.close (con_sock)
 
 while 1
     try

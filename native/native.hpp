@@ -19,6 +19,7 @@
 
 /* integer methods */
 #include "int/base.hpp"
+#include "int/to_string.hpp"
 
 /* list methods */
 #include "list/pop.hpp"

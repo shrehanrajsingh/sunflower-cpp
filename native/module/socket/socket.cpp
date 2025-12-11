@@ -58,6 +58,8 @@ bind (Module *mod)
   address.sin_port = htons (port);
   address.sin_family = AF_INET;
 
+  int opt = 1;
+  ::setsockopt (fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt));
   if (::bind (fd, (sockaddr *)&address, (socklen_t)sizeof (address)) < 0)
     {
       std::cerr << "failed to bind socket\n";
@@ -196,6 +198,27 @@ send (Module *mod)
 
   ::send (fd, static_cast<void *> (msg.get_internal_buffer ()), msg.size (),
           0);
+
+  Object *res;
+  res = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+  IR (res);
+  return res;
+}
+
+SF_API Object *
+close (Module *mod)
+{
+  Object *o_sock = mod->get_variable ("sock");
+
+  assert (OBJ_IS_INT (o_sock) && "socket id is not an integer");
+
+  int fd = static_cast<IntegerConstant *> (
+               static_cast<ConstantObject *> (o_sock)->get_c ().get ())
+               ->get_value ();
+
+  ::close (fd);
 
   Object *res;
   res = static_cast<Object *> (

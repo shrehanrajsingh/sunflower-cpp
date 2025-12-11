@@ -2246,7 +2246,7 @@ expr_eval (Module &mod, Expr *e)
                           }
 
                         res->get_self_arg () = o_parent;
-                        // IR (o_parent);
+                        IR (o_parent);
                       }
                   }
                   break;
@@ -2280,7 +2280,7 @@ expr_eval (Module &mod, Expr *e)
                           }
 
                         res->get_self_arg () = o_parent;
-                        // IR (o_parent);
+                        IR (o_parent);
                       }
                   }
                   break;

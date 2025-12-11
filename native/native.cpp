@@ -21,6 +21,7 @@ add_natives (Vec<Statement *> &m)
 
   /* integer methods */
   _add_native_int_base (m);
+  _add_native_int_to_string (m);
 
   /* list methods */
   _add_native_list_push (m);

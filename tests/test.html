@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <style>
+      html,
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 0;
+        margin: 0;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      nav {
+        display: flex;
+        width: 100%;
+        background: #4325ca;
+        color: white;
+        padding-left: 2rem;
+      }
+
+      nav h1 {
+        font-size: 1.75rem;
+        margin-right: 15%;
+      }
+
+      nav div.hyperlinks {
+        display: flex;
+        gap: 1.5rem;
+        vertical-align: middle;
+        justify-content: center;
+        align-items: center;
+      }
+
+      nav div.hyperlinks div {
+        cursor: pointer;
+      }
+
+      nav div.hyperlinks div:hover {
+        text-decoration: underline;
+      }
+
+      section.hero {
+        flex: 1 1 auto;
+        min-height: 0;
+        background: #e9e9e9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      section.hero h1 {
+        font-size: 3rem;
+        position: relative;
+        bottom: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <h1>Logo</h1>
+
+      <div class="hyperlinks">
+        <div>Home</div>
+        <div>About</div>
+        <div>Contact</div>
+        <div>Download</div>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <h1>Some cool text</h1>
+    </section>
+  </body>
+</html>
