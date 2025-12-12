@@ -6,9 +6,10 @@ bool
 _is_keyword (const char *k)
 {
   static const char *KEYWORDS[]
-      = { "if",     "else", "for",    "while", "in",    "to",       "step",
-          "class",  "fun",  "return", "or",    "and",   "not",      "repeat",
-          "import", "as",   "try",    "catch", "break", "continue", NULL };
+      = { "if",    "else",     "for",     "while",  "in",  "to",
+          "step",  "class",    "fun",     "return", "or",  "and",
+          "not",   "repeat",   "import",  "as",     "try", "catch",
+          "break", "continue", "extends", NULL };
 
   for (size_t i = 0; KEYWORDS[i] != NULL; i++)
     if (!strcmp (KEYWORDS[i], k))

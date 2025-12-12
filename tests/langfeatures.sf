@@ -436,3 +436,39 @@ for i in 1 to 10
             continue
         put (i)
     put ('\n')
+
+import '_Native_Socket' as s
+import 'file' as file
+import 'thread' as thread
+
+a = file ('../../tests/test.html', 'r')
+r = a.read ()
+a.close ()
+
+sock = s.socket ()
+s.bind (sock, 'localhost', 8000)
+s.listen (sock, 10)
+
+fun process (con_sock)
+    write ("process():", con_sock)
+    req = s.read (con_sock)
+    write (req)
+
+    s.send (
+        con_sock, 
+        "HTTP/1.1 200 OK\r\n" +
+        "Content-Length: " + len (r).to_string () + "\r\n" +
+        "Content-Type: text/html\r\n\r\n" +
+        r
+    )
+
+    s.close (con_sock)
+
+while 1
+    try
+        con_sock = s.accept (sock, 'localhost', 8000)
+        th = thread (process, [con_sock])
+        th.run ()
+
+    catch E
+        write ("Error:", E)

@@ -1,35 +1,21 @@
-import '_Native_Socket' as s
-import 'file' as file
-import 'thread' as thread
+class B
+    b = 0
 
-a = file ('../../tests/test.html', 'r')
-r = a.read ()
-a.close ()
+    fun _init (self, b)
+        self.b = b
+    
+    fun say_b (self)
+        write (self.b)
 
-sock = s.socket ()
-s.bind (sock, 'localhost', 8000)
-s.listen (sock, 10)
+class A extends B
+    a = 0
 
-fun process (con_sock)
-    write ("process():", con_sock)
-    req = s.read (con_sock)
-    write (req)
+    fun _init (self, a)
+        self.a = a
+    
+    fun say_a (self)
+        write (self.a)
 
-    s.send (
-        con_sock, 
-        "HTTP/1.1 200 OK\r\n" +
-        "Content-Length: " + len (r).to_string () + "\r\n" +
-        "Content-Type: text/html\r\n\r\n" +
-        r
-    )
-
-    s.close (con_sock)
-
-while 1
-    try
-        con_sock = s.accept (sock, 'localhost', 8000)
-        th = thread (process, [con_sock])
-        th.run ()
-
-    catch E
-        write ("Error:", E)
+a = A (10)
+a.say_a ()
+a.say_b ()

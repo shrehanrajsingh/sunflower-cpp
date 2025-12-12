@@ -18,6 +18,19 @@ ClassDeclStatement::ClassDeclStatement (Str n, Vec<Statement *> &&b)
 {
 }
 
+ClassDeclStatement::ClassDeclStatement (Str n, Vec<Statement *> &b,
+                                        Vec<Expr *> &i)
+    : Statement (StatementType::ClassDeclStmt), body (b), name (n), inhs (i)
+{
+}
+
+ClassDeclStatement::ClassDeclStatement (Str n, Vec<Statement *> &&b,
+                                        Vec<Expr *> &&i)
+    : Statement (StatementType::ClassDeclStmt), body (std::move (b)), name (n),
+      inhs (std::move (i))
+{
+}
+
 ClassDeclStatement::~ClassDeclStatement () {}
 
 ClassObject::ClassObject () : Object (ObjectType::ClassObj), mod (nullptr) {}
@@ -53,6 +66,9 @@ SfClass::SfClass (Str n, Module *m)
 
 SfClass::~SfClass ()
 {
+  for (Object *&i : inhs)
+    DR (i);
+
   if (mod != nullptr)
     delete mod;
 }

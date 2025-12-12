@@ -1998,10 +1998,58 @@ stmt_gen (Vec<Token *> &toks)
                 Str name_str
                     = static_cast<IdentifierToken *> (name)->get_val ();
 
-                assert (i + 2 < toks.get_size ()
-                        && toks[i + 2]->get_type () == TokenType::Newline);
+                // assert (i + 2 < toks.get_size ()
+                //         && toks[i + 2]->get_type () == TokenType::Newline);
 
-                size_t block_st_idx = i + 2;
+                Token *next_name = toks[i + 2];
+                size_t block_st_idx;
+                Vec<Expr *> inhs;
+
+                if (next_name->get_type () == TokenType::Newline)
+                  block_st_idx = i + 2;
+                else if (next_name->get_type () == TokenType::Keyword
+                         && static_cast<KeywordToken *> (next_name)->get_val ()
+                                == "extends")
+                  {
+                    size_t l = i + 3, r = i + 4;
+                    int gb = 0;
+
+                    while (r < toks.get_size ())
+                      {
+                        Token *cr = toks[r];
+
+                        if (cr->get_type () == TokenType::Newline && !gb)
+                          {
+                            inhs.push_back (expr_gen (toks, l, r));
+                            break;
+                          }
+
+                        if (cr->get_type () == TokenType::Operator)
+                          {
+                            OperatorToken *ot
+                                = static_cast<OperatorToken *> (cr);
+                            Str &op = ot->get_val ();
+
+                            if ((op == "(" || op == "{" || op == "[") && !gb)
+                              gb++;
+
+                            if ((op == ")" || op == "}" || op == "]") && !gb)
+                              gb--;
+
+                            if (op == "," && !gb)
+                              {
+                                inhs.push_back (expr_gen (toks, l, r));
+                                l = r + 1;
+                                r++;
+                              }
+                          }
+
+                        r++;
+                      }
+
+                    block_st_idx = r;
+                  }
+
                 size_t block_end_idx = _sf_ast_getblock_idx (
                     toks, i, _sf_ast_gettabspace (toks, i));
 
@@ -2014,7 +2062,7 @@ stmt_gen (Vec<Token *> &toks)
                 Vec<Statement *> body = stmt_gen (body_toks);
 
                 res.push_back (static_cast<Statement *> (
-                    new ClassDeclStatement (name_str, body)));
+                    new ClassDeclStatement (name_str, body, inhs)));
                 SET_LINE_NUMBER (res, c);
 
                 i = block_end_idx - 1;

@@ -1132,7 +1132,31 @@ mod_exec (Module &mod)
 
             TC (mod_exec (*cmod));
 
+            Vec<Object *> inhs;
+            for (Expr *&i : cds->get_inhs ())
+              {
+                Object *o;
+                TC (o = expr_eval (mod, i));
+
+                if (mod.get_saw_ambig ())
+                  {
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                    goto ambig_test;
+                  }
+                else
+                  AMBIG_CHECK (o, {
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                  });
+
+                inhs.push_back (o);
+              }
+
             SfClass *sfc = new SfClass (cds->get_name (), cmod);
+            sfc->get_inhs () = inhs;
 
             mod.set_variable (sfc->get_name ().get_internal_buffer (),
                               static_cast<Object *> (sfc));
@@ -2275,12 +2299,36 @@ expr_eval (Module &mod, Expr *e)
 
               if (!co->get_mod ()->has_variable (
                       member.get_internal_buffer ()))
-                throw std::runtime_error (
-                    (Str{ "Class does not have member " } + member)
-                        .get_internal_buffer ());
+                {
+                  // check mro
+                  bool got_var = false;
 
-              res = co->get_mod ()->get_variable (
-                  member.get_internal_buffer ());
+                  for (Object *&i : co->get_mro ())
+                    {
+                      assert (i->get_type () == ObjectType::ClassObj);
+                      ClassObject *mco = static_cast<ClassObject *> (i);
+
+                      // for (auto &&j : mco->get_mod ()->get_vtable ())
+                      //   std::cout << j.first << '\n';
+
+                      if (mco->get_mod ()->has_variable (
+                              member.get_internal_buffer ()))
+                        {
+                          res = mco->get_mod ()->get_variable (
+                              member.get_internal_buffer ());
+                          got_var = true;
+                          break;
+                        }
+                    }
+
+                  if (!got_var)
+                    throw std::runtime_error (
+                        (Str{ "Class does not have member " } + member)
+                            .get_internal_buffer ());
+                }
+              else
+                res = co->get_mod ()->get_variable (
+                    member.get_internal_buffer ());
 
               IR (res);
               AMBIG_CHECK (res, {});
@@ -3269,8 +3317,14 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
               if (!cf->get_va_args ())
                 {
                   if (__self_Arg == nullptr)
-                    assert (cf->get_args ().get_size ()
-                            == fargs.get_size () + fv->get_self_arg ());
+                    {
+                      if (fname->get_self_arg () != nullptr)
+                        assert (cf->get_args ().get_size ()
+                                == fargs.get_size () + fv->get_self_arg ());
+                      else
+                        assert (cf->get_args ().get_size ()
+                                == fargs.get_size ());
+                    }
                   else
                     {
                       assert (cf->get_args ().get_size ()
@@ -3316,10 +3370,19 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 {
                   if (fv->get_self_arg ())
                     {
-                      assert (fname->get_self_arg () != nullptr);
-                      fargs.insert (0, fname->get_self_arg ());
-                      self_arg = fname->get_self_arg ();
-                      IR (self_arg);
+                      if (fname->get_self_arg () != nullptr)
+                        // assert (fname->get_self_arg () != nullptr);
+                        {
+                          fargs.insert (0, fname->get_self_arg ());
+                          self_arg = fname->get_self_arg ();
+                          IR (self_arg);
+                        }
+                      else
+                        {
+                          assert (fargs.get_size ());
+                          self_arg = fargs[0];
+                          IR (self_arg);
+                        }
 
                       switch (self_arg->get_type ())
                         {
@@ -3562,11 +3625,94 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
         Module *objm = new Module (ModuleType::Class);
         objm->get_code_lines () = mod.get_code_lines ();
+
         Object *co = static_cast<Object *> (new ClassObject (objm));
         IR (co); /* prevent from deallocation in _init */
 
         for (auto &&i : sm->get_vtable ())
           objm->set_variable (i.first, i.second);
+
+        /**
+         * Create class objects of inherited classes
+         * The MRO (Method Resolution Order) will be generated in the following
+         * way The first classes to lookup will be the direct base classes in
+         * the order they were inherited This will be followed by inherited
+         * classes of direct base classes in the order they were inherited in.
+         * So if class A derives from B, C, D in the order C, B, D
+         * Then MRO(A) = [C, B, D, MRO(C), MRO(B), MRO(D)]
+         */
+        Vec<Object *> inh_objs;
+        Vec<Object *> mro;
+
+        for (int i = sfc->get_inhs ().get_size () - 1; i > -1; i--)
+          inh_objs.push_back (sfc->get_inhs ()[i]);
+
+        while (inh_objs.get_size ())
+          {
+            Object *t = inh_objs.pop_back ();
+            assert (t->get_type () == ObjectType::SfClass);
+
+            SfClass *tsfc = static_cast<SfClass *> (t);
+            Module *&mod_tsfc = tsfc->get_mod ();
+
+            Module *inh_mod = new Module (ModuleType::Class);
+            inh_mod->get_code_lines () = mod.get_code_lines ();
+
+            for (auto &&j : mod_tsfc->get_vtable ())
+              inh_mod->set_variable (j.first, j.second);
+
+            Object *nh_obj = static_cast<Object *> (new ClassObject (inh_mod));
+            IR (nh_obj);
+
+            mro.push_back (nh_obj);
+
+            /* get inherits */
+            /**
+             * TODO: check that same class does not appear multiple times
+             * or a recursion does not occur
+             */
+            for (Object *&j : tsfc->get_inhs ())
+              {
+                bool saw_same = false;
+
+                for (Object *&k : inh_objs)
+                  {
+                    assert (k->get_type () == ObjectType::SfClass);
+
+                    if ((static_cast<SfClass *> (k)->get_mod ()
+                         == static_cast<SfClass *> (j)->get_mod ())
+                        && (static_cast<SfClass *> (k)->get_name ()
+                            == static_cast<SfClass *> (j)->get_name ()))
+                      {
+                        saw_same = true;
+                        break;
+                      }
+                  }
+
+                if (!saw_same)
+                  inh_objs.push_back (j);
+              }
+          }
+
+        static_cast<ClassObject *> (co)->get_mro () = mro;
+
+        // for (Object *&i : sfc->get_inhs ())
+        //   {
+        //     assert (i->get_type () == ObjectType::SfClass);
+        //     SfClass *inh_sfc = static_cast<SfClass *> (i);
+        //     Module *&inh_smod = inh_sfc->get_mod ();
+
+        //     Module *inh_mod = new Module (ModuleType::Class);
+        //     inh_mod->get_code_lines () = mod.get_code_lines ();
+
+        //     Object *n_obj = static_cast<Object *> (new ClassObject
+        //     (inh_mod)); IR (n_obj);
+
+        //     for (auto &&j : inh_smod->get_vtable ())
+        //       inh_mod->set_variable (j.first, j.second);
+
+        //     inh_objs.push_back (n_obj);
+        //   }
 
         if (objm->has_variable ("_init"))
           {
@@ -3579,6 +3725,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
             objm->set_parent (sm->get_parent ());
 
             Object *ret = call_func (*sm->get_parent (), f_init, fargs, co);
+            // TODO: Ambig check
             DR (ret);
           }
 

@@ -15,10 +15,23 @@ class ClassObject : public Object
 {
 private:
   Module *mod;
+  Vec<Object *> mro;
 
 public:
   ClassObject ();
   ClassObject (Module *);
+
+  inline Vec<Object *> &
+  get_mro ()
+  {
+    return mro;
+  }
+
+  inline const Vec<Object *> &
+  get_mro () const
+  {
+    return mro;
+  }
 
   inline Module *&
   get_mod ()
@@ -54,6 +67,7 @@ class SfClass : public Object
 private:
   Module *mod;
   Str name;
+  Vec<Object *> inhs;
 
 public:
   SfClass ();
@@ -91,6 +105,18 @@ public:
     return get_stdout_repr ();
   }
 
+  inline Vec<Object *> &
+  get_inhs ()
+  {
+    return inhs;
+  }
+
+  inline const Vec<Object *> &
+  get_inhs () const
+  {
+    return inhs;
+  }
+
   void
   print () override
   {
@@ -107,13 +133,16 @@ class ClassDeclStatement : public Statement
 private:
   Vec<Statement *> body;
   Str name;
+  Vec<Expr *> inhs;
 
 public:
   ClassDeclStatement ();
   ClassDeclStatement (Str, Vec<Statement *> &);
   ClassDeclStatement (Str, Vec<Statement *> &&);
+  ClassDeclStatement (Str, Vec<Statement *> &, Vec<Expr *> &);
+  ClassDeclStatement (Str, Vec<Statement *> &&, Vec<Expr *> &&);
 
-  inline Vec<Statement *>
+  inline Vec<Statement *> &
   get_body ()
   {
     return body;
@@ -137,6 +166,18 @@ public:
     return name;
   }
 
+  inline Vec<Expr *> &
+  get_inhs ()
+  {
+    return inhs;
+  }
+
+  inline const Vec<Expr *> &
+  get_inhs () const
+  {
+    return inhs;
+  }
+
   void
   print () override
   {
@@ -144,6 +185,14 @@ public:
     for (Statement *&i : body)
       {
         i->print ();
+      }
+
+    if (get_inhs ().get_size ())
+      {
+        std::cout << "Inherits (" << get_inhs ().get_size () << ")\n";
+
+        for (Expr *&i : get_inhs ())
+          i->print ();
       }
   }
 
