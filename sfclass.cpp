@@ -47,6 +47,7 @@ ClassObject::get_stdout_repr ()
 
 ClassObject::~ClassObject ()
 {
+  /* mro is deleted in _sfobj_refcheck */
   if (mod != nullptr)
     delete mod;
 }

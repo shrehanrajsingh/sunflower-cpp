@@ -472,3 +472,47 @@ while 1
 
     catch E
         write ("Error:", E)
+
+class B
+    b = 0
+
+    fun _init (self, b)
+        self.b = b
+    
+    fun say_b (self)
+        write (self.b)
+
+class A extends B
+    a = 0
+
+    fun _init (self, a)
+        self.a = a
+    
+    fun say_a (self)
+        write (self.a)
+
+a = A (10)
+a.say_a ()
+a.say_b ()
+
+class Rectangle
+    w = 0
+    h = 0
+
+    fun _init (self, w, h)
+        self.w = w
+        self.h = h
+    
+    fun area (self)
+        return self.w * self.h
+
+class Square extends Rectangle
+    fun _init (self, s)
+        Rectangle._init (self, s, s)
+    
+    fun perimeter (self)
+        return 4 * self.w
+
+s = Square (5)
+write (s.area ()) # 25
+write (s.perimeter ()) # 20

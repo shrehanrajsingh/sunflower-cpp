@@ -105,6 +105,14 @@ _sfobj_refcheck (Object *&obj)
               //       }
               //   }
             }
+
+          /* call destructor of inherits in reverse MRO order */
+          for (int i = co->get_mro ().get_size () - 1; i > -1; i--)
+            {
+              // std::cout << co->get_mro ()[i]->get_ref_count () << '\n';
+              DR (co->get_mro ()[i]);
+            }
+
           // /**
           //  * remove self_arg from all variables
           //  * which have self_arg as this class (obj)

@@ -3079,6 +3079,7 @@ expr_eval (Module &mod, Expr *e)
 
         if (OBJ_IS_AMBIG (ev))
           {
+            mod.get_saw_ambig () = false;
             mod.get_continue_exec () = true;
             DR (mod.get_ambig ());
             mod.get_ambig () = nullptr;
@@ -3087,13 +3088,15 @@ expr_eval (Module &mod, Expr *e)
 
             Object *aov = ao->get_val ();
             ao->get_val () = nullptr;
-            DR (ev);
 
             if (e_catch != nullptr)
               {
                 if (e_catch_var == nullptr)
                   {
+                    // e_catch->print ();
                     res = expr_eval (mod, e_catch);
+                    // std::cout << "Res: ";
+                    // res->print ();
                   }
                 else
                   {
@@ -3120,7 +3123,8 @@ expr_eval (Module &mod, Expr *e)
                 IR (res);
               }
 
-            DR (aov);
+            // DR (aov);
+            DR (ev);
           }
         else
           {
@@ -3299,6 +3303,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
            Object *__self_Arg)
 {
   Module *nmod = new Module (ModuleType::Function);
+
   nmod->get_code_lines () = mod.get_code_lines ();
   Object *res = nullptr;
 
@@ -3657,6 +3662,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
             Module *inh_mod = new Module (ModuleType::Class);
             inh_mod->get_code_lines () = mod.get_code_lines ();
+
+            inh_mod->set_parent (mod_tsfc->get_parent ());
 
             for (auto &&j : mod_tsfc->get_vtable ())
               inh_mod->set_variable (j.first, j.second);

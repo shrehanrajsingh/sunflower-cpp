@@ -1,21 +1,29 @@
+class A
+    fun _init (self)
+        self.a = 10
+    
+    fun say (self)
+        write ("A.say")
+    
+    fun _kill (self)
+        write ("Killing A")
+
 class B
-    b = 0
-
-    fun _init (self, b)
-        self.b = b
+    fun _init (self)
+        self.b = 20
     
-    fun say_b (self)
-        write (self.b)
-
-class A extends B
-    a = 0
-
-    fun _init (self, a)
-        self.a = a
+    fun say (self)
+        write ("B.say")
     
-    fun say_a (self)
-        write (self.a)
+    fun _kill (self)
+        write ("Killing B")
 
-a = A (10)
-a.say_a ()
-a.say_b ()
+class C extends A, B
+    fun _init (self)
+        write ("C._init")
+    
+    fun _kill (self)
+        write ("Killing C")
+
+c = C ()
+c.say ()
