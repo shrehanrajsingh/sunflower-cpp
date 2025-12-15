@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Sunflower — Professional photography portfolio. Portraits, weddings, editorial and commercial photography."
+    />
+    <title>Sunflower Photography — Capturing Moments</title>
+    <style>
+      :root {
+        --accent: #ffb400;
+        --bg: #0f1720;
+        --panel: #0b1216;
+        --muted: #9aa4ad;
+        --maxw: 1100px;
+        --radius: 10px;
+        --shadow: 0 6px 30px rgba(2, 6, 23, 0.6);
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #07101a 0%, #071821 40%), var(--bg);
+        color: #e6eef6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        line-height: 1.5;
+      }
+      .container {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0;
+      }
+      .logo {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+      }
+      .logo .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        background: var(--accent);
+        box-shadow: 0 0 12px rgba(255, 180, 0, 0.25);
+      }
+      nav {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      .cta {
+        background: var(--accent);
+        color: #08121a;
+        padding: 0.55rem 0.95rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      /* hero */
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        align-items: center;
+        padding: 3rem 0 2rem;
+      }
+      .hero-inner {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        flex-direction: column;
+      }
+      .hero-card {
+        width: 100%;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 1.25rem;
+      }
+      .hero-info {
+        padding: 1rem 0;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 4.2vw, 2.6rem);
+        line-height: 1.03;
+      }
+      p.lead {
+        color: var(--muted);
+        margin: 0.6rem 0 1rem;
+        max-width: 50ch;
+      }
+      .hero-ctas {
+        display: flex;
+        gap: 0.7rem;
+      }
+      .btn {
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .btn-outline {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #e6eef6;
+        background: transparent;
+      }
+      .preview {
+        width: 320px;
+        height: 220px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+      }
+      /* gallery */
+      #gallery {
+        margin: 3rem 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .grid a {
+        display: block;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        background: #0b1216;
+      }
+      .grid img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.45s ease;
+      }
+      .grid a::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          transparent 40%,
+          rgba(0, 0, 0, 0.25)
+        );
+        transition: opacity 0.3s ease;
+      }
+      .grid a:hover img {
+        transform: scale(1.05);
+      }
+      /* about/services */
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin: 2rem 0;
+        padding: 1.25rem;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.01),
+          transparent
+        );
+        border-radius: 10px;
+      }
+      h3 {
+        margin: 0 0 0.6rem 0;
+      }
+      ul.services {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.6rem;
+      }
+      ul.services li {
+        display: flex;
+        gap: 0.7rem;
+        align-items: flex-start;
+        color: var(--muted);
+      }
+      .chip {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      footer {
+        padding: 2rem 0;
+        color: var(--muted);
+        text-align: center;
+      }
+      .socials {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+      }
+      .socials a {
+        color: var(--muted);
+        opacity: 0.9;
+        text-decoration: none;
+      }
+      /* responsive */
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .split {
+          grid-template-columns: 1fr;
+        }
+        .hero-inner {
+          flex-direction: column-reverse;
+        }
+        .preview {
+          width: 260px;
+          height: 180px;
+        }
+      }
+      @media (max-width: 520px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        header {
+          padding: 0;
+        }
+        nav {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo" aria-label="Sunflower photography">
+          <div class="dot" aria-hidden="true"></div>
+          <div>Sunflower</div>
+        </div>
+        <nav role="navigation" aria-label="Main navigation">
+          <a href="#gallery">Gallery</a>
+          <a href="#about">About</a>
+          <a href="#services">Services</a>
+          <a class="cta" href="mailto:hello@sunflower.photo">Contact</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-inner">
+            <div class="hero-card" role="region" aria-labelledby="hero-title">
+              <div style="flex: 1">
+                <h1 id="hero-title">
+                  Capturing authentic moments with a timeless style
+                </h1>
+                <p class="lead">
+                  Award-winning photography for weddings, portraits, and
+                  lifestyle projects. Natural light, considered composition and
+                  a relaxed approach.
+                </p>
+                <div class="hero-ctas">
+                  <a
+                    class="btn"
+                    href="#gallery"
+                    style="background: var(--accent); color: #08121a"
+                    >View Gallery</a
+                  >
+                  <a class="btn btn-outline" href="#services">Services</a>
+                </div>
+              </div>
+              <div
+                class="preview"
+                style="
+                  background-image: url('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1600&q=80');
+                "
+                aria-hidden="true"
+              ></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="gallery">
+          <h3 style="margin-bottom: 0.8rem">Selected Work</h3>
+          <div class="grid" aria-label="Photography gallery">
+            <a
+              href="https://images.unsplash.com/photo-1504198453319-5ce911bafcde?auto=format&fit=crop&w=1600&q=80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=1600&q=80"
+                alt="Bride and groom embracing"
+              />
+            </a>
+            <a
+              href="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1600&q=80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=60"
+                alt="Studio portrait with natural light"
+              />
+            </a>
+            <a
+              href="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1600&q=80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=60"
+                alt="Couple walking in city street"
+              />
+            </a>
+            <a
+              href="https://images.unsplash.com/photo-1524503033411-c9566986fc8f?auto=format&fit=crop&w=1600&q=80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1524503033411-c9566986fc8f?auto=format&fit=crop&w=800&q=60"
+                alt="Editorial fashion portrait"
+              />
+            </a>
+            <a
+              href="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=60"
+                alt="Natural portrait in meadow"
+              />
+            </a>
+            <a
+              href="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=1600&q=80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=800&q=60"
+                alt="Couple laughing outdoors"
+              />
+            </a>
+          </div>
+        </section>
+
+        <section id="about" class="split" aria-labelledby="about-title">
+          <div>
+            <h3 id="about-title">About</h3>
+            <p class="lead" style="margin: 0 0 1rem">
+              I'm a freelance photographer focusing on authentic portrait and
+              wedding photography. I aim to create calm, bright imagery that
+              stands the test of time. Based in [Your City], available for
+              travel worldwide.
+            </p>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap">
+              <span class="chip">Editorial</span>
+              <span class="chip">Weddings</span>
+              <span class="chip">Portraits</span>
+              <span class="chip">Commercial</span>
+            </div>
+          </div>
+          <div>
+            <h3 id="contact-title">Contact & Availability</h3>
+            <p style="color: var(--muted); margin-top: 0.4rem">
+              Bookings and enquiries:
+              <a
+                href="mailto:hello@sunflower.photo"
+                style="color: var(--accent); text-decoration: none"
+                >hello@sunflower.photo</a
+              >
+            </p>
+            <p style="color: var(--muted); margin: 0.6rem 0 0">
+              For rates and full portfolio, please include date and location in
+              your message.
+            </p>
+          </div>
+        </section>
+
+        <section id="services">
+          <h3 style="margin-bottom: 0.8rem">Services</h3>
+          <ul class="services" aria-label="Services offered">
+            <li>
+              <strong>Wedding Photography</strong> — Full-day coverage, second
+              shooter, custom albums.
+            </li>
+            <li>
+              <strong>Portrait Sessions</strong> — Studio and on-location
+              half-day sessions.
+            </li>
+            <li>
+              <strong>Commercial & Editorial</strong> — Brand photography,
+              lookbooks, campaigns.
+            </li>
+          </ul>
+        </section>
+      </main>
+
+      <footer>
+        <div>
+          © <strong>Sunflower Photography</strong> · Professional photography
+        </div>
+        <div class="socials" aria-label="Social links">
+          <a href="#" aria-label="Instagram" rel="noopener noreferrer">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              style="vertical-align: middle"
+            >
+              <path
+                d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M16 11.37a4 4 0 1 1-4.63-4.63 4 4 0 0 1 4.63 4.63z"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M17.5 6.5h.01"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+          <a href="#" aria-label="Facebook" rel="noopener noreferrer">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              style="vertical-align: middle"
+            >
+              <path
+                d="M18 2h-3a4 4 0 0 0-4 4v3H8v4h3v8h4v-8h3l1-4h-4V6a1 1 0 0 1 1-1h3z"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+          <a href="#" aria-label="Twitter" rel="noopener noreferrer">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              style="vertical-align: middle"
+            >
+              <path
+                d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.43 2s-2.5 1.5-4.85 2.2A4.48 4.48 0 0 0 12 6.17V7a10.66 10.66 0 0 1-7.7-3.9S1 9 8 13a11.5 11.5 0 0 1-7 2c9 5 20 0 20-11.5 0-.17 0-.34-.01-.51A7.72 7.72 0 0 0 23 3z"
+                stroke="currentColor"
+                stroke-width="1.1"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -215,6 +215,8 @@ close (Module *mod)
   Object *ret = static_cast<Object *> (
       new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
 
+  __sf_thread_cleanup ();
+
   IR (ret);
   return ret;
 }
