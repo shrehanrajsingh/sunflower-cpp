@@ -1,3 +1,22 @@
-import 'modtest.sf' as md
+import 'socket' as s
 
-write (md)
+a = s.Server ('localhost', 8000)
+
+fun home (req)
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': '<h1>Home</h1>'
+    }
+
+fun contact (req)
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': '<h1>Contact</h1>'
+    }
+
+a.add_get ('/', home)
+a.add_get ('/contact', contact)
+
+a.serve ()
