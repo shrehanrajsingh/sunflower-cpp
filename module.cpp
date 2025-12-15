@@ -3180,6 +3180,32 @@ expr_eval (Module &mod, Expr *e)
             }
             break;
 
+          case ObjectType::DictObj:
+            {
+              DictObject *dobj = static_cast<DictObject *> (o_rhs);
+
+              if (OBJ_IS_STR (o_lhs))
+                {
+                  Str &s = static_cast<StringConstant *> (
+                               static_cast<ConstantObject *> (o_lhs)
+                                   ->get_c ()
+                                   .get ())
+                               ->get_value ();
+
+                  for (auto &&i : dobj->get_vals ())
+                    {
+                      if (i.first == s.get_internal_buffer ())
+                        {
+                          r = true;
+                          break;
+                        }
+                    }
+                }
+              else
+                r = false;
+            }
+            break;
+
           case ObjectType::Constant:
             {
               ConstantObject *co = static_cast<ConstantObject *> (o_rhs);

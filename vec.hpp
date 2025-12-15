@@ -339,8 +339,11 @@ Vec<T>::remove (int idx)
   T &v = vals[idx];
   int c = idx + 1;
 
-  while (c < size ())
-    vals[c - 1] = vals[c];
+  while (c < get_size ())
+    {
+      vals[c - 1] = vals[c];
+      c--;
+    }
 }
 
 template <typename T> Vec<T>::~Vec () { delete[] vals; }

@@ -1,1 +1,85 @@
-import '_Native_socket' as _socket
+import '_Native_Socket' as s
+import 'thread' as thread
+
+codes = {
+    '200': 'OK',
+    '201': 'Created',
+    '204': 'No Content',
+    '301': 'Moved Permanently',
+    '302': 'Found',
+    '400': 'Bad Request',
+    '401': 'Unauthorized',
+    '403': 'Forbidden',
+    '404': 'Not Found',
+    '500': 'Internal Server Error',
+    '502': 'Bad Gateway',
+    '503': 'Service Unavailable'
+}
+
+class Server
+    port = 0
+    host = ''
+    r_get = {}
+    r_post = {}
+
+    fun _init (self, host, port)
+        self.port = port
+        self.host = host
+    
+    fun add_get (self, route, callback)
+        self.r_get[route] = callback
+    
+    fun add_post (self, route, callback)
+        self.r_post[route] = callback
+    
+    fun gen_response (self, route)
+        a = self.r_get[route] ({})
+
+        r = "HTTP/1.1 " + a['status'].to_string () + ' ' + codes[a['status'].to_string ()] + '\r\n'
+        for j in a
+            if not j in ['status', 'body']
+                r = r + j + ': ' + a[j] + '\r\n'
+        
+        if 'body' in a
+            r = r + '\r\n' + a['body']
+
+        return r
+    
+    fun process (self, cs)
+        req = s.read (cs)
+        matches = []
+
+        if req[0 to 3] == 'GET'
+            req = req[4 to len (req)]
+            for i in self.r_get
+                if req[0 to len (i)] == i
+                    matches.push (i)
+        
+        # get the longest match
+        l = 0
+        m = none
+
+        for i in matches
+            if len (i) > l
+                l = len (i)
+                m = i
+        
+        if m
+            s.send (cs, self.gen_response (m))
+            s.close (cs)
+        else
+            write ('m is none')
+    
+    fun serve (self)
+        sock = s.socket ()
+        s.bind (sock, self.host, self.port)
+        s.listen (sock, 10)
+
+        while 1
+            try
+                cs = s.accept (sock, self.host, self.port)
+                th = thread (self.process, [self, cs])
+
+                th.run ()
+            catch E
+                write ('error:', E)

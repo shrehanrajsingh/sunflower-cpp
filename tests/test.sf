@@ -1,29 +1,22 @@
-class A
-    fun _init (self)
-        self.a = 10
-    
-    fun say (self)
-        write ("A.say")
-    
-    fun _kill (self)
-        write ("Killing A")
+import 'socket' as s
 
-class B
-    fun _init (self)
-        self.b = 20
-    
-    fun say (self)
-        write ("B.say")
-    
-    fun _kill (self)
-        write ("Killing B")
+a = s.Server ('localhost', 8000)
 
-class C extends A, B
-    fun _init (self)
-        write ("C._init")
-    
-    fun _kill (self)
-        write ("Killing C")
+fun home (req)
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': '<h1>Home</h1>'
+    }
 
-c = C ()
-c.say ()
+fun contact (req)
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': '<h1>Contact</h1>'
+    }
+
+a.add_get ('/', home)
+a.add_get ('/contact', contact)
+
+a.serve ()
