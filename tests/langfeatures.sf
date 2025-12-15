@@ -516,3 +516,33 @@ class Square extends Rectangle
 s = Square (5)
 write (s.area ()) # 25
 write (s.perimeter ()) # 20
+
+class A
+    fun _init (self)
+        self.a = 10
+    
+    fun say (self)
+        write ("A.say")
+    
+    fun _kill (self)
+        write ("Killing A")
+
+class B
+    fun _init (self)
+        self.b = 20
+    
+    fun say (self)
+        write ("B.say")
+    
+    fun _kill (self)
+        write ("Killing B")
+
+class C extends A, B
+    fun _init (self)
+        write ("C._init")
+    
+    fun _kill (self)
+        write ("Killing C")
+
+c = C ()
+c.say ()
