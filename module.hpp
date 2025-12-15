@@ -32,18 +32,18 @@ private:
   ModuleType type;
   Vec<Statement *> stmts;
 
-  Module *parent;
+  Module *parent = nullptr;
   std::map<std::string, Object *> vtable;
 
   int var_priority_counter = 0;
   std::map<std::string, int> vhist;
 
-  bool continue_exec;
-  bool saw_ambig;
-  Object *ret;
-  Object *ambig;
+  bool continue_exec = true;
+  bool saw_ambig = false;
+  Object *ret = nullptr;
+  Object *ambig = nullptr;
 
-  Environment *env;
+  Environment *env = nullptr;
 
   Vec<Str> code_lines;
   Vec<std::pair<int, Str>> backtrace;
@@ -59,6 +59,7 @@ public:
     continue_exec = true;
     exec_signals = 0;
     inside_loop = false;
+    env = nullptr;
   }
 
   Module (ModuleType t) : type (t)
@@ -68,33 +69,37 @@ public:
     continue_exec = true;
     exec_signals = 0;
     inside_loop = false;
+    env = nullptr;
   }
 
   Module (ModuleType t, Vec<Statement *> &st)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
-        exec_signals{ 0 }, inside_loop{ false }
+        exec_signals{ 0 }, inside_loop{ false }, env{ nullptr }
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &st, Vec<Str> &lines)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
-        code_lines (lines), exec_signals{ 0 }, inside_loop{ false }
+        code_lines (lines), exec_signals{ 0 }, inside_loop{ false },
+        env{ nullptr }
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &&st)
       : type (t), stmts (std::move (st)), parent (nullptr),
         continue_exec (true), ambig (nullptr), ret (nullptr),
-        saw_ambig (false), exec_signals{ 0 }, inside_loop{ false }
+        saw_ambig (false), exec_signals{ 0 }, inside_loop{ false },
+        env{ nullptr }
   {
   }
 
   Module (ModuleType t, Vec<Statement *> &&st, Vec<Str> &lines)
       : type (t), stmts (st), parent (nullptr), ret (nullptr),
         continue_exec (true), ambig (nullptr), saw_ambig (false),
-        code_lines (lines), exec_signals{ 0 }, inside_loop{ false }
+        code_lines (lines), exec_signals{ 0 }, inside_loop{ false },
+        env{ nullptr }
   {
   }
 

@@ -809,6 +809,12 @@ AmbigObject::get_stdout_repr ()
   return "ambig";
 }
 
+std::string
+ModuleObject::get_stdout_repr ()
+{
+  return "<module>";
+}
+
 bool
 _sfobj_isiterable (Object *&obj)
 {
