@@ -216,11 +216,12 @@ template <typename T> Vec<T>::Vec (Vec<T> &rhs)
     vals[i] = rhs.vals[i];
 }
 
-template <typename T> Vec<T>::Vec (Vec<T> &&rhs)
+template <typename T>
+Vec<T>::Vec (Vec<T> &&rhs) : size{ rhs.size }, cap{ rhs.cap }, vals{ rhs.vals }
 {
-  size = rhs.size;
-  cap = rhs.cap;
-  std::swap (vals, rhs.vals);
+  rhs.size = 0;
+  rhs.cap = 0;
+  rhs.vals = nullptr;
 }
 
 template <typename T> Vec<T>::Vec (const Vec &rhs)

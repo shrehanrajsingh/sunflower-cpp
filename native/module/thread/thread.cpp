@@ -224,10 +224,19 @@ close (Module *mod)
 SF_API void
 __sf_thread_cleanup ()
 {
-  for (auto &&i : threadmap)
+  for (auto it = threadmap.begin (); it != threadmap.end (); ++it)
     {
-      if (i.second->get_is_deleted ())
-        delete i.second;
+      ThreadHandle *th = it->second;
+
+      if (th->get_is_deleted () && !th->get_th ().joinable ())
+        {
+          delete th;
+          it = threadmap.erase (it);
+        }
+      else
+        {
+          ++it;
+        }
     }
 }
 } // namespace Thread

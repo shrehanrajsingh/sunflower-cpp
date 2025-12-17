@@ -2,6 +2,8 @@
 
 #include "header.hpp"
 #include "vec.hpp"
+#include <cstring>
+#include <ostream>
 #include <utility>
 
 namespace sf
@@ -87,12 +89,18 @@ public:
   Str &
   operator= (const char *s)
   {
+    if (s == v)
+      return *this;
+
+    size_t n = strlen (s);
+    size_t new_cap = (n / DEFAULT_VEC_CAP + 1) * DEFAULT_VEC_CAP;
+    char *nv = new char[new_cap];
+    memcpy (nv, s, n + 1);
+
     delete[] v;
-    len = strlen (s);
-    cap = (len / DEFAULT_VEC_CAP + 1) * DEFAULT_VEC_CAP;
-    v = new char[cap];
-    memcpy (v, s, len);
-    v[len] = '\0';
+    v = nv;
+    len = n;
+    cap = new_cap;
     return *this;
   }
 
@@ -131,7 +139,9 @@ public:
     if (!len)
       throw "Str.pop_back(): String is empty";
 
-    return v[--len];
+    char c = v[--len];
+    v[len] = '\0';
+    return c;
   }
 
   char &

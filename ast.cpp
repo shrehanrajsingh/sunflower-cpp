@@ -1728,8 +1728,8 @@ stmt_gen (Vec<Token *> &toks)
                     Token *name_tok = toks[i + 1];
                     assert (name_tok->get_type () == TokenType::Identifier);
 
-                    Str name = static_cast<IdentifierToken *> (name_tok)
-                                   ->get_val ();
+                    Str &name = static_cast<IdentifierToken *> (name_tok)
+                                    ->get_val ();
 
                     int gb = 0;
                     size_t last_arg_idx = i + 3;
