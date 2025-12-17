@@ -168,12 +168,70 @@ read (Module *mod)
                static_cast<ConstantObject *> (o_sock)->get_c ().get ())
                ->get_value ();
 
+  std::string req;
   char buf[1024];
-  ::read (fd, static_cast<void *> (buf), 1024);
+
+  while (1)
+    {
+      ssize_t n = ::read (fd, static_cast<void *> (buf), 1024);
+
+      if (n < 0)
+        {
+          if (errno == EINTR)
+            continue;
+
+          throw std::runtime_error ("read failed");
+        }
+
+      if (n == 0)
+        break; /* client closed */
+
+      req.append (buf, n);
+
+      if (req.find ("\r\n\r\n") != std::string::npos)
+        break;
+    }
+
+  size_t header_end = req.find ("\r\n\r\n");
+  assert (header_end != std::string::npos);
+
+  size_t body_start = header_end + 4;
+  size_t bytes_alr_read = req.size () - body_start;
+
+  int content_length = 0;
+
+  {
+    size_t pos = req.find ("Content-Length:");
+    if (pos != std::string::npos)
+      {
+        pos += strlen ("Content-Length:");
+        while (pos < req.size () && req[pos] == ' ')
+          pos++;
+
+        content_length = std::stoi (req.substr (pos));
+      }
+  }
+
+  std::string body;
+  if (bytes_alr_read > 0)
+    {
+      body = req.substr (body_start);
+    }
+
+  while (static_cast<int> (body.size ()) < content_length)
+    {
+      ssize_t n = ::read (fd, buf, sizeof (buf));
+      if (n <= 0)
+        break;
+
+      body.append (buf, n);
+    }
 
   Object *res;
   res = static_cast<Object *> (
-      new ConstantObject (static_cast<Constant *> (new StringConstant (buf))));
+      new ConstantObject (static_cast<Constant *> (new StringConstant (
+          (req.substr (0, req.find ("\r\n\r\n")) + "\r\n\r\n" + body)
+              .c_str ()))));
 
   IR (res);
   return res;
@@ -219,6 +277,33 @@ close (Module *mod)
                ->get_value ();
 
   ::close (fd);
+
+  Object *res;
+  res = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+  IR (res);
+  return res;
+}
+
+SF_API Object *
+shutdown (Module *mod)
+{
+  Object *o_sock = mod->get_variable ("sock");
+  Object *o_mode = mod->get_variable ("mode");
+
+  assert (OBJ_IS_INT (o_sock) && "socket id is not an integer");
+  assert (OBJ_IS_INT (o_mode) && "mode is not an integer");
+
+  int fd = static_cast<IntegerConstant *> (
+               static_cast<ConstantObject *> (o_sock)->get_c ().get ())
+               ->get_value ();
+
+  int mode = static_cast<IntegerConstant *> (
+                 static_cast<ConstantObject *> (o_mode)->get_c ().get ())
+                 ->get_value ();
+
+  ::shutdown (fd, mode);
 
   Object *res;
   res = static_cast<Object *> (

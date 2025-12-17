@@ -1,509 +1,2915 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta
-      name="description"
-      content="Sunflower — Professional photography portfolio. Portraits, weddings, editorial and commercial photography."
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TestOS</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
     />
-    <title>Sunflower Photography — Capturing Moments</title>
     <style>
-      :root {
-        --accent: #ffb400;
-        --bg: #0f1720;
-        --panel: #0b1216;
-        --muted: #9aa4ad;
-        --maxw: 1100px;
-        --radius: 10px;
-        --shadow: 0 6px 30px rgba(2, 6, 23, 0.6);
-        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
-          "Helvetica Neue", Arial;
-        color-scheme: dark;
-      }
       * {
-        box-sizing: border-box;
-      }
-      body {
         margin: 0;
-        background: linear-gradient(180deg, #07101a 0%, #071821 40%), var(--bg);
-        color: #e6eef6;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        line-height: 1.5;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
       }
-      .container {
-        max-width: var(--maxw);
-        margin: 0 auto;
-        padding: 2rem;
+
+      :root {
+        --menubar-bg: rgba(30, 30, 30, 0.8);
+        --dock-bg: rgba(40, 40, 40, 0.6);
+        --window-bg: #1e1e1e;
+        --window-header: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #888888;
+        --accent: #007aff;
+        --border: rgba(255, 255, 255, 0.1);
+        --hover: rgba(255, 255, 255, 0.1);
       }
-      header {
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+          "Segoe UI", sans-serif;
+        overflow: hidden;
+        height: 100vh;
+        background: #000;
+      }
+
+      /* Desktop */
+      #desktop {
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
+        );
+        background-size: cover;
+        position: relative;
+      }
+
+      /* Menu Bar */
+      #menubar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 28px;
+        background: var(--menubar-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1rem 0;
+        padding: 0 10px;
+        z-index: 10000;
+        border-bottom: 1px solid var(--border);
       }
-      .logo {
+
+      .menu-left,
+      .menu-right {
         display: flex;
-        gap: 0.6rem;
         align-items: center;
-        font-weight: 700;
-        letter-spacing: 0.6px;
+        gap: 5px;
       }
-      .logo .dot {
+
+      .menu-item {
+        padding: 4px 12px;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: 4px;
+        cursor: default;
+      }
+
+      .menu-item:hover {
+        background: var(--hover);
+      }
+
+      .apple-logo {
+        font-size: 16px;
+        padding: 4px 10px;
+      }
+
+      .menu-right .menu-item {
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .menu-icon {
+        font-size: 14px;
+      }
+
+      /* Desktop Icons */
+      #desktop-icons {
+        position: absolute;
+        top: 40px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .desktop-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 80px;
+        padding: 10px 5px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .desktop-icon:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .desktop-icon.selected {
+        background: rgba(0, 122, 255, 0.4);
+      }
+
+      .desktop-icon .icon {
+        font-size: 48px;
+        margin-bottom: 5px;
+      }
+
+      .desktop-icon .label {
+        color: white;
+        font-size: 11px;
+        text-align: center;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        word-wrap: break-word;
+        max-width: 70px;
+      }
+
+      /* Dock */
+      #dock {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--dock-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        z-index: 9999;
+      }
+
+      .dock-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+        position: relative;
+      }
+
+      .dock-item:hover {
+        transform: scale(1.3) translateY(-10px);
+      }
+
+      .dock-item .dock-icon {
+        font-size: 48px;
+        filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+      }
+
+      .dock-item .dock-dot {
+        width: 4px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        margin-top: 4px;
+        opacity: 0;
+      }
+
+      .dock-item.running .dock-dot {
+        opacity: 1;
+      }
+
+      .dock-item .tooltip {
+        position: absolute;
+        bottom: 70px;
+        background: rgba(30, 30, 30, 0.95);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+
+      .dock-item:hover .tooltip {
+        opacity: 1;
+      }
+
+      .dock-separator {
+        width: 1px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 0 4px;
+      }
+
+      /* Windows */
+      .window {
+        position: absolute;
+        min-width: 400px;
+        min-height: 300px;
+        background: var(--window-bg);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+          0 0 1px rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border);
+      }
+
+      .window.focused {
+        z-index: 1000;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6),
+          0 0 1px rgba(255, 255, 255, 0.2);
+      }
+
+      .window.minimized {
+        transform: scale(0.1);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .window.maximized {
+        width: 100vw !important;
+        height: calc(100vh - 28px) !important;
+        top: 28px !important;
+        left: 0 !important;
+        border-radius: 0;
+      }
+
+      .window-header {
+        height: 52px;
+        background: var(--window-header);
+        display: flex;
+        align-items: center;
+        padding: 0 15px;
+        cursor: move;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .window-controls {
+        display: flex;
+        gap: 8px;
+        margin-right: 15px;
+      }
+
+      .window-btn {
         width: 12px;
         height: 12px;
-        border-radius: 3px;
-        background: var(--accent);
-        box-shadow: 0 0 12px rgba(255, 180, 0, 0.25);
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        position: relative;
       }
-      nav {
+
+      .window-btn.close {
+        background: #ff5f57;
+      }
+
+      .window-btn.minimize {
+        background: #ffbd2e;
+      }
+
+      .window-btn.maximize {
+        background: #28ca42;
+      }
+
+      .window:not(:hover) .window-btn::after {
+        display: none;
+      }
+
+      .window-btn.close:hover::after {
+        content: "×";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 10px;
+        color: rgba(0, 0, 0, 0.5);
+        font-weight: bold;
+      }
+
+      .window-btn.minimize:hover::after {
+        content: "−";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 10px;
+        color: rgba(0, 0, 0, 0.5);
+        font-weight: bold;
+      }
+
+      .window-btn.maximize:hover::after {
+        content: "+";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 10px;
+        color: rgba(0, 0, 0, 0.5);
+        font-weight: bold;
+      }
+
+      .window-title {
+        flex: 1;
+        text-align: center;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .window-content {
+        flex: 1;
+        overflow: auto;
+        background: var(--window-bg);
+      }
+
+      .window-resize {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 15px;
+        height: 15px;
+        cursor: nwse-resize;
+      }
+
+      /* Finder */
+      .finder-container {
         display: flex;
-        gap: 1rem;
-        align-items: center;
+        height: 100%;
       }
-      nav a {
-        color: var(--muted);
-        text-decoration: none;
+
+      .finder-sidebar {
+        width: 180px;
+        background: rgba(30, 30, 30, 0.95);
+        border-right: 1px solid var(--border);
+        padding: 10px 0;
+        flex-shrink: 0;
+      }
+
+      .sidebar-section {
+        padding: 0 10px;
+        margin-bottom: 20px;
+      }
+
+      .sidebar-title {
+        font-size: 11px;
+        color: var(--text-secondary);
         font-weight: 600;
-        font-size: 0.95rem;
+        text-transform: uppercase;
+        padding: 5px 10px;
       }
-      .cta {
-        background: var(--accent);
-        color: #08121a;
-        padding: 0.55rem 0.95rem;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 700;
-      }
-      /* hero */
-      .hero {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        align-items: center;
-        padding: 3rem 0 2rem;
-      }
-      .hero-inner {
+
+      .sidebar-item {
         display: flex;
-        gap: 2rem;
         align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .sidebar-item:hover {
+        background: var(--hover);
+      }
+
+      .sidebar-item.active {
+        background: var(--accent);
+      }
+
+      .sidebar-item .icon {
+        font-size: 16px;
+      }
+
+      .finder-main {
+        flex: 1;
+        display: flex;
         flex-direction: column;
       }
-      .hero-card {
-        width: 100%;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.02),
-          rgba(255, 255, 255, 0.01)
-        );
-        border-radius: var(--radius);
-        overflow: hidden;
-        box-shadow: var(--shadow);
+
+      .finder-toolbar {
+        height: 40px;
+        background: var(--window-header);
         display: flex;
-        gap: 1rem;
         align-items: center;
-        padding: 1.25rem;
+        padding: 0 15px;
+        gap: 15px;
+        border-bottom: 1px solid var(--border);
       }
-      .hero-info {
-        padding: 1rem 0;
+
+      .toolbar-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: var(--text-secondary);
+        padding: 5px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
       }
-      h1 {
-        margin: 0;
-        font-size: clamp(1.8rem, 4.2vw, 2.6rem);
-        line-height: 1.03;
+
+      .toolbar-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--text-primary);
       }
-      p.lead {
-        color: var(--muted);
-        margin: 0.6rem 0 1rem;
-        max-width: 50ch;
-      }
-      .hero-ctas {
+
+      .finder-path {
+        flex: 1;
         display: flex;
-        gap: 0.7rem;
+        align-items: center;
+        gap: 5px;
+        color: var(--text-secondary);
+        font-size: 13px;
       }
-      .btn {
-        padding: 0.6rem 1rem;
+
+      .finder-path span {
+        cursor: pointer;
+      }
+
+      .finder-path span:hover {
+        color: var(--text-primary);
+      }
+
+      .finder-files {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 15px;
+        overflow-y: auto;
+      }
+
+      .file-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 90px;
+        padding: 10px;
         border-radius: 8px;
-        text-decoration: none;
-        font-weight: 700;
+        cursor: pointer;
       }
-      .btn-outline {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: #e6eef6;
-        background: transparent;
+
+      .file-item:hover {
+        background: var(--hover);
       }
-      .preview {
-        width: 320px;
-        height: 220px;
-        border-radius: 8px;
-        flex-shrink: 0;
-        background-size: cover;
-        background-position: center;
-        box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.04);
+
+      .file-item.selected {
+        background: rgba(0, 122, 255, 0.3);
       }
-      /* gallery */
-      #gallery {
-        margin: 3rem 0;
+
+      .file-item .icon {
+        font-size: 48px;
+        margin-bottom: 8px;
       }
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
+
+      .file-item .name {
+        color: var(--text-primary);
+        font-size: 11px;
+        text-align: center;
+        word-wrap: break-word;
+        max-width: 80px;
       }
-      .grid a {
-        display: block;
-        border-radius: 8px;
-        overflow: hidden;
-        position: relative;
-        background: #0b1216;
+
+      .file-item .name.editing {
+        background: white;
+        color: black;
+        padding: 2px 5px;
+        border-radius: 3px;
+        outline: none;
       }
-      .grid img {
-        width: 100%;
+
+      /* Text Editor */
+      .editor-container {
+        display: flex;
+        flex-direction: column;
         height: 100%;
-        object-fit: cover;
-        display: block;
-        transition: transform 0.45s ease;
       }
-      .grid a::after {
+
+      .editor-toolbar {
+        height: 40px;
+        background: var(--window-header);
+        display: flex;
+        align-items: center;
+        padding: 0 15px;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .editor-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: var(--text-primary);
+        padding: 5px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .editor-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .editor-filename {
+        flex: 1;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+
+      .editor-textarea {
+        flex: 1;
+        background: #1a1a1a;
+        border: none;
+        color: var(--text-primary);
+        font-family: "Monaco", "Menlo", monospace;
+        font-size: 14px;
+        padding: 20px;
+        resize: none;
+        outline: none;
+        line-height: 1.6;
+      }
+
+      .editor-status {
+        height: 25px;
+        background: var(--window-header);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 15px;
+        font-size: 11px;
+        color: var(--text-secondary);
+        border-top: 1px solid var(--border);
+      }
+
+      /* Terminal */
+      .terminal-container {
+        background: rgba(0, 0, 0, 0.95);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .terminal-output {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        font-family: "Monaco", "Menlo", monospace;
+        font-size: 13px;
+        color: #00ff00;
+      }
+
+      .terminal-line {
+        margin-bottom: 5px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .terminal-input-line {
+        display: flex;
+        align-items: center;
+        padding: 0 15px 15px;
+        font-family: "Monaco", "Menlo", monospace;
+        font-size: 13px;
+      }
+
+      .terminal-prompt {
+        color: #00ff00;
+        margin-right: 10px;
+      }
+
+      .terminal-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: #00ff00;
+        font-family: inherit;
+        font-size: inherit;
+        outline: none;
+      }
+
+      /* Calculator */
+      .calculator-container {
+        background: #1c1c1e;
+        padding: 15px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .calc-display {
+        background: transparent;
+        color: white;
+        font-size: 48px;
+        text-align: right;
+        padding: 20px 10px;
+        font-weight: 300;
+        min-height: 80px;
+        word-break: break-all;
+      }
+
+      .calc-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        flex: 1;
+      }
+
+      .calc-btn {
+        border: none;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: filter 0.1s;
+      }
+
+      .calc-btn:hover {
+        filter: brightness(1.2);
+      }
+
+      .calc-btn:active {
+        filter: brightness(0.8);
+      }
+
+      .calc-btn.number {
+        background: #333333;
+        color: white;
+      }
+
+      .calc-btn.operator {
+        background: #ff9500;
+        color: white;
+      }
+
+      .calc-btn.function {
+        background: #a5a5a5;
+        color: black;
+      }
+
+      .calc-btn.zero {
+        border-radius: 35px;
+        grid-column: span 2;
+        justify-content: flex-start;
+        padding-left: 30px;
+        aspect-ratio: auto;
+      }
+
+      /* Settings */
+      .settings-container {
+        display: flex;
+        height: 100%;
+      }
+
+      .settings-sidebar {
+        width: 200px;
+        background: rgba(30, 30, 30, 0.95);
+        border-right: 1px solid var(--border);
+        padding: 15px 10px;
+      }
+
+      .settings-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        color: var(--text-primary);
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .settings-item:hover {
+        background: var(--hover);
+      }
+
+      .settings-item.active {
+        background: var(--accent);
+      }
+
+      .settings-item .icon {
+        font-size: 20px;
+      }
+
+      .settings-content {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+      }
+
+      .settings-section {
+        margin-bottom: 30px;
+      }
+
+      .settings-title {
+        font-size: 24px;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .setting-label {
+        color: var(--text-primary);
+        font-size: 14px;
+      }
+
+      .setting-description {
+        color: var(--text-secondary);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
+      .toggle-switch {
+        width: 51px;
+        height: 31px;
+        background: #39393d;
+        border-radius: 16px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .toggle-switch.active {
+        background: #34c759;
+      }
+
+      .toggle-switch::after {
         content: "";
         position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          180deg,
-          transparent 40%,
-          rgba(0, 0, 0, 0.25)
-        );
-        transition: opacity 0.3s ease;
+        width: 27px;
+        height: 27px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.3s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
-      .grid a:hover img {
+
+      .toggle-switch.active::after {
+        transform: translateX(20px);
+      }
+
+      .slider-control {
+        width: 200px;
+      }
+
+      .slider-control input {
+        width: 100%;
+        -webkit-appearance: none;
+        height: 4px;
+        background: #39393d;
+        border-radius: 2px;
+        outline: none;
+      }
+
+      .slider-control input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Notes App */
+      .notes-container {
+        display: flex;
+        height: 100%;
+      }
+
+      .notes-sidebar {
+        width: 250px;
+        background: rgba(30, 30, 30, 0.95);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .notes-search {
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .notes-search input {
+        width: 100%;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 13px;
+        outline: none;
+      }
+
+      .notes-list {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .note-item {
+        padding: 15px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+      }
+
+      .note-item:hover {
+        background: var(--hover);
+      }
+
+      .note-item.active {
+        background: rgba(0, 122, 255, 0.3);
+      }
+
+      .note-item-title {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
+      .note-item-preview {
+        color: var(--text-secondary);
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .note-item-date {
+        color: var(--text-secondary);
+        font-size: 11px;
+        margin-top: 4px;
+      }
+
+      .notes-editor {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .note-title-input {
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 24px;
+        font-weight: 600;
+        padding: 20px;
+        outline: none;
+      }
+
+      .note-content-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 14px;
+        padding: 0 20px 20px;
+        outline: none;
+        resize: none;
+        line-height: 1.6;
+      }
+
+      /* Context Menu */
+      #context-menu {
+        position: fixed;
+        background: rgba(40, 40, 40, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 10px;
+        padding: 5px;
+        min-width: 200px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border);
+        z-index: 100000;
+        display: none;
+      }
+
+      .context-item {
+        padding: 8px 15px;
+        color: var(--text-primary);
+        font-size: 13px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .context-item:hover {
+        background: var(--accent);
+      }
+
+      .context-item.disabled {
+        color: var(--text-secondary);
+        pointer-events: none;
+      }
+
+      .context-separator {
+        height: 1px;
+        background: var(--border);
+        margin: 5px 0;
+      }
+
+      .context-shortcut {
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+
+      /* Dialog */
+      .dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100001;
+      }
+
+      .dialog {
+        background: var(--window-bg);
+        border-radius: 12px;
+        padding: 20px;
+        min-width: 300px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border);
+      }
+
+      .dialog-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+      }
+
+      .dialog-input {
+        width: 100%;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 14px;
+        outline: none;
+        margin-bottom: 15px;
+      }
+
+      .dialog-input:focus {
+        border-color: var(--accent);
+      }
+
+      .dialog-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .dialog-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .dialog-btn.cancel {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+      }
+
+      .dialog-btn.confirm {
+        background: var(--accent);
+        color: white;
+      }
+
+      /* About Window */
+      .about-container {
+        text-align: center;
+        padding: 40px;
+      }
+
+      .about-logo {
+        font-size: 80px;
+        margin-bottom: 20px;
+      }
+
+      .about-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+      }
+
+      .about-version {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 30px;
+      }
+
+      .about-info {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+      }
+
+      /* Spotlight Search */
+      #spotlight {
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        background: rgba(40, 40, 40, 0.95);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border);
+        z-index: 100000;
+        display: none;
+        overflow: hidden;
+      }
+
+      .spotlight-input-container {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .spotlight-icon {
+        font-size: 24px;
+        margin-right: 15px;
+        color: var(--text-secondary);
+      }
+
+      .spotlight-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 20px;
+        outline: none;
+      }
+
+      .spotlight-results {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .spotlight-result {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 20px;
+        cursor: pointer;
+      }
+
+      .spotlight-result:hover,
+      .spotlight-result.selected {
+        background: var(--accent);
+      }
+
+      .spotlight-result .icon {
+        font-size: 32px;
+      }
+
+      .spotlight-result-info {
+        flex: 1;
+      }
+
+      .spotlight-result-name {
+        color: var(--text-primary);
+        font-size: 14px;
+      }
+
+      .spotlight-result-type {
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+
+      /* Wallpaper options */
+      .wallpaper-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .wallpaper-option {
+        aspect-ratio: 16/10;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.2s;
+      }
+
+      .wallpaper-option:hover {
         transform: scale(1.05);
       }
-      /* about/services */
-      .split {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-        margin: 2rem 0;
-        padding: 1.25rem;
+
+      .wallpaper-option.active {
+        border-color: var(--accent);
+      }
+
+      .wallpaper-option.w1 {
         background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.01),
-          transparent
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
         );
-        border-radius: 10px;
       }
-      h3 {
-        margin: 0 0 0.6rem 0;
+
+      .wallpaper-option.w2 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       }
-      ul.services {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: grid;
-        gap: 0.6rem;
+
+      .wallpaper-option.w3 {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       }
-      ul.services li {
+
+      .wallpaper-option.w4 {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .wallpaper-option.w5 {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      }
+
+      .wallpaper-option.w6 {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      }
+
+      /* Notification */
+      .notification {
+        position: fixed;
+        top: 40px;
+        right: 20px;
+        background: rgba(40, 40, 40, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 12px;
+        padding: 15px 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border);
+        z-index: 100000;
         display: flex;
-        gap: 0.7rem;
-        align-items: flex-start;
-        color: var(--muted);
+        align-items: center;
+        gap: 15px;
+        animation: slideIn 0.3s ease;
+        min-width: 300px;
       }
-      .chip {
-        background: rgba(255, 255, 255, 0.03);
-        padding: 0.25rem 0.5rem;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        color: var(--muted);
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
       }
-      footer {
-        padding: 2rem 0;
-        color: var(--muted);
-        text-align: center;
+
+      .notification-icon {
+        font-size: 32px;
       }
-      .socials {
+
+      .notification-content {
+        flex: 1;
+      }
+
+      .notification-title {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .notification-message {
+        color: var(--text-secondary);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      /* Hide elements */
+      .hidden {
+        display: none !important;
+      }
+
+      /* Smooth transitions */
+      .window {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+
+      /* Boot Screen */
+      #boot-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #000;
         display: flex;
-        gap: 1rem;
+        flex-direction: column;
+        align-items: center;
         justify-content: center;
-        margin-top: 1rem;
+        z-index: 999999;
+        transition: opacity 0.5s;
       }
-      .socials a {
-        color: var(--muted);
-        opacity: 0.9;
-        text-decoration: none;
+
+      #boot-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
       }
-      /* responsive */
-      @media (max-width: 900px) {
-        .grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .split {
-          grid-template-columns: 1fr;
-        }
-        .hero-inner {
-          flex-direction: column-reverse;
-        }
-        .preview {
-          width: 260px;
-          height: 180px;
-        }
+
+      .boot-logo {
+        font-size: 80px;
+        margin-bottom: 30px;
       }
-      @media (max-width: 520px) {
-        .grid {
-          grid-template-columns: 1fr;
+
+      .boot-progress {
+        width: 200px;
+        height: 4px;
+        background: #333;
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .boot-progress-bar {
+        height: 100%;
+        background: white;
+        width: 0%;
+        animation: bootProgress 2s forwards;
+      }
+
+      @keyframes bootProgress {
+        0% {
+          width: 0%;
         }
-        header {
-          padding: 0;
-        }
-        nav {
-          display: none;
+        100% {
+          width: 100%;
         }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <header>
-        <div class="logo" aria-label="Sunflower photography">
-          <div class="dot" aria-hidden="true"></div>
-          <div>Sunflower</div>
-        </div>
-        <nav role="navigation" aria-label="Main navigation">
-          <a href="#gallery">Gallery</a>
-          <a href="#about">About</a>
-          <a href="#services">Services</a>
-          <a class="cta" href="mailto:hello@sunflower.photo">Contact</a>
-        </nav>
-      </header>
-
-      <main>
-        <section class="hero">
-          <div class="hero-inner">
-            <div class="hero-card" role="region" aria-labelledby="hero-title">
-              <div style="flex: 1">
-                <h1 id="hero-title">
-                  Capturing authentic moments with a timeless style
-                </h1>
-                <p class="lead">
-                  Award-winning photography for weddings, portraits, and
-                  lifestyle projects. Natural light, considered composition and
-                  a relaxed approach.
-                </p>
-                <div class="hero-ctas">
-                  <a
-                    class="btn"
-                    href="#gallery"
-                    style="background: var(--accent); color: #08121a"
-                    >View Gallery</a
-                  >
-                  <a class="btn btn-outline" href="#services">Services</a>
-                </div>
-              </div>
-              <div
-                class="preview"
-                style="
-                  background-image: url('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1600&q=80');
-                "
-                aria-hidden="true"
-              ></div>
-            </div>
-          </div>
-        </section>
-
-        <section id="gallery">
-          <h3 style="margin-bottom: 0.8rem">Selected Work</h3>
-          <div class="grid" aria-label="Photography gallery">
-            <a
-              href="https://images.unsplash.com/photo-1504198453319-5ce911bafcde?auto=format&fit=crop&w=1600&q=80"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=1600&q=80"
-                alt="Bride and groom embracing"
-              />
-            </a>
-            <a
-              href="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1600&q=80"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=60"
-                alt="Studio portrait with natural light"
-              />
-            </a>
-            <a
-              href="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1600&q=80"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=60"
-                alt="Couple walking in city street"
-              />
-            </a>
-            <a
-              href="https://images.unsplash.com/photo-1524503033411-c9566986fc8f?auto=format&fit=crop&w=1600&q=80"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1524503033411-c9566986fc8f?auto=format&fit=crop&w=800&q=60"
-                alt="Editorial fashion portrait"
-              />
-            </a>
-            <a
-              href="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=60"
-                alt="Natural portrait in meadow"
-              />
-            </a>
-            <a
-              href="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=1600&q=80"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=800&q=60"
-                alt="Couple laughing outdoors"
-              />
-            </a>
-          </div>
-        </section>
-
-        <section id="about" class="split" aria-labelledby="about-title">
-          <div>
-            <h3 id="about-title">About</h3>
-            <p class="lead" style="margin: 0 0 1rem">
-              I'm a freelance photographer focusing on authentic portrait and
-              wedding photography. I aim to create calm, bright imagery that
-              stands the test of time. Based in [Your City], available for
-              travel worldwide.
-            </p>
-            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap">
-              <span class="chip">Editorial</span>
-              <span class="chip">Weddings</span>
-              <span class="chip">Portraits</span>
-              <span class="chip">Commercial</span>
-            </div>
-          </div>
-          <div>
-            <h3 id="contact-title">Contact & Availability</h3>
-            <p style="color: var(--muted); margin-top: 0.4rem">
-              Bookings and enquiries:
-              <a
-                href="mailto:hello@sunflower.photo"
-                style="color: var(--accent); text-decoration: none"
-                >hello@sunflower.photo</a
-              >
-            </p>
-            <p style="color: var(--muted); margin: 0.6rem 0 0">
-              For rates and full portfolio, please include date and location in
-              your message.
-            </p>
-          </div>
-        </section>
-
-        <section id="services">
-          <h3 style="margin-bottom: 0.8rem">Services</h3>
-          <ul class="services" aria-label="Services offered">
-            <li>
-              <strong>Wedding Photography</strong> — Full-day coverage, second
-              shooter, custom albums.
-            </li>
-            <li>
-              <strong>Portrait Sessions</strong> — Studio and on-location
-              half-day sessions.
-            </li>
-            <li>
-              <strong>Commercial & Editorial</strong> — Brand photography,
-              lookbooks, campaigns.
-            </li>
-          </ul>
-        </section>
-      </main>
-
-      <footer>
-        <div>
-          © <strong>Sunflower Photography</strong> · Professional photography
-        </div>
-        <div class="socials" aria-label="Social links">
-          <a href="#" aria-label="Instagram" rel="noopener noreferrer">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-              style="vertical-align: middle"
-            >
-              <path
-                d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z"
-                stroke="currentColor"
-                stroke-width="1.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M16 11.37a4 4 0 1 1-4.63-4.63 4 4 0 0 1 4.63 4.63z"
-                stroke="currentColor"
-                stroke-width="1.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M17.5 6.5h.01"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </a>
-          <a href="#" aria-label="Facebook" rel="noopener noreferrer">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-              style="vertical-align: middle"
-            >
-              <path
-                d="M18 2h-3a4 4 0 0 0-4 4v3H8v4h3v8h4v-8h3l1-4h-4V6a1 1 0 0 1 1-1h3z"
-                stroke="currentColor"
-                stroke-width="1.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </a>
-          <a href="#" aria-label="Twitter" rel="noopener noreferrer">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-              style="vertical-align: middle"
-            >
-              <path
-                d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.43 2s-2.5 1.5-4.85 2.2A4.48 4.48 0 0 0 12 6.17V7a10.66 10.66 0 0 1-7.7-3.9S1 9 8 13a11.5 11.5 0 0 1-7 2c9 5 20 0 20-11.5 0-.17 0-.34-.01-.51A7.72 7.72 0 0 0 23 3z"
-                stroke="currentColor"
-                stroke-width="1.1"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </a>
-        </div>
-      </footer>
+    <!-- Boot Screen -->
+    <div id="boot-screen">
+      <div class="boot-logo">🖥️</div>
+      <div class="boot-progress">
+        <div class="boot-progress-bar"></div>
+      </div>
     </div>
+
+    <!-- Desktop -->
+    <div id="desktop">
+      <!-- Menu Bar -->
+      <div id="menubar">
+        <div class="menu-left">
+          <div class="menu-item apple-logo" onclick="showAppleMenu()"></div>
+          <div class="menu-item active-app">Finder</div>
+          <div class="menu-item">File</div>
+          <div class="menu-item">Edit</div>
+          <div class="menu-item">View</div>
+          <div class="menu-item">Go</div>
+          <div class="menu-item">Window</div>
+          <div class="menu-item">Help</div>
+        </div>
+        <div class="menu-right">
+          <div class="menu-item menu-icon">🔋</div>
+          <div class="menu-item menu-icon">📶</div>
+          <div class="menu-item menu-icon">🔍</div>
+          <div class="menu-item" id="menu-clock">Mon Jan 1 12:00 PM</div>
+        </div>
+      </div>
+
+      <!-- Desktop Icons -->
+      <div id="desktop-icons"></div>
+
+      <!-- Windows Container -->
+      <div id="windows-container"></div>
+
+      <!-- Dock -->
+      <div id="dock">
+        <div class="dock-item" onclick="openApp('finder')" data-app="finder">
+          <span class="tooltip">Finder</span>
+          <span class="dock-icon">📁</span>
+          <span class="dock-dot"></span>
+        </div>
+        <div
+          class="dock-item"
+          onclick="openApp('terminal')"
+          data-app="terminal"
+        >
+          <span class="tooltip">Terminal</span>
+          <span class="dock-icon">💻</span>
+          <span class="dock-dot"></span>
+        </div>
+        <div
+          class="dock-item"
+          onclick="openApp('textedit')"
+          data-app="textedit"
+        >
+          <span class="tooltip">TextEdit</span>
+          <span class="dock-icon">📝</span>
+          <span class="dock-dot"></span>
+        </div>
+        <div
+          class="dock-item"
+          onclick="openApp('calculator')"
+          data-app="calculator"
+        >
+          <span class="tooltip">Calculator</span>
+          <span class="dock-icon">🔢</span>
+          <span class="dock-dot"></span>
+        </div>
+        <div class="dock-item" onclick="openApp('notes')" data-app="notes">
+          <span class="tooltip">Notes</span>
+          <span class="dock-icon">📒</span>
+          <span class="dock-dot"></span>
+        </div>
+        <div class="dock-separator"></div>
+        <div
+          class="dock-item"
+          onclick="openApp('settings')"
+          data-app="settings"
+        >
+          <span class="tooltip">System Preferences</span>
+          <span class="dock-icon">⚙️</span>
+          <span class="dock-dot"></span>
+        </div>
+        <div class="dock-item" onclick="openApp('about')" data-app="about">
+          <span class="tooltip">About TestOS</span>
+          <span class="dock-icon">ℹ️</span>
+          <span class="dock-dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+      <div class="context-item" onclick="createNewFolder()">
+        New Folder
+        <span class="context-shortcut">⇧⌘N</span>
+      </div>
+      <div class="context-item" onclick="createNewFile()">
+        New File
+        <span class="context-shortcut">⌘N</span>
+      </div>
+      <div class="context-separator"></div>
+      <div class="context-item" onclick="getInfo()">
+        Get Info
+        <span class="context-shortcut">⌘I</span>
+      </div>
+      <div class="context-separator"></div>
+      <div class="context-item" onclick="changeWallpaper()">
+        Change Wallpaper...
+      </div>
+      <div class="context-separator"></div>
+      <div class="context-item" onclick="cleanupDesktop()">Clean Up</div>
+      <div class="context-item" onclick="sortDesktopBy('name')">
+        Sort By Name
+      </div>
+    </div>
+
+    <!-- Spotlight -->
+    <div id="spotlight">
+      <div class="spotlight-input-container">
+        <span class="spotlight-icon">🔍</span>
+        <input
+          type="text"
+          class="spotlight-input"
+          placeholder="Spotlight Search"
+          oninput="searchSpotlight(this.value)"
+        />
+      </div>
+      <div class="spotlight-results" id="spotlight-results"></div>
+    </div>
+
+    <script>
+      // System State
+      const TestOS = {
+        windows: [],
+        windowZIndex: 100,
+        activeWindow: null,
+        fileSystem: {
+          "/": {
+            type: "folder",
+            children: {
+              Desktop: {
+                type: "folder",
+                children: {
+                  Documents: { type: "folder", children: {} },
+                  Projects: { type: "folder", children: {} },
+                  "Welcome.txt": {
+                    type: "file",
+                    content:
+                      "Welcome to TestOS!\n\nThis is a Mac-styled operating system UI.\n\nFeatures:\n- Finder for file browsing\n- Text Editor\n- Terminal\n- Calculator\n- Notes\n- System Preferences\n\nEnjoy exploring!",
+                  },
+                },
+              },
+              Applications: { type: "folder", children: {} },
+              Downloads: { type: "folder", children: {} },
+              Pictures: { type: "folder", children: {} },
+            },
+          },
+        },
+        currentPath: "/Desktop",
+        clipboardItem: null,
+        selectedItem: null,
+        notes: [
+          {
+            id: 1,
+            title: "Welcome Note",
+            content: "Welcome to Notes!\n\nYou can create and edit notes here.",
+            date: new Date(),
+          },
+        ],
+        activeNoteId: 1,
+        settings: {
+          darkMode: true,
+          notifications: true,
+          sounds: true,
+          wallpaper: "w1",
+        },
+        apps: [
+          { name: "Finder", icon: "📁", app: "finder" },
+          { name: "Terminal", icon: "💻", app: "terminal" },
+          { name: "TextEdit", icon: "📝", app: "textedit" },
+          { name: "Calculator", icon: "🔢", app: "calculator" },
+          { name: "Notes", icon: "📒", app: "notes" },
+          { name: "System Preferences", icon: "⚙️", app: "settings" },
+        ],
+        terminalHistory: [],
+        terminalHistoryIndex: -1,
+        calcDisplay: "0",
+        calcPrevValue: null,
+        calcOperator: null,
+        calcWaitingForOperand: false,
+      };
+
+      // Boot sequence
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.getElementById("boot-screen").classList.add("hidden");
+          initOS();
+        }, 2500);
+      });
+
+      // Initialize OS
+      function initOS() {
+        updateClock();
+        setInterval(updateClock, 1000);
+        renderDesktopIcons();
+        setupEventListeners();
+        showNotification("TestOS", "System ready. Welcome!");
+      }
+
+      // Update clock
+      function updateClock() {
+        const now = new Date();
+        const options = {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        };
+        document.getElementById("menu-clock").textContent =
+          now.toLocaleDateString("en-US", options);
+      }
+
+      // Render desktop icons
+      function renderDesktopIcons() {
+        const container = document.getElementById("desktop-icons");
+        const desktopItems =
+          TestOS.fileSystem["/"].children["Desktop"].children;
+
+        container.innerHTML = "";
+
+        for (const [name, item] of Object.entries(desktopItems)) {
+          const icon = document.createElement("div");
+          icon.className = "desktop-icon";
+          icon.dataset.name = name;
+          icon.dataset.type = item.type;
+
+          icon.innerHTML = `
+                    <span class="icon">${
+                      item.type === "folder" ? "📁" : "📄"
+                    }</span>
+                    <span class="label">${name}</span>
+                `;
+
+          icon.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectDesktopIcon(icon);
+          });
+
+          icon.addEventListener("dblclick", (e) => {
+            e.stopPropagation();
+            openDesktopItem(name, item);
+          });
+
+          container.appendChild(icon);
+        }
+      }
+
+      // Select desktop icon
+      function selectDesktopIcon(icon) {
+        document
+          .querySelectorAll(".desktop-icon")
+          .forEach((i) => i.classList.remove("selected"));
+        icon.classList.add("selected");
+        TestOS.selectedItem = icon.dataset.name;
+      }
+
+      // Open desktop item
+      function openDesktopItem(name, item) {
+        if (item.type === "folder") {
+          openApp("finder", "/Desktop/" + name);
+        } else {
+          openApp("textedit", { name, content: item.content || "" });
+        }
+      }
+
+      // Setup event listeners
+      function setupEventListeners() {
+        // Desktop click
+        document.getElementById("desktop").addEventListener("click", (e) => {
+          if (e.target.id === "desktop" || e.target.id === "desktop-icons") {
+            document
+              .querySelectorAll(".desktop-icon")
+              .forEach((i) => i.classList.remove("selected"));
+            TestOS.selectedItem = null;
+          }
+        });
+
+        // Context menu
+        document
+          .getElementById("desktop")
+          .addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY);
+          });
+
+        // Close context menu
+        document.addEventListener("click", () => {
+          document.getElementById("context-menu").style.display = "none";
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener("keydown", (e) => {
+          // Spotlight: Cmd+Space
+          if ((e.metaKey || e.ctrlKey) && e.code === "Space") {
+            e.preventDefault();
+            toggleSpotlight();
+          }
+
+          // Close spotlight on Escape
+          if (e.key === "Escape") {
+            document.getElementById("spotlight").style.display = "none";
+          }
+
+          // New folder: Shift+Cmd+N
+          if (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key === "N") {
+            e.preventDefault();
+            createNewFolder();
+          }
+
+          // Delete selected item
+          if (e.key === "Backspace" && TestOS.selectedItem) {
+            deleteSelectedItem();
+          }
+        });
+      }
+
+      // Show context menu
+      function showContextMenu(x, y) {
+        const menu = document.getElementById("context-menu");
+        menu.style.display = "block";
+        menu.style.left = x + "px";
+        menu.style.top = y + "px";
+
+        // Adjust if menu goes off screen
+        const rect = menu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+          menu.style.left = x - rect.width + "px";
+        }
+        if (rect.bottom > window.innerHeight) {
+          menu.style.top = y - rect.height + "px";
+        }
+      }
+
+      // Create window
+      function createWindow(options) {
+        const id = "window-" + Date.now();
+        const windowEl = document.createElement("div");
+        windowEl.id = id;
+        windowEl.className = "window";
+        windowEl.style.width = (options.width || 800) + "px";
+        windowEl.style.height = (options.height || 500) + "px";
+        windowEl.style.left = 100 + TestOS.windows.length * 30 + "px";
+        windowEl.style.top = 80 + TestOS.windows.length * 30 + "px";
+        windowEl.style.zIndex = ++TestOS.windowZIndex;
+
+        windowEl.innerHTML = `
+                <div class="window-header">
+                    <div class="window-controls">
+                        <button class="window-btn close" onclick="closeWindow('${id}')"></button>
+                        <button class="window-btn minimize" onclick="minimizeWindow('${id}')"></button>
+                        <button class="window-btn maximize" onclick="maximizeWindow('${id}')"></button>
+                    </div>
+                    <div class="window-title">${options.title || "Window"}</div>
+                    <div style="width: 54px;"></div>
+                </div>
+                <div class="window-content">
+                    ${options.content || ""}
+                </div>
+                <div class="window-resize"></div>
+            `;
+
+        document.getElementById("windows-container").appendChild(windowEl);
+
+        // Make window draggable
+        makeDraggable(windowEl);
+
+        // Make window resizable
+        makeResizable(windowEl);
+
+        // Focus handling
+        windowEl.addEventListener("mousedown", () => focusWindow(id));
+
+        // Mark dock item as running
+        const dockItem = document.querySelector(
+          `.dock-item[data-app="${options.app}"]`
+        );
+        if (dockItem) dockItem.classList.add("running");
+
+        // Track window
+        TestOS.windows.push({ id, app: options.app, ...options });
+        focusWindow(id);
+
+        // Update active app in menu bar
+        document.querySelector(".active-app").textContent = options.title;
+
+        return id;
+      }
+
+      // Make element draggable
+      function makeDraggable(el) {
+        const header = el.querySelector(".window-header");
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        header.addEventListener("mousedown", (e) => {
+          if (e.target.classList.contains("window-btn")) return;
+          isDragging = true;
+          startX = e.clientX;
+          startY = e.clientY;
+          initialX = el.offsetLeft;
+          initialY = el.offsetTop;
+          el.style.zIndex = ++TestOS.windowZIndex;
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isDragging) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          el.style.left = initialX + dx + "px";
+          el.style.top = Math.max(28, initialY + dy) + "px";
+        });
+
+        document.addEventListener("mouseup", () => {
+          isDragging = false;
+        });
+      }
+
+      // Make element resizable
+      function makeResizable(el) {
+        const resizer = el.querySelector(".window-resize");
+        let isResizing = false;
+        let startX, startY, startWidth, startHeight;
+
+        resizer.addEventListener("mousedown", (e) => {
+          isResizing = true;
+          startX = e.clientX;
+          startY = e.clientY;
+          startWidth = el.offsetWidth;
+          startHeight = el.offsetHeight;
+          e.preventDefault();
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isResizing) return;
+          const width = startWidth + (e.clientX - startX);
+          const height = startHeight + (e.clientY - startY);
+          el.style.width = Math.max(400, width) + "px";
+          el.style.height = Math.max(300, height) + "px";
+        });
+
+        document.addEventListener("mouseup", () => {
+          isResizing = false;
+        });
+      }
+
+      // Focus window
+      function focusWindow(id) {
+        document
+          .querySelectorAll(".window")
+          .forEach((w) => w.classList.remove("focused"));
+        const win = document.getElementById(id);
+        if (win) {
+          win.classList.add("focused");
+          win.style.zIndex = ++TestOS.windowZIndex;
+          TestOS.activeWindow = id;
+
+          const windowData = TestOS.windows.find((w) => w.id === id);
+          if (windowData) {
+            document.querySelector(".active-app").textContent =
+              windowData.title;
+          }
+        }
+      }
+
+      // Close window
+      function closeWindow(id) {
+        const windowEl = document.getElementById(id);
+        if (windowEl) {
+          windowEl.remove();
+          const windowData = TestOS.windows.find((w) => w.id === id);
+          TestOS.windows = TestOS.windows.filter((w) => w.id !== id);
+
+          // Check if any windows of same app are still open
+          if (windowData) {
+            const sameAppWindows = TestOS.windows.filter(
+              (w) => w.app === windowData.app
+            );
+            if (sameAppWindows.length === 0) {
+              const dockItem = document.querySelector(
+                `.dock-item[data-app="${windowData.app}"]`
+              );
+              if (dockItem) dockItem.classList.remove("running");
+            }
+          }
+
+          document.querySelector(".active-app").textContent = "Finder";
+        }
+      }
+
+      // Minimize window
+      function minimizeWindow(id) {
+        const windowEl = document.getElementById(id);
+        if (windowEl) {
+          windowEl.classList.add("minimized");
+        }
+      }
+
+      // Maximize window
+      function maximizeWindow(id) {
+        const windowEl = document.getElementById(id);
+        if (windowEl) {
+          windowEl.classList.toggle("maximized");
+        }
+      }
+
+      // Open app
+      function openApp(app, data) {
+        switch (app) {
+          case "finder":
+            openFinder(data);
+            break;
+          case "terminal":
+            openTerminal();
+            break;
+          case "textedit":
+            openTextEdit(data);
+            break;
+          case "calculator":
+            openCalculator();
+            break;
+          case "notes":
+            openNotes();
+            break;
+          case "settings":
+            openSettings();
+            break;
+          case "about":
+            openAbout();
+            break;
+        }
+      }
+
+      // Finder app
+      function openFinder(path = "/Desktop") {
+        const content = `
+                <div class="finder-container">
+                    <div class="finder-sidebar">
+                        <div class="sidebar-section">
+                            <div class="sidebar-title">Favorites</div>
+                            <div class="sidebar-item active" onclick="navigateFinder(this, '/')">
+                                <span class="icon">🏠</span>
+                                <span>Home</span>
+                            </div>
+                            <div class="sidebar-item" onclick="navigateFinder(this, '/Desktop')">
+                                <span class="icon">🖥️</span>
+                                <span>Desktop</span>
+                            </div>
+                            <div class="sidebar-item" onclick="navigateFinder(this, '/Applications')">
+                                <span class="icon">📱</span>
+                                <span>Applications</span>
+                            </div>
+                            <div class="sidebar-item" onclick="navigateFinder(this, '/Downloads')">
+                                <span class="icon">📥</span>
+                                <span>Downloads</span>
+                            </div>
+                            <div class="sidebar-item" onclick="navigateFinder(this, '/Pictures')">
+                                <span class="icon">🖼️</span>
+                                <span>Pictures</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="finder-main">
+                        <div class="finder-toolbar">
+                            <button class="toolbar-btn" onclick="finderBack()">←</button>
+                            <button class="toolbar-btn" onclick="finderForward()">→</button>
+                            <div class="finder-path" id="finder-path"></div>
+                            <button class="toolbar-btn" onclick="createNewFolderInFinder()">+ Folder</button>
+                            <button class="toolbar-btn" onclick="createNewFileInFinder()">+ File</button>
+                        </div>
+                        <div class="finder-files" id="finder-files"></div>
+                    </div>
+                </div>
+            `;
+
+        createWindow({
+          title: "Finder",
+          content,
+          app: "finder",
+          width: 900,
+          height: 550,
+        });
+
+        TestOS.currentPath = path;
+        renderFinderFiles();
+      }
+
+      // Navigate finder
+      function navigateFinder(el, path) {
+        document
+          .querySelectorAll(".sidebar-item")
+          .forEach((i) => i.classList.remove("active"));
+        el.classList.add("active");
+        TestOS.currentPath = path;
+        renderFinderFiles();
+      }
+
+      // Render finder files
+      function renderFinderFiles() {
+        const filesContainer = document.getElementById("finder-files");
+        const pathContainer = document.getElementById("finder-path");
+
+        if (!filesContainer) return;
+
+        // Get current folder
+        let current = TestOS.fileSystem["/"];
+        const pathParts = TestOS.currentPath.split("/").filter((p) => p);
+
+        for (const part of pathParts) {
+          if (current.children && current.children[part]) {
+            current = current.children[part];
+          }
+        }
+
+        // Render path
+        pathContainer.innerHTML =
+          pathParts
+            .map(
+              (p, i) =>
+                `<span onclick="goToPath(${i})">${p}</span><span>/</span>`
+            )
+            .join("") || "<span>/</span>";
+
+        // Render files
+        filesContainer.innerHTML = "";
+
+        if (current.children) {
+          for (const [name, item] of Object.entries(current.children)) {
+            const fileEl = document.createElement("div");
+            fileEl.className = "file-item";
+            fileEl.dataset.name = name;
+            fileEl.dataset.type = item.type;
+
+            fileEl.innerHTML = `
+                        <span class="icon">${
+                          item.type === "folder" ? "📁" : "📄"
+                        }</span>
+                        <span class="name">${name}</span>
+                    `;
+
+            fileEl.addEventListener("click", (e) => {
+              e.stopPropagation();
+              document
+                .querySelectorAll(".file-item")
+                .forEach((f) => f.classList.remove("selected"));
+              fileEl.classList.add("selected");
+            });
+
+            fileEl.addEventListener("dblclick", () => {
+              if (item.type === "folder") {
+                TestOS.currentPath += "/" + name;
+                renderFinderFiles();
+              } else {
+                openApp("textedit", { name, content: item.content || "" });
+              }
+            });
+
+            filesContainer.appendChild(fileEl);
+          }
+        }
+
+        if (filesContainer.children.length === 0) {
+          filesContainer.innerHTML =
+            '<div style="color: var(--text-secondary); padding: 20px;">This folder is empty</div>';
+        }
+      }
+
+      // Go to path
+      function goToPath(index) {
+        const parts = TestOS.currentPath.split("/").filter((p) => p);
+        TestOS.currentPath = "/" + parts.slice(0, index + 1).join("/");
+        renderFinderFiles();
+      }
+
+      // Finder back
+      function finderBack() {
+        const parts = TestOS.currentPath.split("/").filter((p) => p);
+        if (parts.length > 0) {
+          parts.pop();
+          TestOS.currentPath = "/" + parts.join("/") || "/";
+          renderFinderFiles();
+        }
+      }
+
+      // Finder forward
+      function finderForward() {
+        // Would need history tracking
+      }
+
+      // Create new folder in finder
+      function createNewFolderInFinder() {
+        showDialog(
+          "New Folder",
+          "Enter folder name:",
+          "Untitled Folder",
+          (name) => {
+            if (name) {
+              let current = TestOS.fileSystem["/"];
+              const parts = TestOS.currentPath.split("/").filter((p) => p);
+              for (const part of parts) {
+                current = current.children[part];
+              }
+              current.children[name] = { type: "folder", children: {} };
+              renderFinderFiles();
+              if (TestOS.currentPath === "/Desktop") {
+                renderDesktopIcons();
+              }
+            }
+          }
+        );
+      }
+
+      // Create new file in finder
+      function createNewFileInFinder() {
+        showDialog("New File", "Enter file name:", "Untitled.txt", (name) => {
+          if (name) {
+            let current = TestOS.fileSystem["/"];
+            const parts = TestOS.currentPath.split("/").filter((p) => p);
+            for (const part of parts) {
+              current = current.children[part];
+            }
+            current.children[name] = { type: "file", content: "" };
+            renderFinderFiles();
+            if (TestOS.currentPath === "/Desktop") {
+              renderDesktopIcons();
+            }
+          }
+        });
+      }
+
+      // Terminal app
+      function openTerminal() {
+        const content = `
+                <div class="terminal-container">
+                    <div class="terminal-output" id="terminal-output">
+                        <div class="terminal-line">TestOS Terminal v1.0</div>
+                        <div class="terminal-line">Type 'help' for available commands.</div>
+                        <div class="terminal-line">&nbsp;</div>
+                    </div>
+                    <div class="terminal-input-line">
+                        <span class="terminal-prompt">guest@testos ~ %</span>
+                        <input type="text" class="terminal-input" id="terminal-input" autofocus onkeydown="handleTerminalInput(event)">
+                    </div>
+                </div>
+            `;
+
+        createWindow({
+          title: "Terminal",
+          content,
+          app: "terminal",
+          width: 700,
+          height: 450,
+        });
+      }
+
+      // Handle terminal input
+      function handleTerminalInput(e) {
+        if (e.key === "Enter") {
+          const input = e.target;
+          const command = input.value.trim();
+          const output = document.getElementById("terminal-output");
+
+          // Add command to output
+          output.innerHTML += `<div class="terminal-line"><span style="color: #0f0;">guest@testos ~ %</span> ${command}</div>`;
+
+          // Process command
+          const result = processTerminalCommand(command);
+          if (result) {
+            output.innerHTML += `<div class="terminal-line">${result}</div>`;
+          }
+          output.innerHTML += `<div class="terminal-line">&nbsp;</div>`;
+
+          // Clear input and scroll
+          input.value = "";
+          output.scrollTop = output.scrollHeight;
+
+          // Add to history
+          if (command) {
+            TestOS.terminalHistory.push(command);
+            TestOS.terminalHistoryIndex = TestOS.terminalHistory.length;
+          }
+        } else if (e.key === "ArrowUp") {
+          if (TestOS.terminalHistoryIndex > 0) {
+            TestOS.terminalHistoryIndex--;
+            e.target.value =
+              TestOS.terminalHistory[TestOS.terminalHistoryIndex];
+          }
+        } else if (e.key === "ArrowDown") {
+          if (TestOS.terminalHistoryIndex < TestOS.terminalHistory.length - 1) {
+            TestOS.terminalHistoryIndex++;
+            e.target.value =
+              TestOS.terminalHistory[TestOS.terminalHistoryIndex];
+          } else {
+            TestOS.terminalHistoryIndex = TestOS.terminalHistory.length;
+            e.target.value = "";
+          }
+        }
+      }
+
+      // Process terminal command
+      function processTerminalCommand(cmd) {
+        const parts = cmd.split(" ");
+        const command = parts[0].toLowerCase();
+        const args = parts.slice(1);
+
+        switch (command) {
+          case "help":
+            return `Available commands:
+  help     - Show this help
+  ls       - List files
+  cd       - Change directory
+  pwd      - Print working directory
+  mkdir    - Create directory
+  touch    - Create file
+  cat      - Display file contents
+  clear    - Clear terminal
+  date     - Show current date
+  whoami   - Show current user
+  echo     - Print text
+  neofetch - System info`;
+
+          case "ls":
+            let current = TestOS.fileSystem["/"];
+            const pathParts = TestOS.currentPath.split("/").filter((p) => p);
+            for (const part of pathParts) {
+              if (current.children && current.children[part]) {
+                current = current.children[part];
+              }
+            }
+            if (current.children) {
+              return Object.keys(current.children).join("  ");
+            }
+            return "";
+
+          case "pwd":
+            return TestOS.currentPath || "/";
+
+          case "cd":
+            if (args[0] === "..") {
+              finderBack();
+            } else if (args[0]) {
+              TestOS.currentPath += "/" + args[0];
+            }
+            return "";
+
+          case "clear":
+            document.getElementById("terminal-output").innerHTML = "";
+            return "";
+
+          case "date":
+            return new Date().toString();
+
+          case "whoami":
+            return "guest";
+
+          case "echo":
+            return args.join(" ");
+
+          case "neofetch":
+            return `
+       🖥️ TestOS
+  ──────────────
+  OS: TestOS 1.0
+  Host: Web Browser
+  Kernel: JavaScript
+  Shell: TestOS Terminal
+  Theme: Dark Mode
+  Icons: Emoji
+  Terminal: Terminal.app`;
+
+          case "mkdir":
+            if (args[0]) {
+              let curr = TestOS.fileSystem["/"];
+              const pts = TestOS.currentPath.split("/").filter((p) => p);
+              for (const part of pts) {
+                curr = curr.children[part];
+              }
+              curr.children[args[0]] = { type: "folder", children: {} };
+              return `Created directory: ${args[0]}`;
+            }
+            return "Usage: mkdir <name>";
+
+          case "touch":
+            if (args[0]) {
+              let curr = TestOS.fileSystem["/"];
+              const pts = TestOS.currentPath.split("/").filter((p) => p);
+              for (const part of pts) {
+                curr = curr.children[part];
+              }
+              curr.children[args[0]] = { type: "file", content: "" };
+              return `Created file: ${args[0]}`;
+            }
+            return "Usage: touch <name>";
+
+          case "":
+            return "";
+
+          default:
+            return `Command not found: ${command}`;
+        }
+      }
+
+      // TextEdit app
+      function openTextEdit(data = {}) {
+        const name = data.name || "Untitled.txt";
+        const content = data.content || "";
+
+        const windowContent = `
+                <div class="editor-container">
+                    <div class="editor-toolbar">
+                        <button class="editor-btn" onclick="saveDocument()">💾 Save</button>
+                        <button class="editor-btn" onclick="newDocument()">📄 New</button>
+                        <span class="editor-filename" id="editor-filename">${name}</span>
+                    </div>
+                    <textarea class="editor-textarea" id="editor-textarea" placeholder="Start typing...">${content}</textarea>
+                    <div class="editor-status">
+                        <span id="editor-chars">0 characters</span>
+                        <span id="editor-lines">1 line</span>
+                    </div>
+                </div>
+            `;
+
+        const winId = createWindow({
+          title: "TextEdit - " + name,
+          content: windowContent,
+          app: "textedit",
+          width: 700,
+          height: 500,
+        });
+
+        // Setup text stats
+        setTimeout(() => {
+          const textarea = document.getElementById("editor-textarea");
+          if (textarea) {
+            updateEditorStats();
+            textarea.addEventListener("input", updateEditorStats);
+          }
+        }, 100);
+      }
+
+      // Update editor stats
+      function updateEditorStats() {
+        const textarea = document.getElementById("editor-textarea");
+        if (textarea) {
+          const chars = textarea.value.length;
+          const lines = textarea.value.split("\n").length;
+          document.getElementById(
+            "editor-chars"
+          ).textContent = `${chars} characters`;
+          document.getElementById(
+            "editor-lines"
+          ).textContent = `${lines} lines`;
+        }
+      }
+
+      // Save document
+      function saveDocument() {
+        const textarea = document.getElementById("editor-textarea");
+        const filename = document.getElementById("editor-filename").textContent;
+
+        if (textarea) {
+          // Save to desktop
+          TestOS.fileSystem["/"].children["Desktop"].children[filename] = {
+            type: "file",
+            content: textarea.value,
+          };
+          renderDesktopIcons();
+          showNotification("TextEdit", `${filename} saved successfully!`);
+        }
+      }
+
+      // New document
+      function newDocument() {
+        showDialog(
+          "New Document",
+          "Enter file name:",
+          "Untitled.txt",
+          (name) => {
+            if (name) {
+              document.getElementById("editor-filename").textContent = name;
+              document.getElementById("editor-textarea").value = "";
+              updateEditorStats();
+            }
+          }
+        );
+      }
+
+      // Calculator app
+      function openCalculator() {
+        const content = `
+                <div class="calculator-container">
+                    <div class="calc-display" id="calc-display">0</div>
+                    <div class="calc-buttons">
+                        <button class="calc-btn function" onclick="calcClear()">AC</button>
+                        <button class="calc-btn function" onclick="calcToggleSign()">±</button>
+                        <button class="calc-btn function" onclick="calcPercent()">%</button>
+                        <button class="calc-btn operator" onclick="calcOperator('/')">÷</button>
+                        
+                        <button class="calc-btn number" onclick="calcDigit('7')">7</button>
+                        <button class="calc-btn number" onclick="calcDigit('8')">8</button>
+                        <button class="calc-btn number" onclick="calcDigit('9')">9</button>
+                        <button class="calc-btn operator" onclick="calcOperator('*')">×</button>
+                        
+                        <button class="calc-btn number" onclick="calcDigit('4')">4</button>
+                        <button class="calc-btn number" onclick="calcDigit('5')">5</button>
+                        <button class="calc-btn number" onclick="calcDigit('6')">6</button>
+                        <button class="calc-btn operator" onclick="calcOperator('-')">−</button>
+                        
+                        <button class="calc-btn number" onclick="calcDigit('1')">1</button>
+                        <button class="calc-btn number" onclick="calcDigit('2')">2</button>
+                        <button class="calc-btn number" onclick="calcDigit('3')">3</button>
+                        <button class="calc-btn operator" onclick="calcOperator('+')">+</button>
+                        
+                        <button class="calc-btn number zero" onclick="calcDigit('0')">0</button>
+                        <button class="calc-btn number" onclick="calcDecimal()">.</button>
+                        <button class="calc-btn operator" onclick="calcEquals()">=</button>
+                    </div>
+                </div>
+            `;
+
+        createWindow({
+          title: "Calculator",
+          content,
+          app: "calculator",
+          width: 280,
+          height: 420,
+        });
+      }
+
+      // Calculator functions
+      function calcDigit(d) {
+        if (TestOS.calcWaitingForOperand) {
+          TestOS.calcDisplay = d;
+          TestOS.calcWaitingForOperand = false;
+        } else {
+          TestOS.calcDisplay =
+            TestOS.calcDisplay === "0" ? d : TestOS.calcDisplay + d;
+        }
+        updateCalcDisplay();
+      }
+
+      function calcDecimal() {
+        if (!TestOS.calcDisplay.includes(".")) {
+          TestOS.calcDisplay += ".";
+          updateCalcDisplay();
+        }
+      }
+
+      function calcClear() {
+        TestOS.calcDisplay = "0";
+        TestOS.calcPrevValue = null;
+        TestOS.calcOperator = null;
+        TestOS.calcWaitingForOperand = false;
+        updateCalcDisplay();
+      }
+
+      function calcToggleSign() {
+        TestOS.calcDisplay = String(-parseFloat(TestOS.calcDisplay));
+        updateCalcDisplay();
+      }
+
+      function calcPercent() {
+        TestOS.calcDisplay = String(parseFloat(TestOS.calcDisplay) / 100);
+        updateCalcDisplay();
+      }
+
+      function calcOperator(op) {
+        const value = parseFloat(TestOS.calcDisplay);
+
+        if (TestOS.calcPrevValue !== null && !TestOS.calcWaitingForOperand) {
+          const result = calculate(
+            TestOS.calcPrevValue,
+            value,
+            TestOS.calcOperator
+          );
+          TestOS.calcDisplay = String(result);
+          TestOS.calcPrevValue = result;
+        } else {
+          TestOS.calcPrevValue = value;
+        }
+
+        TestOS.calcOperator = op;
+        TestOS.calcWaitingForOperand = true;
+        updateCalcDisplay();
+      }
+
+      function calcEquals() {
+        if (TestOS.calcOperator && TestOS.calcPrevValue !== null) {
+          const value = parseFloat(TestOS.calcDisplay);
+          const result = calculate(
+            TestOS.calcPrevValue,
+            value,
+            TestOS.calcOperator
+          );
+          TestOS.calcDisplay = String(result);
+          TestOS.calcPrevValue = null;
+          TestOS.calcOperator = null;
+          TestOS.calcWaitingForOperand = true;
+          updateCalcDisplay();
+        }
+      }
+
+      function calculate(a, b, op) {
+        switch (op) {
+          case "+":
+            return a + b;
+          case "-":
+            return a - b;
+          case "*":
+            return a * b;
+          case "/":
+            return b !== 0 ? a / b : "Error";
+          default:
+            return b;
+        }
+      }
+
+      function updateCalcDisplay() {
+        const display = document.getElementById("calc-display");
+        if (display) {
+          let value = TestOS.calcDisplay;
+          if (value.length > 12) {
+            value = parseFloat(value).toExponential(6);
+          }
+          display.textContent = value;
+        }
+      }
+
+      // Notes app
+      function openNotes() {
+        const notesHtml = TestOS.notes
+          .map(
+            (n) => `
+                <div class="note-item ${
+                  n.id === TestOS.activeNoteId ? "active" : ""
+                }" onclick="selectNote(${n.id})">
+                    <div class="note-item-title">${n.title || "New Note"}</div>
+                    <div class="note-item-preview">${n.content.substring(
+                      0,
+                      50
+                    )}</div>
+                    <div class="note-item-date">${n.date.toLocaleDateString()}</div>
+                </div>
+            `
+          )
+          .join("");
+
+        const activeNote =
+          TestOS.notes.find((n) => n.id === TestOS.activeNoteId) ||
+          TestOS.notes[0];
+
+        const content = `
+                <div class="notes-container">
+                    <div class="notes-sidebar">
+                        <div class="notes-search">
+                            <input type="text" placeholder="Search" oninput="searchNotes(this.value)">
+                        </div>
+                        <div style="padding: 10px;">
+                            <button class="toolbar-btn" style="width: 100%;" onclick="createNewNote()">+ New Note</button>
+                        </div>
+                        <div class="notes-list" id="notes-list">
+                            ${notesHtml}
+                        </div>
+                    </div>
+                    <div class="notes-editor">
+                        <input type="text" class="note-title-input" id="note-title" value="${activeNote.title}" placeholder="Title" oninput="updateNote()">
+                        <textarea class="note-content-input" id="note-content" placeholder="Start typing..." oninput="updateNote()">${activeNote.content}</textarea>
+                    </div>
+                </div>
+            `;
+
+        createWindow({
+          title: "Notes",
+          content,
+          app: "notes",
+          width: 800,
+          height: 500,
+        });
+      }
+
+      // Select note
+      function selectNote(id) {
+        TestOS.activeNoteId = id;
+        const note = TestOS.notes.find((n) => n.id === id);
+        if (note) {
+          document.getElementById("note-title").value = note.title;
+          document.getElementById("note-content").value = note.content;
+          document
+            .querySelectorAll(".note-item")
+            .forEach((n) => n.classList.remove("active"));
+          event.currentTarget.classList.add("active");
+        }
+      }
+
+      // Update note
+      function updateNote() {
+        const note = TestOS.notes.find((n) => n.id === TestOS.activeNoteId);
+        if (note) {
+          note.title = document.getElementById("note-title").value;
+          note.content = document.getElementById("note-content").value;
+          note.date = new Date();
+        }
+      }
+
+      // Create new note
+      function createNewNote() {
+        const newNote = {
+          id: Date.now(),
+          title: "New Note",
+          content: "",
+          date: new Date(),
+        };
+        TestOS.notes.unshift(newNote);
+        TestOS.activeNoteId = newNote.id;
+
+        const noteItem = document.createElement("div");
+        noteItem.className = "note-item active";
+        noteItem.onclick = () => selectNote(newNote.id);
+        noteItem.innerHTML = `
+                <div class="note-item-title">New Note</div>
+                <div class="note-item-preview"></div>
+                <div class="note-item-date">${newNote.date.toLocaleDateString()}</div>
+            `;
+
+        const notesList = document.getElementById("notes-list");
+        document
+          .querySelectorAll(".note-item")
+          .forEach((n) => n.classList.remove("active"));
+        notesList.insertBefore(noteItem, notesList.firstChild);
+
+        document.getElementById("note-title").value = "";
+        document.getElementById("note-content").value = "";
+        document.getElementById("note-title").focus();
+      }
+
+      // Settings app
+      function openSettings() {
+        const content = `
+                <div class="settings-container">
+                    <div class="settings-sidebar">
+                        <div class="settings-item active">
+                            <span class="icon">🎨</span>
+                            <span>Appearance</span>
+                        </div>
+                        <div class="settings-item">
+                            <span class="icon">🖥️</span>
+                            <span>Desktop</span>
+                        </div>
+                        <div class="settings-item">
+                            <span class="icon">🔔</span>
+                            <span>Notifications</span>
+                        </div>
+                        <div class="settings-item">
+                            <span class="icon">🔊</span>
+                            <span>Sound</span>
+                        </div>
+                        <div class="settings-item">
+                            <span class="icon">ℹ️</span>
+                            <span>About</span>
+                        </div>
+                    </div>
+                    <div class="settings-content">
+                        <div class="settings-section">
+                            <h2 class="settings-title">Appearance</h2>
+                            
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Dark Mode</div>
+                                    <div class="setting-description">Use dark appearance</div>
+                                </div>
+                                <div class="toggle-switch ${
+                                  TestOS.settings.darkMode ? "active" : ""
+                                }" onclick="toggleSetting(this, 'darkMode')"></div>
+                            </div>
+                            
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Wallpaper</div>
+                                    <div class="setting-description">Choose your desktop background</div>
+                                </div>
+                            </div>
+                            
+                            <div class="wallpaper-grid">
+                                <div class="wallpaper-option w1 ${
+                                  TestOS.settings.wallpaper === "w1"
+                                    ? "active"
+                                    : ""
+                                }" onclick="setWallpaper('w1', this)"></div>
+                                <div class="wallpaper-option w2 ${
+                                  TestOS.settings.wallpaper === "w2"
+                                    ? "active"
+                                    : ""
+                                }" onclick="setWallpaper('w2', this)"></div>
+                                <div class="wallpaper-option w3 ${
+                                  TestOS.settings.wallpaper === "w3"
+                                    ? "active"
+                                    : ""
+                                }" onclick="setWallpaper('w3', this)"></div>
+                                <div class="wallpaper-option w4 ${
+                                  TestOS.settings.wallpaper === "w4"
+                                    ? "active"
+                                    : ""
+                                }" onclick="setWallpaper('w4', this)"></div>
+                                <div class="wallpaper-option w5 ${
+                                  TestOS.settings.wallpaper === "w5"
+                                    ? "active"
+                                    : ""
+                                }" onclick="setWallpaper('w5', this)"></div>
+                                <div class="wallpaper-option w6 ${
+                                  TestOS.settings.wallpaper === "w6"
+                                    ? "active"
+                                    : ""
+                                }" onclick="setWallpaper('w6', this)"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Notifications</div>
+                                    <div class="setting-description">Show notifications</div>
+                                </div>
+                                <div class="toggle-switch ${
+                                  TestOS.settings.notifications ? "active" : ""
+                                }" onclick="toggleSetting(this, 'notifications')"></div>
+                            </div>
+                            
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Sound Effects</div>
+                                    <div class="setting-description">Play sounds for actions</div>
+                                </div>
+                                <div class="toggle-switch ${
+                                  TestOS.settings.sounds ? "active" : ""
+                                }" onclick="toggleSetting(this, 'sounds')"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        createWindow({
+          title: "System Preferences",
+          content,
+          app: "settings",
+          width: 750,
+          height: 500,
+        });
+      }
+
+      // Toggle setting
+      function toggleSetting(el, setting) {
+        TestOS.settings[setting] = !TestOS.settings[setting];
+        el.classList.toggle("active");
+      }
+
+      // Set wallpaper
+      function setWallpaper(id, el) {
+        TestOS.settings.wallpaper = id;
+        document
+          .querySelectorAll(".wallpaper-option")
+          .forEach((w) => w.classList.remove("active"));
+        el.classList.add("active");
+
+        const wallpapers = {
+          w1: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+          w2: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          w3: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+          w4: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+          w5: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+          w6: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+        };
+
+        document.getElementById("desktop").style.background = wallpapers[id];
+      }
+
+      // About app
+      function openAbout() {
+        const content = `
+                <div class="about-container">
+                    <div class="about-logo">🖥️</div>
+                    <h1 class="about-title">TestOS</h1>
+                    <p class="about-version">Version 1.0.0</p>
+                    <div class="about-info">
+                        <p>A Mac-styled Operating System UI</p>
+                        <p>Built with HTML, CSS, and JavaScript</p>
+                        <br>
+                        <p>Features:</p>
+                        <p>• Finder File Browser</p>
+                        <p>• Text Editor</p>
+                        <p>• Terminal</p>
+                        <p>• Calculator</p>
+                        <p>• Notes</p>
+                        <p>• System Preferences</p>
+                        <br>
+                        <p>© 2024 TestOS. All rights reserved.</p>
+                    </div>
+                </div>
+            `;
+
+        createWindow({
+          title: "About TestOS",
+          content,
+          app: "about",
+          width: 400,
+          height: 450,
+        });
+      }
+
+      // Context menu actions
+      function createNewFolder() {
+        showDialog(
+          "New Folder",
+          "Enter folder name:",
+          "Untitled Folder",
+          (name) => {
+            if (name) {
+              TestOS.fileSystem["/"].children["Desktop"].children[name] = {
+                type: "folder",
+                children: {},
+              };
+              renderDesktopIcons();
+              showNotification("Finder", `Folder "${name}" created`);
+            }
+          }
+        );
+      }
+
+      function createNewFile() {
+        showDialog("New File", "Enter file name:", "Untitled.txt", (name) => {
+          if (name) {
+            TestOS.fileSystem["/"].children["Desktop"].children[name] = {
+              type: "file",
+              content: "",
+            };
+            renderDesktopIcons();
+            showNotification("Finder", `File "${name}" created`);
+          }
+        });
+      }
+
+      function getInfo() {
+        if (TestOS.selectedItem) {
+          const item =
+            TestOS.fileSystem["/"].children["Desktop"].children[
+              TestOS.selectedItem
+            ];
+          showNotification(
+            "Info",
+            `${TestOS.selectedItem}\nType: ${item.type}`
+          );
+        }
+      }
+
+      function changeWallpaper() {
+        openApp("settings");
+      }
+
+      function cleanupDesktop() {
+        renderDesktopIcons();
+        showNotification("Desktop", "Icons arranged");
+      }
+
+      function sortDesktopBy(criteria) {
+        // Would implement sorting logic
+        showNotification("Desktop", `Sorted by ${criteria}`);
+      }
+
+      function deleteSelectedItem() {
+        if (TestOS.selectedItem) {
+          const name = TestOS.selectedItem;
+          delete TestOS.fileSystem["/"].children["Desktop"].children[name];
+          renderDesktopIcons();
+          TestOS.selectedItem = null;
+          showNotification("Finder", `"${name}" deleted`);
+        }
+      }
+
+      // Show dialog
+      function showDialog(title, message, defaultValue, callback) {
+        const overlay = document.createElement("div");
+        overlay.className = "dialog-overlay";
+        overlay.innerHTML = `
+                <div class="dialog">
+                    <div class="dialog-title">${title}</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 13px;">${message}</p>
+                    <input type="text" class="dialog-input" value="${defaultValue}" autofocus>
+                    <div class="dialog-buttons">
+                        <button class="dialog-btn cancel">Cancel</button>
+                        <button class="dialog-btn confirm">OK</button>
+                    </div>
+                </div>
+            `;
+
+        document.body.appendChild(overlay);
+
+        const input = overlay.querySelector("input");
+        input.select();
+
+        overlay.querySelector(".cancel").onclick = () => overlay.remove();
+        overlay.querySelector(".confirm").onclick = () => {
+          callback(input.value);
+          overlay.remove();
+        };
+
+        input.onkeydown = (e) => {
+          if (e.key === "Enter") {
+            callback(input.value);
+            overlay.remove();
+          } else if (e.key === "Escape") {
+            overlay.remove();
+          }
+        };
+      }
+
+      // Show notification
+      function showNotification(title, message) {
+        if (!TestOS.settings.notifications) return;
+
+        const notif = document.createElement("div");
+        notif.className = "notification";
+        notif.innerHTML = `
+                <div class="notification-icon">🔔</div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+            `;
+
+        document.body.appendChild(notif);
+
+        setTimeout(() => {
+          notif.style.animation = "slideIn 0.3s ease reverse";
+          setTimeout(() => notif.remove(), 300);
+        }, 3000);
+      }
+
+      // Spotlight
+      function toggleSpotlight() {
+        const spotlight = document.getElementById("spotlight");
+        if (spotlight.style.display === "block") {
+          spotlight.style.display = "none";
+        } else {
+          spotlight.style.display = "block";
+          spotlight.querySelector("input").value = "";
+          spotlight.querySelector("input").focus();
+          document.getElementById("spotlight-results").innerHTML = "";
+        }
+      }
+
+      function searchSpotlight(query) {
+        const results = document.getElementById("spotlight-results");
+
+        if (!query) {
+          results.innerHTML = "";
+          return;
+        }
+
+        const matches = TestOS.apps.filter((app) =>
+          app.name.toLowerCase().includes(query.toLowerCase())
+        );
+
+        // Also search files
+        const desktopItems =
+          TestOS.fileSystem["/"].children["Desktop"].children;
+        const fileMatches = Object.entries(desktopItems)
+          .filter(([name]) => name.toLowerCase().includes(query.toLowerCase()))
+          .map(([name, item]) => ({
+            name,
+            icon: item.type === "folder" ? "📁" : "📄",
+            type: item.type,
+          }));
+
+        results.innerHTML =
+          matches
+            .map(
+              (app) => `
+                <div class="spotlight-result" onclick="openApp('${app.app}'); toggleSpotlight();">
+                    <span class="icon">${app.icon}</span>
+                    <div class="spotlight-result-info">
+                        <div class="spotlight-result-name">${app.name}</div>
+                        <div class="spotlight-result-type">Application</div>
+                    </div>
+                </div>
+            `
+            )
+            .join("") +
+          fileMatches
+            .map(
+              (file) => `
+                <div class="spotlight-result" onclick="toggleSpotlight();">
+                    <span class="icon">${file.icon}</span>
+                    <div class="spotlight-result-info">
+                        <div class="spotlight-result-name">${file.name}</div>
+                        <div class="spotlight-result-type">${file.type}</div>
+                    </div>
+                </div>
+            `
+            )
+            .join("");
+      }
+
+      // Apple menu
+      function showAppleMenu() {
+        showNotification("TestOS", "Apple menu would go here");
+      }
+    </script>
   </body>
 </html>

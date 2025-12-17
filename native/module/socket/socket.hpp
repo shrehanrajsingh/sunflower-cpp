@@ -23,6 +23,7 @@ SF_API Object *accept (Module *);
 SF_API Object *read (Module *);
 SF_API Object *send (Module *);
 SF_API Object *close (Module *);
+SF_API Object *shutdown (Module *);
 } // namespace Socket
 } // namespace native_mod
 } // namespace sf

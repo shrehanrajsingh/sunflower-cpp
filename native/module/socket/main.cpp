@@ -55,6 +55,13 @@ make ()
 
   mod->set_variable ("close", static_cast<Object *> (fo_close));
 
+  NativeFunction *nf_shutdown
+      = new NativeFunction (shutdown, { "sock", "mode" });
+  FunctionObject *fo_shutdown
+      = new FunctionObject (static_cast<Function *> (nf_shutdown));
+
+  mod->set_variable ("shutdown", static_cast<Object *> (fo_shutdown));
+
   return mod;
 }
 } // namespace Socket

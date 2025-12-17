@@ -16,6 +16,12 @@ codes = {
     '503': 'Service Unavailable'
 }
 
+shut_codes = {
+    'SHUT_RD': 0,
+    'SHUT_WR': 1,
+    'SHUT_RDWR': 2
+}
+
 class Server
     port = 0
     host = ''
@@ -41,34 +47,29 @@ class Server
                 r = r + j + ': ' + a[j] + '\r\n'
         
         if 'body' in a
+            r = r + 'Content-Length: ' + len (a['body']).to_string () + '\r\n'
             r = r + '\r\n' + a['body']
 
         return r
     
     fun process (self, cs)
         req = s.read (cs)
-        matches = []
-
-        if req[0 to 3] == 'GET'
-            req = req[4 to len (req)]
-            for i in self.r_get
-                if req[0 to len (i)] == i
-                    matches.push (i)
+        protocol = req[0 to req.find (' ')]
+        path = req[len (protocol) + 1 to req[len (protocol) + 1 to len (req)].find (' ') + len (protocol) + 1]
         
-        # get the longest match
-        l = 0
-        m = none
+        m = path
 
-        for i in matches
-            if len (i) > l
-                l = len (i)
-                m = i
-        
+        if protocol == 'GET'
+            if not path in self.r_get
+                m = none
+
+        write ("Got route:", path, "Protocol:", protocol)
         if m
             s.send (cs, self.gen_response (m))
+            s.shutdown (cs, shut_codes['SHUT_WR'])
             s.close (cs)
         else
-            write ('m is none')
+            write ('path not found (path:', path + ')')
     
     fun serve (self)
         sock = s.socket ()
