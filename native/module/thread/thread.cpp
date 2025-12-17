@@ -224,7 +224,7 @@ close (Module *mod)
 SF_API void
 __sf_thread_cleanup ()
 {
-  for (auto it = threadmap.begin (); it != threadmap.end (); ++it)
+  for (auto it = threadmap.begin (); it != threadmap.end ();)
     {
       ThreadHandle *th = it->second;
 
