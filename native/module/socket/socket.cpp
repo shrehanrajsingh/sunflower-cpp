@@ -193,7 +193,6 @@ read (Module *mod)
     }
 
   size_t header_end = req.find ("\r\n\r\n");
-  assert (header_end != std::string::npos);
 
   if (header_end == std::string::npos)
     {
