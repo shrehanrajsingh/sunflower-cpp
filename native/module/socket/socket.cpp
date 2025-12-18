@@ -195,6 +195,17 @@ read (Module *mod)
   size_t header_end = req.find ("\r\n\r\n");
   assert (header_end != std::string::npos);
 
+  if (header_end == std::string::npos)
+    {
+      /* no body */
+      Object *res;
+      res = static_cast<Object *> (new ConstantObject (
+          static_cast<Constant *> (new StringConstant ((req).c_str ()))));
+
+      IR (res);
+      return res;
+    }
+
   size_t body_start = header_end + 4;
   size_t bytes_alr_read = req.size () - body_start;
 

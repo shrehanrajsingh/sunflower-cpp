@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Clone</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-base: #121212;
+        --bg-highlight: #1a1a1a;
+        --bg-elevated: #242424;
+        --bg-card: #181818;
+        --text-base: #ffffff;
+        --text-subdued: #a7a7a7;
+        --text-bright: #ffffff;
+        --accent: #1db954;
+        --accent-hover: #1ed760;
+        --sidebar-width: 280px;
+        --player-height: 90px;
+      }
+
+      body {
+        font-family: "Circular", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-base);
+        overflow: hidden;
+        height: 100vh;
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      button {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      /* Scrollbar Styles */
+      ::-webkit-scrollbar {
+        width: 12px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      /* Layout */
+      .app-container {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: 1fr auto;
+        height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: var(--sidebar-width);
+        background-color: #000;
+        display: flex;
+        flex-direction: column;
+        grid-row: 1;
+        overflow: hidden;
+      }
+
+      .sidebar-section {
+        background-color: var(--bg-highlight);
+        border-radius: 8px;
+        margin: 8px;
+        padding: 12px;
+      }
+
+      .logo {
+        padding: 16px;
+        margin-bottom: 8px;
+      }
+
+      .logo svg {
+        height: 40px;
+        width: auto;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-weight: 700;
+        color: var(--text-subdued);
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover {
+        color: var(--text-bright);
+      }
+
+      .nav-link.active {
+        color: var(--text-bright);
+      }
+
+      .nav-link i {
+        font-size: 24px;
+        width: 24px;
+        text-align: center;
+      }
+
+      /* Library Section */
+      .library-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .library-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+      }
+
+      .library-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-subdued);
+        font-weight: 700;
+        transition: color 0.2s;
+        cursor: pointer;
+      }
+
+      .library-title:hover {
+        color: var(--text-bright);
+      }
+
+      .library-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .library-actions button {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-subdued);
+        transition: all 0.2s;
+      }
+
+      .library-actions button:hover {
+        color: var(--text-bright);
+        background-color: var(--bg-elevated);
+      }
+
+      .library-filters {
+        display: flex;
+        gap: 8px;
+        padding: 8px 16px;
+        flex-wrap: wrap;
+      }
+
+      .filter-chip {
+        background-color: var(--bg-elevated);
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        white-space: nowrap;
+        transition: background-color 0.2s;
+      }
+
+      .filter-chip:hover {
+        background-color: #333;
+      }
+
+      .filter-chip.active {
+        background-color: #fff;
+        color: #000;
+      }
+
+      .library-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+      }
+
+      .library-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .library-item:hover {
+        background-color: var(--bg-elevated);
+      }
+
+      .library-item-img {
+        width: 48px;
+        height: 48px;
+        border-radius: 4px;
+        object-fit: cover;
+        background-color: var(--bg-elevated);
+      }
+
+      .library-item-img.rounded {
+        border-radius: 50%;
+      }
+
+      .library-item-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .library-item-name {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .library-item-meta {
+        font-size: 14px;
+        color: var(--text-subdued);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Main Content */
+      .main-content {
+        background: linear-gradient(180deg, #1e3264 0%, var(--bg-base) 300px);
+        overflow-y: auto;
+        grid-row: 1;
+        border-radius: 8px;
+        margin: 8px 8px 8px 0;
+      }
+
+      /* Header */
+      .main-header {
+        position: sticky;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        z-index: 100;
+        background: transparent;
+        transition: background-color 0.3s;
+      }
+
+      .main-header.scrolled {
+        background-color: #1e3264;
+      }
+
+      .header-nav {
+        display: flex;
+        gap: 8px;
+      }
+
+      .nav-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.1s;
+      }
+
+      .nav-btn:hover {
+        transform: scale(1.05);
+      }
+
+      .nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .install-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-bright);
+      }
+
+      .install-btn:hover {
+        transform: scale(1.04);
+      }
+
+      .user-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 2px;
+        padding-right: 12px;
+        border-radius: 24px;
+        transition: background-color 0.2s;
+      }
+
+      .user-btn:hover {
+        background-color: rgba(40, 40, 40, 0.9);
+      }
+
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background-color: #535353;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .user-avatar i {
+        font-size: 14px;
+      }
+
+      .user-name {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      /* Content Sections */
+      .content-section {
+        padding: 0 24px 24px;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .section-title {
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .section-title:hover {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      .show-all {
+        color: var(--text-subdued);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .show-all:hover {
+        text-decoration: underline;
+      }
+
+      /* Greeting */
+      .greeting {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        padding: 0 24px;
+      }
+
+      /* Quick Picks Grid */
+      .quick-picks {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        padding: 0 24px 24px;
+      }
+
+      .quick-pick-card {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        position: relative;
+      }
+
+      .quick-pick-card:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .quick-pick-card:hover .play-btn-small {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .quick-pick-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+
+      .quick-pick-name {
+        font-weight: 700;
+        flex: 1;
+      }
+
+      .play-btn-small {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: all 0.3s;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .play-btn-small:hover {
+        background-color: var(--accent-hover);
+        transform: scale(1.05) translateY(0);
+      }
+
+      .play-btn-small i {
+        color: #000;
+        font-size: 18px;
+        margin-left: 3px;
+      }
+
+      /* Card Grid */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 24px;
+      }
+
+      .card {
+        background-color: var(--bg-card);
+        padding: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        position: relative;
+      }
+
+      .card:hover {
+        background-color: var(--bg-elevated);
+      }
+
+      .card:hover .card-play-btn {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .card-img-container {
+        position: relative;
+        margin-bottom: 16px;
+      }
+
+      .card-img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 4px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+
+      .card-img.rounded {
+        border-radius: 50%;
+      }
+
+      .card-play-btn {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: all 0.3s;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-play-btn:hover {
+        background-color: var(--accent-hover);
+        transform: scale(1.05) translateY(0);
+      }
+
+      .card-play-btn i {
+        color: #000;
+        font-size: 20px;
+        margin-left: 3px;
+      }
+
+      .card-title {
+        font-weight: 700;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .card-desc {
+        font-size: 14px;
+        color: var(--text-subdued);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* Now Playing Bar */
+      .now-playing-bar {
+        grid-column: 1 / -1;
+        background-color: #000;
+        height: var(--player-height);
+        padding: 0 16px;
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        align-items: center;
+        gap: 16px;
+        border-top: 1px solid #282828;
+      }
+
+      /* Track Info */
+      .track-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .track-img {
+        width: 56px;
+        height: 56px;
+        border-radius: 4px;
+        object-fit: cover;
+      }
+
+      .track-details {
+        min-width: 0;
+      }
+
+      .track-name {
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .track-name:hover {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      .track-artist {
+        font-size: 11px;
+        color: var(--text-subdued);
+      }
+
+      .track-artist:hover {
+        text-decoration: underline;
+        cursor: pointer;
+        color: var(--text-bright);
+      }
+
+      .track-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: 8px;
+      }
+
+      .track-actions button {
+        color: var(--text-subdued);
+        padding: 4px;
+      }
+
+      .track-actions button:hover {
+        color: var(--text-bright);
+      }
+
+      .track-actions button.active {
+        color: var(--accent);
+      }
+
+      /* Player Controls */
+      .player-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        max-width: 722px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .control-buttons {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .control-btn {
+        color: var(--text-subdued);
+        font-size: 16px;
+        padding: 4px;
+        transition: all 0.2s;
+      }
+
+      .control-btn:hover {
+        color: var(--text-bright);
+      }
+
+      .control-btn.active {
+        color: var(--accent);
+      }
+
+      .play-pause-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        transition: transform 0.1s;
+      }
+
+      .play-pause-btn:hover {
+        transform: scale(1.05);
+      }
+
+      .play-pause-btn i {
+        font-size: 14px;
+      }
+
+      /* Progress Bar */
+      .progress-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .time {
+        font-size: 11px;
+        color: var(--text-subdued);
+        min-width: 40px;
+        text-align: center;
+      }
+
+      .progress-bar {
+        flex: 1;
+        height: 4px;
+        background-color: #4d4d4d;
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .progress-bar:hover .progress-fill {
+        background-color: var(--accent);
+      }
+
+      .progress-bar:hover .progress-knob {
+        opacity: 1;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background-color: #fff;
+        border-radius: 2px;
+        width: 35%;
+        position: relative;
+      }
+
+      .progress-knob {
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        background-color: #fff;
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+
+      /* Extra Controls */
+      .extra-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .extra-btn {
+        color: var(--text-subdued);
+        font-size: 16px;
+        padding: 8px;
+        transition: color 0.2s;
+      }
+
+      .extra-btn:hover {
+        color: var(--text-bright);
+      }
+
+      .extra-btn.active {
+        color: var(--accent);
+      }
+
+      .volume-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .volume-bar {
+        width: 100px;
+        height: 4px;
+        background-color: #4d4d4d;
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .volume-bar:hover .volume-fill {
+        background-color: var(--accent);
+      }
+
+      .volume-bar:hover .volume-knob {
+        opacity: 1;
+      }
+
+      .volume-fill {
+        height: 100%;
+        background-color: #fff;
+        border-radius: 2px;
+        width: 70%;
+        position: relative;
+      }
+
+      .volume-knob {
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        background-color: #fff;
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+
+      /* Mobile Navigation */
+      .mobile-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #000;
+        padding: 8px 0;
+        z-index: 200;
+      }
+
+      .mobile-nav-items {
+        display: flex;
+        justify-content: space-around;
+      }
+
+      .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        color: var(--text-subdued);
+        font-size: 10px;
+        padding: 4px 12px;
+      }
+
+      .mobile-nav-item.active {
+        color: var(--text-bright);
+      }
+
+      .mobile-nav-item i {
+        font-size: 24px;
+      }
+
+      /* Mobile Now Playing Mini */
+      .now-playing-mini {
+        display: none;
+        position: fixed;
+        bottom: 56px;
+        left: 8px;
+        right: 8px;
+        background: linear-gradient(90deg, #3a1c71, #d76d77);
+        border-radius: 8px;
+        padding: 8px 12px;
+        align-items: center;
+        gap: 12px;
+        z-index: 150;
+      }
+
+      .mini-track-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+      }
+
+      .mini-track-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .mini-track-name {
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mini-track-artist {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .mini-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .mini-controls button {
+        color: #fff;
+        font-size: 24px;
+      }
+
+      .mini-progress {
+        position: absolute;
+        bottom: 0;
+        left: 12px;
+        right: 12px;
+        height: 2px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 1px;
+      }
+
+      .mini-progress-fill {
+        height: 100%;
+        width: 35%;
+        background-color: #fff;
+        border-radius: 1px;
+      }
+
+      /* Responsive Styles */
+      @media (max-width: 1024px) {
+        .card-grid {
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        }
+      }
+
+      @media (max-width: 900px) {
+        .sidebar {
+          width: 80px;
+        }
+
+        .nav-link span,
+        .library-title span,
+        .library-actions,
+        .library-filters,
+        .library-item-info {
+          display: none;
+        }
+
+        .nav-link {
+          justify-content: center;
+          padding: 12px;
+        }
+
+        .library-header {
+          justify-content: center;
+        }
+
+        .library-item {
+          justify-content: center;
+        }
+
+        .library-item-img {
+          width: 48px;
+          height: 48px;
+        }
+
+        .logo svg {
+          height: 32px;
+        }
+
+        .quick-picks {
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        .install-btn span {
+          display: none;
+        }
+
+        .user-name {
+          display: none;
+        }
+
+        .user-btn {
+          padding: 2px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .app-container {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .main-content {
+          margin: 0;
+          border-radius: 0;
+          padding-bottom: 140px;
+        }
+
+        .now-playing-bar {
+          display: none;
+        }
+
+        .mobile-nav {
+          display: block;
+        }
+
+        .now-playing-mini {
+          display: flex;
+        }
+
+        .greeting {
+          font-size: 24px;
+        }
+
+        .section-title {
+          font-size: 20px;
+        }
+
+        .quick-picks {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .quick-pick-img {
+          width: 56px;
+          height: 56px;
+        }
+
+        .quick-pick-name {
+          font-size: 14px;
+        }
+
+        .card-grid {
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+          gap: 16px;
+        }
+
+        .card {
+          padding: 12px;
+        }
+
+        .content-section {
+          padding: 0 16px 24px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .quick-picks {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .quick-pick-card {
+          flex-direction: column;
+          gap: 0;
+          padding: 0;
+        }
+
+        .quick-pick-img {
+          width: 100%;
+          height: auto;
+          aspect-ratio: 1;
+        }
+
+        .quick-pick-name {
+          padding: 8px;
+          font-size: 12px;
+          text-align: center;
+        }
+
+        .play-btn-small {
+          display: none;
+        }
+
+        .card-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      /* Animation */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .playing-indicator {
+        display: flex;
+        gap: 2px;
+        align-items: flex-end;
+        height: 14px;
+      }
+
+      .playing-indicator span {
+        width: 3px;
+        background-color: var(--accent);
+        animation: soundBars 0.5s ease infinite;
+      }
+
+      .playing-indicator span:nth-child(1) {
+        height: 8px;
+        animation-delay: 0s;
+      }
+      .playing-indicator span:nth-child(2) {
+        height: 14px;
+        animation-delay: 0.1s;
+      }
+      .playing-indicator span:nth-child(3) {
+        height: 10px;
+        animation-delay: 0.2s;
+      }
+      .playing-indicator span:nth-child(4) {
+        height: 6px;
+        animation-delay: 0.3s;
+      }
+
+      @keyframes soundBars {
+        0%,
+        100% {
+          transform: scaleY(1);
+        }
+        50% {
+          transform: scaleY(0.5);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="logo">
+            <h1 style="font-size: 2rem; color: #1ed760">Clonify</h1>
+          </div>
+          <nav class="nav-links">
+            <a href="#" class="nav-link active">
+              <i class="fa-solid fa-house"></i>
+              <span>Home</span>
+            </a>
+            <a href="#" class="nav-link">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>Search</span>
+            </a>
+          </nav>
+        </div>
+
+        <div class="sidebar-section library-section">
+          <div class="library-header">
+            <div class="library-title">
+              <i class="fa-solid fa-lines-leaning"></i>
+              <span>Your Library</span>
+            </div>
+            <div class="library-actions">
+              <button><i class="fa-solid fa-plus"></i></button>
+              <button><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          </div>
+
+          <div class="library-filters">
+            <button class="filter-chip">Playlists</button>
+            <button class="filter-chip">Artists</button>
+            <button class="filter-chip">Albums</button>
+          </div>
+
+          <div class="library-list" id="libraryList">
+            <!-- Library items will be generated by JS -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content" id="mainContent">
+        <header class="main-header" id="mainHeader">
+          <div class="header-nav">
+            <button class="nav-btn" disabled>
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="nav-btn" disabled>
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+          <div class="header-actions">
+            <button class="install-btn">
+              <i class="fa-solid fa-circle-arrow-down"></i>
+              <span>Install App</span>
+            </button>
+            <button class="user-btn">
+              <div class="user-avatar">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <span class="user-name">User</span>
+              <i class="fa-solid fa-caret-down" style="font-size: 12px"></i>
+            </button>
+          </div>
+        </header>
+
+        <h1 class="greeting" id="greeting">Good evening</h1>
+
+        <div class="quick-picks" id="quickPicks">
+          <!-- Quick picks will be generated by JS -->
+        </div>
+
+        <section class="content-section">
+          <div class="section-header">
+            <h2 class="section-title">Made For You</h2>
+            <a href="#" class="show-all">Show all</a>
+          </div>
+          <div class="card-grid" id="madeForYou">
+            <!-- Cards will be generated by JS -->
+          </div>
+        </section>
+
+        <section class="content-section">
+          <div class="section-header">
+            <h2 class="section-title">Recently Played</h2>
+            <a href="#" class="show-all">Show all</a>
+          </div>
+          <div class="card-grid" id="recentlyPlayed">
+            <!-- Cards will be generated by JS -->
+          </div>
+        </section>
+
+        <section class="content-section">
+          <div class="section-header">
+            <h2 class="section-title">Popular Artists</h2>
+            <a href="#" class="show-all">Show all</a>
+          </div>
+          <div class="card-grid" id="popularArtists">
+            <!-- Cards will be generated by JS -->
+          </div>
+        </section>
+
+        <section class="content-section">
+          <div class="section-header">
+            <h2 class="section-title">New Releases</h2>
+            <a href="#" class="show-all">Show all</a>
+          </div>
+          <div class="card-grid" id="newReleases">
+            <!-- Cards will be generated by JS -->
+          </div>
+        </section>
+      </main>
+
+      <!-- Now Playing Bar -->
+      <div class="now-playing-bar">
+        <div class="track-info">
+          <img
+            src="https://picsum.photos/seed/song1/112/112"
+            alt="Album"
+            class="track-img"
+          />
+          <div class="track-details">
+            <div class="track-name">Blinding Lights</div>
+            <div class="track-artist">The Weeknd</div>
+          </div>
+          <div class="track-actions">
+            <button class="active"><i class="fa-solid fa-heart"></i></button>
+            <button><i class="fa-regular fa-window-restore"></i></button>
+          </div>
+        </div>
+
+        <div class="player-controls">
+          <div class="control-buttons">
+            <button class="control-btn">
+              <i class="fa-solid fa-shuffle"></i>
+            </button>
+            <button class="control-btn">
+              <i class="fa-solid fa-backward-step"></i>
+            </button>
+            <button class="play-pause-btn" id="playPauseBtn">
+              <i class="fa-solid fa-play" id="playIcon"></i>
+            </button>
+            <button class="control-btn">
+              <i class="fa-solid fa-forward-step"></i>
+            </button>
+            <button class="control-btn active">
+              <i class="fa-solid fa-repeat"></i>
+            </button>
+          </div>
+          <div class="progress-container">
+            <span class="time">1:23</span>
+            <div class="progress-bar" id="progressBar">
+              <div class="progress-fill" id="progressFill">
+                <div class="progress-knob"></div>
+              </div>
+            </div>
+            <span class="time">3:54</span>
+          </div>
+        </div>
+
+        <div class="extra-controls">
+          <button class="extra-btn"><i class="fa-solid fa-display"></i></button>
+          <button class="extra-btn">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+          <button class="extra-btn">
+            <i class="fa-solid fa-bars-staggered"></i>
+          </button>
+          <button class="extra-btn"><i class="fa-solid fa-laptop"></i></button>
+          <div class="volume-container">
+            <button class="extra-btn" id="volumeBtn">
+              <i class="fa-solid fa-volume-high"></i>
+            </button>
+            <div class="volume-bar" id="volumeBar">
+              <div class="volume-fill" id="volumeFill">
+                <div class="volume-knob"></div>
+              </div>
+            </div>
+          </div>
+          <button class="extra-btn">
+            <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Now Playing Mini -->
+    <div class="now-playing-mini">
+      <img
+        src="https://picsum.photos/seed/song1/80/80"
+        alt="Album"
+        class="mini-track-img"
+      />
+      <div class="mini-track-info">
+        <div class="mini-track-name">Blinding Lights</div>
+        <div class="mini-track-artist">The Weeknd</div>
+      </div>
+      <div class="mini-controls">
+        <button><i class="fa-solid fa-laptop"></i></button>
+        <button id="mobilePlayBtn"><i class="fa-solid fa-play"></i></button>
+      </div>
+      <div class="mini-progress">
+        <div class="mini-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-items">
+        <a href="#" class="mobile-nav-item active">
+          <i class="fa-solid fa-house"></i>
+          <span>Home</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>Search</span>
+        </a>
+        <a href="#" class="mobile-nav-item">
+          <i class="fa-solid fa-lines-leaning"></i>
+          <span>Your Library</span>
+        </a>
+      </div>
+    </nav>
+
+    <script>
+      // Data
+      const playlists = [
+        {
+          name: "Liked Songs",
+          type: "Playlist",
+          img: "https://misc.scdn.co/liked-songs/liked-songs-640.png",
+        },
+        {
+          name: "Daily Mix 1",
+          type: "Playlist",
+          img: "https://picsum.photos/seed/mix1/96/96",
+        },
+        {
+          name: "Discover Weekly",
+          type: "Playlist",
+          img: "https://picsum.photos/seed/discover/96/96",
+        },
+        {
+          name: "Release Radar",
+          type: "Playlist",
+          img: "https://picsum.photos/seed/radar/96/96",
+        },
+        {
+          name: "Chill Vibes",
+          type: "Playlist",
+          img: "https://picsum.photos/seed/chill/96/96",
+        },
+        {
+          name: "Workout Mix",
+          type: "Playlist",
+          img: "https://picsum.photos/seed/workout/96/96",
+        },
+        {
+          name: "The Weeknd",
+          type: "Artist",
+          img: "https://picsum.photos/seed/weeknd/96/96",
+          isArtist: true,
+        },
+        {
+          name: "Taylor Swift",
+          type: "Artist",
+          img: "https://picsum.photos/seed/taylor/96/96",
+          isArtist: true,
+        },
+      ];
+
+      const quickPickItems = [
+        {
+          name: "Liked Songs",
+          img: "https://misc.scdn.co/liked-songs/liked-songs-640.png",
+        },
+        { name: "Daily Mix 1", img: "https://picsum.photos/seed/mix1/160/160" },
+        {
+          name: "Chill Hits",
+          img: "https://picsum.photos/seed/chill2/160/160",
+        },
+        {
+          name: "Rock Classics",
+          img: "https://picsum.photos/seed/rock/160/160",
+        },
+        { name: "Pop Rising", img: "https://picsum.photos/seed/pop/160/160" },
+        {
+          name: "Mood Booster",
+          img: "https://picsum.photos/seed/mood/160/160",
+        },
+      ];
+
+      const madeForYouItems = [
+        {
+          title: "Daily Mix 1",
+          desc: "The Weeknd, Dua Lipa, Post Malone and more",
+          img: "https://picsum.photos/seed/daily1/320/320",
+        },
+        {
+          title: "Daily Mix 2",
+          desc: "Ed Sheeran, Coldplay, Imagine Dragons",
+          img: "https://picsum.photos/seed/daily2/320/320",
+        },
+        {
+          title: "Discover Weekly",
+          desc: "Your weekly mixtape of fresh music",
+          img: "https://picsum.photos/seed/weekly/320/320",
+        },
+        {
+          title: "Release Radar",
+          desc: "Catch all the latest music from artists you follow",
+          img: "https://picsum.photos/seed/release/320/320",
+        },
+        {
+          title: "Time Capsule",
+          desc: "We made you a personalized playlist",
+          img: "https://picsum.photos/seed/capsule/320/320",
+        },
+        {
+          title: "On Repeat",
+          desc: "Songs you can't stop playing",
+          img: "https://picsum.photos/seed/repeat/320/320",
+        },
+      ];
+
+      const recentlyPlayedItems = [
+        {
+          title: "After Hours",
+          desc: "The Weeknd",
+          img: "https://picsum.photos/seed/after/320/320",
+        },
+        {
+          title: "Future Nostalgia",
+          desc: "Dua Lipa",
+          img: "https://picsum.photos/seed/future/320/320",
+        },
+        {
+          title: "Happier Than Ever",
+          desc: "Billie Eilish",
+          img: "https://picsum.photos/seed/happier/320/320",
+        },
+        {
+          title: "Midnights",
+          desc: "Taylor Swift",
+          img: "https://picsum.photos/seed/midnights/320/320",
+        },
+        {
+          title: "Renaissance",
+          desc: "Beyoncé",
+          img: "https://picsum.photos/seed/renaissance/320/320",
+        },
+        {
+          title: "Harry's House",
+          desc: "Harry Styles",
+          img: "https://picsum.photos/seed/harry/320/320",
+        },
+      ];
+
+      const popularArtists = [
+        {
+          title: "The Weeknd",
+          desc: "Artist",
+          img: "https://picsum.photos/seed/artist1/320/320",
+          isArtist: true,
+        },
+        {
+          title: "Taylor Swift",
+          desc: "Artist",
+          img: "https://picsum.photos/seed/artist2/320/320",
+          isArtist: true,
+        },
+        {
+          title: "Drake",
+          desc: "Artist",
+          img: "https://picsum.photos/seed/artist3/320/320",
+          isArtist: true,
+        },
+        {
+          title: "Bad Bunny",
+          desc: "Artist",
+          img: "https://picsum.photos/seed/artist4/320/320",
+          isArtist: true,
+        },
+        {
+          title: "Ed Sheeran",
+          desc: "Artist",
+          img: "https://picsum.photos/seed/artist5/320/320",
+          isArtist: true,
+        },
+        {
+          title: "Ariana Grande",
+          desc: "Artist",
+          img: "https://picsum.photos/seed/artist6/320/320",
+          isArtist: true,
+        },
+      ];
+
+      const newReleases = [
+        {
+          title: "New Album 2024",
+          desc: "Various Artists",
+          img: "https://picsum.photos/seed/new1/320/320",
+        },
+        {
+          title: "Fresh Finds",
+          desc: "Spotify",
+          img: "https://picsum.photos/seed/new2/320/320",
+        },
+        {
+          title: "Hot Hits",
+          desc: "Top 50 Global",
+          img: "https://picsum.photos/seed/new3/320/320",
+        },
+        {
+          title: "Summer Vibes",
+          desc: "Summer 2024 Playlist",
+          img: "https://picsum.photos/seed/new4/320/320",
+        },
+        {
+          title: "Acoustic Covers",
+          desc: "Relaxing acoustic versions",
+          img: "https://picsum.photos/seed/new5/320/320",
+        },
+        {
+          title: "Jazz Vibes",
+          desc: "Smooth jazz for any mood",
+          img: "https://picsum.photos/seed/new6/320/320",
+        },
+      ];
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        setGreeting();
+        renderLibrary();
+        renderQuickPicks();
+        renderCards("madeForYou", madeForYouItems);
+        renderCards("recentlyPlayed", recentlyPlayedItems);
+        renderCards("popularArtists", popularArtists);
+        renderCards("newReleases", newReleases);
+        initScrollHandler();
+        initPlayerControls();
+      });
+
+      // Set greeting based on time
+      function setGreeting() {
+        const hour = new Date().getHours();
+        const greetingEl = document.getElementById("greeting");
+
+        if (hour < 12) {
+          greetingEl.textContent = "Good morning";
+        } else if (hour < 18) {
+          greetingEl.textContent = "Good afternoon";
+        } else {
+          greetingEl.textContent = "Good evening";
+        }
+      }
+
+      // Render library items
+      function renderLibrary() {
+        const container = document.getElementById("libraryList");
+        container.innerHTML = playlists
+          .map(
+            (item) => `
+                <div class="library-item">
+                    <img src="${item.img}" alt="${
+              item.name
+            }" class="library-item-img ${item.isArtist ? "rounded" : ""}">
+                    <div class="library-item-info">
+                        <div class="library-item-name">${item.name}</div>
+                        <div class="library-item-meta">
+                            ${
+                              item.isArtist
+                                ? ""
+                                : '<i class="fa-solid fa-thumbtack" style="font-size: 10px;"></i>'
+                            }
+                            ${item.type}
+                        </div>
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      // Render quick picks
+      function renderQuickPicks() {
+        const container = document.getElementById("quickPicks");
+        container.innerHTML = quickPickItems
+          .map(
+            (item) => `
+                <div class="quick-pick-card">
+                    <img src="${item.img}" alt="${item.name}" class="quick-pick-img">
+                    <span class="quick-pick-name">${item.name}</span>
+                    <button class="play-btn-small">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      // Render cards
+      function renderCards(containerId, items) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = items
+          .map(
+            (item) => `
+                <div class="card">
+                    <div class="card-img-container">
+                        <img src="${item.img}" alt="${
+              item.title
+            }" class="card-img ${item.isArtist ? "rounded" : ""}">
+                        <button class="card-play-btn">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+                    <div class="card-title">${item.title}</div>
+                    <div class="card-desc">${item.desc}</div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      // Scroll handler for header
+      function initScrollHandler() {
+        const mainContent = document.getElementById("mainContent");
+        const header = document.getElementById("mainHeader");
+
+        mainContent.addEventListener("scroll", () => {
+          if (mainContent.scrollTop > 64) {
+            header.classList.add("scrolled");
+          } else {
+            header.classList.remove("scrolled");
+          }
+        });
+      }
+
+      // Player controls
+      function initPlayerControls() {
+        let isPlaying = false;
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const playIcon = document.getElementById("playIcon");
+        const mobilePlayBtn = document.getElementById("mobilePlayBtn");
+
+        playPauseBtn.addEventListener("click", togglePlay);
+        mobilePlayBtn.addEventListener("click", togglePlay);
+
+        function togglePlay() {
+          isPlaying = !isPlaying;
+          if (isPlaying) {
+            playIcon.classList.remove("fa-play");
+            playIcon.classList.add("fa-pause");
+            mobilePlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+          } else {
+            playIcon.classList.remove("fa-pause");
+            playIcon.classList.add("fa-play");
+            mobilePlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+          }
+        }
+
+        // Progress bar interaction
+        const progressBar = document.getElementById("progressBar");
+        const progressFill = document.getElementById("progressFill");
+
+        progressBar.addEventListener("click", (e) => {
+          const rect = progressBar.getBoundingClientRect();
+          const percent = ((e.clientX - rect.left) / rect.width) * 100;
+          progressFill.style.width = `${percent}%`;
+        });
+
+        // Volume bar interaction
+        const volumeBar = document.getElementById("volumeBar");
+        const volumeFill = document.getElementById("volumeFill");
+        const volumeBtn = document.getElementById("volumeBtn");
+        let isMuted = false;
+        let prevVolume = 70;
+
+        volumeBar.addEventListener("click", (e) => {
+          const rect = volumeBar.getBoundingClientRect();
+          const percent = ((e.clientX - rect.left) / rect.width) * 100;
+          volumeFill.style.width = `${percent}%`;
+          updateVolumeIcon(percent);
+          isMuted = false;
+        });
+
+        volumeBtn.addEventListener("click", () => {
+          if (isMuted) {
+            volumeFill.style.width = `${prevVolume}%`;
+            updateVolumeIcon(prevVolume);
+            isMuted = false;
+          } else {
+            prevVolume = parseInt(volumeFill.style.width) || 70;
+            volumeFill.style.width = "0%";
+            volumeBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+            isMuted = true;
+          }
+        });
+
+        function updateVolumeIcon(percent) {
+          if (percent === 0) {
+            volumeBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+          } else if (percent < 50) {
+            volumeBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>';
+          } else {
+            volumeBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+          }
+        }
+
+        // Card play buttons
+        document
+          .querySelectorAll(".card-play-btn, .play-btn-small")
+          .forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (!isPlaying) {
+                togglePlay();
+              }
+            });
+          });
+
+        // Control button active states
+        document.querySelectorAll(".control-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            if (
+              this.querySelector(".fa-shuffle") ||
+              this.querySelector(".fa-repeat")
+            ) {
+              this.classList.toggle("active");
+            }
+          });
+        });
+
+        // Track actions
+        document.querySelectorAll(".track-actions button").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            if (this.querySelector(".fa-heart")) {
+              this.classList.toggle("active");
+            }
+          });
+        });
+      }
+
+      // Mobile navigation
+      document.querySelectorAll(".mobile-nav-item").forEach((item) => {
+        item.addEventListener("click", function (e) {
+          e.preventDefault();
+          document
+            .querySelectorAll(".mobile-nav-item")
+            .forEach((i) => i.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+
+      // Filter chips
+      document.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.addEventListener("click", function () {
+          document
+            .querySelectorAll(".filter-chip")
+            .forEach((c) => c.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+
+      // Nav links
+      document.querySelectorAll(".nav-link").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          document
+            .querySelectorAll(".nav-link")
+            .forEach((l) => l.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+    </script>
+  </body>
+</html>
