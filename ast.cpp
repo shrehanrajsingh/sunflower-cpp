@@ -1020,8 +1020,8 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
               dict_done:
                 std::map<Expr *, Expr *> r;
 
-                for (size_t j = 0; j < dict_keys.get_size (); j++)
-                  r[dict_keys[j]] = dict_values[j];
+                for (size_t k = 0; k < dict_keys.get_size (); k++)
+                  r[dict_keys[k]] = dict_values[k];
 
                 res = static_cast<Expr *> (new DictExpr (r));
                 i = j;

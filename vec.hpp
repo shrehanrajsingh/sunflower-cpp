@@ -343,7 +343,7 @@ Vec<T>::remove (int idx)
   while (c < get_size ())
     {
       vals[c - 1] = vals[c];
-      c--;
+      c++;
     }
 }
 

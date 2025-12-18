@@ -594,6 +594,39 @@ mod_exec (Module &mod)
                   DR (ret);
                 }
                 break;
+              case ObjectType::HalfFunction:
+                {
+                  HalfFunction *hf = static_cast<HalfFunction *> (name_eval);
+
+                  Object *&fobj = hf->get_function_obj ();
+                  Vec<Object *> &fargs = hf->get_args ();
+
+                  assert (fobj->get_type () == ObjectType::FuncObject);
+                  FunctionObject *fo = static_cast<FunctionObject *> (fobj);
+
+                  Object *ret = nullptr;
+
+                  if (fo->get_v ()->get_self_arg ())
+                    {
+                      if (fargs.get_size () == 1)
+                        {
+                          ret = call_func (mod, fobj, args_eval, fargs[0]);
+                        }
+                      else
+                        assert (0 && "TODO");
+                    }
+                  else
+                    {
+                      for (Object *&i : fargs)
+                        args_eval.insert (0, i);
+
+                      ret = call_func (mod, fobj, args_eval);
+                    }
+
+                  if (ret != nullptr)
+                    DR (ret);
+                }
+                break;
               case ObjectType::SfClass:
                 {
                   Object *obj = call_func (mod, name_eval, args_eval);
@@ -1155,7 +1188,7 @@ mod_exec (Module &mod)
                 inhs.push_back (o);
               }
 
-            SfClass *sfc = new SfClass (cds->get_name (), cmod);
+            SfClass *sfc = new SfClass (cds->get_name (), cmod, cds);
             sfc->get_inhs () = inhs;
 
             mod.set_variable (sfc->get_name ().get_internal_buffer (),
@@ -1839,6 +1872,8 @@ expr_eval (Module &mod, Expr *e)
                                  ->get_value ()
                                  .get_internal_buffer ());
 
+              // dobj->print ();
+              // std::cout << "(" << k << ")" << '\n';
               assert (dobj->get_vals ().find (k) != dobj->get_vals ().end ());
 
               if (res != nullptr)
@@ -2246,6 +2281,36 @@ expr_eval (Module &mod, Expr *e)
               res = call_func (mod, name_eval, args_eval);
             }
             break;
+
+          case ObjectType::HalfFunction:
+            {
+              HalfFunction *hf = static_cast<HalfFunction *> (name_eval);
+
+              Object *&fobj = hf->get_function_obj ();
+              Vec<Object *> &fargs = hf->get_args ();
+
+              assert (fobj->get_type () == ObjectType::FuncObject);
+              FunctionObject *fo = static_cast<FunctionObject *> (fobj);
+
+              if (fo->get_v ()->get_self_arg ())
+                {
+                  if (fargs.get_size () == 1)
+                    {
+                      res = call_func (mod, fobj, args_eval, fargs[0]);
+                    }
+                  else
+                    assert (0 && "TODO");
+                }
+              else
+                {
+                  for (Object *&i : fargs)
+                    args_eval.insert (0, i);
+
+                  res = call_func (mod, fobj, args_eval);
+                }
+            }
+            break;
+
           case ObjectType::SfClass:
             {
               res = call_func (mod, name_eval, args_eval);
@@ -2297,6 +2362,17 @@ expr_eval (Module &mod, Expr *e)
             {
               ClassObject *co = static_cast<ClassObject *> (o_parent);
 
+              Module *comod = co->get_mod ();
+
+              // for (auto &&i : comod->get_vtable ())
+              //   {
+              //     if (i.second->get_type () == ObjectType::FuncObject)
+              //       {
+              //         std::cout << (i.second->get_self_arg () == nullptr)
+              //                   << '\n';
+              //       }
+              //   }
+
               if (!co->get_mod ()->has_variable (
                       member.get_internal_buffer ()))
                 {
@@ -2327,8 +2403,7 @@ expr_eval (Module &mod, Expr *e)
                             .get_internal_buffer ());
                 }
               else
-                res = co->get_mod ()->get_variable (
-                    member.get_internal_buffer ());
+                res = comod->get_variable (member.get_internal_buffer ());
 
               IR (res);
               AMBIG_CHECK (res, {});
@@ -2343,16 +2418,29 @@ expr_eval (Module &mod, Expr *e)
                          ->get_v ()
                          ->get_self_arg ())
                 {
-                  if (res->get_self_arg () != nullptr)
-                    {
-                      DR (res->get_self_arg ());
-                      res->get_self_arg () = nullptr;
-                    }
+                  /**
+                   * ! NOTE
+                   * If each class object initialization
+                   * re-evaluates the entire class body
+                   * then each class makes unique modules
+                   * and unique functions so we can assign
+                   * self_arg at creation once and will no longer
+                   * need to change it throughout
+                   */
+                  // if (res->get_self_arg () != nullptr)
+                  //   {
+                  //     DR (res->get_self_arg ());
+                  //     res->get_self_arg () = nullptr;
+                  //   }
 
-                  res->get_self_arg () = o_parent;
-                  // std::cout << o_parent->get_ref_count () << '\n';
-                  IR (o_parent);
+                  // res->get_self_arg () = o_parent;
                   // IR (o_parent);
+
+                  if (res->get_self_arg () == nullptr)
+                    {
+                      res->get_self_arg () = o_parent;
+                      IR (o_parent);
+                    }
                 }
             }
             break;
@@ -2415,13 +2503,18 @@ expr_eval (Module &mod, Expr *e)
                          ->get_v ()
                          ->get_self_arg ())
                 {
-                  if (res->get_self_arg () != nullptr)
-                    {
-                      DR (res->get_self_arg ());
-                      res->get_self_arg () = nullptr;
-                    }
+                  // if (res->get_self_arg () != nullptr)
+                  //   {
+                  //     DR (res->get_self_arg ());
+                  //     res->get_self_arg () = nullptr;
+                  //   }
 
-                  res->get_self_arg () = o_parent;
+                  // res->get_self_arg () = o_parent;
+
+                  if (res->get_self_arg () == nullptr)
+                    {
+                      res->get_self_arg () = o_parent;
+                    }
 
                   /**
                    * This leaks memory for some reason
@@ -2452,25 +2545,51 @@ expr_eval (Module &mod, Expr *e)
                                 .get_internal_buffer ());
                       }
 
-                    res = mod.get_variable (meth_name.get_internal_buffer ());
+                    // res = mod.get_variable (meth_name.get_internal_buffer
+                    // ());
 
-                    IR (res);
-                    AMBIG_CHECK (res, {});
+                    // IR (res);
+                    // AMBIG_CHECK (res, {});
 
-                    if (res->get_type () == ObjectType::FuncObject
-                        && static_cast<FunctionObject *> (res)
+                    // if (res->get_type () == ObjectType::FuncObject
+                    //     && static_cast<FunctionObject *> (res)
+                    //            ->get_v ()
+                    //            ->get_self_arg ())
+                    //   {
+                    //     if (res->get_self_arg () != nullptr)
+                    //       {
+                    //         DR (res->get_self_arg ());
+                    //         res->get_self_arg () = nullptr;
+                    //       }
+
+                    //     res->get_self_arg () = o_parent;
+                    //     IR (o_parent);
+
+                    //     // if (res->get_self_arg () == nullptr)
+                    //     //   {
+                    //     //     res->get_self_arg () = o_parent;
+                    //     //     IR (o_parent);
+                    //     //   }
+                    //   }
+
+                    Object *o_meth
+                        = mod.get_variable (meth_name.get_internal_buffer ());
+
+                    if (o_meth->get_type () == ObjectType::FuncObject
+                        && static_cast<FunctionObject *> (o_meth)
                                ->get_v ()
                                ->get_self_arg ())
                       {
-                        if (res->get_self_arg () != nullptr)
-                          {
-                            DR (res->get_self_arg ());
-                            res->get_self_arg () = nullptr;
-                          }
+                        HalfFunction *hf = new HalfFunction (
+                            static_cast<FunctionObject *> (o_meth),
+                            { o_parent });
 
-                        res->get_self_arg () = o_parent;
-                        IR (o_parent);
+                        res = static_cast<Object *> (hf);
                       }
+                    else
+                      res = o_meth;
+
+                    IR (res);
                   }
                   break;
 
@@ -2486,25 +2605,51 @@ expr_eval (Module &mod, Expr *e)
                                 .get_internal_buffer ());
                       }
 
-                    res = mod.get_variable (meth_name.get_internal_buffer ());
+                    // res = mod.get_variable (meth_name.get_internal_buffer
+                    // ());
 
-                    IR (res);
-                    AMBIG_CHECK (res, {});
+                    // IR (res);
+                    // AMBIG_CHECK (res, {});
 
-                    if (res->get_type () == ObjectType::FuncObject
-                        && static_cast<FunctionObject *> (res)
+                    // if (res->get_type () == ObjectType::FuncObject
+                    //     && static_cast<FunctionObject *> (res)
+                    //            ->get_v ()
+                    //            ->get_self_arg ())
+                    //   {
+                    //     if (res->get_self_arg () != nullptr)
+                    //       {
+                    //         DR (res->get_self_arg ());
+                    //         res->get_self_arg () = nullptr;
+                    //       }
+
+                    //     res->get_self_arg () = o_parent;
+                    //     IR (o_parent);
+
+                    //     // if (res->get_self_arg () == nullptr)
+                    //     //   {
+                    //     //     res->get_self_arg () = o_parent;
+                    //     //     IR (o_parent);
+                    //     //   }
+                    //   }
+
+                    Object *o_meth
+                        = mod.get_variable (meth_name.get_internal_buffer ());
+
+                    if (o_meth->get_type () == ObjectType::FuncObject
+                        && static_cast<FunctionObject *> (o_meth)
                                ->get_v ()
                                ->get_self_arg ())
                       {
-                        if (res->get_self_arg () != nullptr)
-                          {
-                            DR (res->get_self_arg ());
-                            res->get_self_arg () = nullptr;
-                          }
+                        HalfFunction *hf = new HalfFunction (
+                            static_cast<FunctionObject *> (o_meth),
+                            { o_parent });
 
-                        res->get_self_arg () = o_parent;
-                        IR (o_parent);
+                        res = static_cast<Object *> (hf);
                       }
+                    else
+                      res = o_meth;
+
+                    IR (res);
                   }
                   break;
 
@@ -3328,6 +3473,24 @@ Object *
 call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
            Object *__self_Arg)
 {
+  // std::cout << "fname: ";
+  // fname->print ();
+
+  // std::cout << "fargs: ";
+  // for (Object *&i : fargs)
+  //   {
+  //     i->print ();
+  //     std::cout << std::endl;
+  //   }
+
+  // if (__self_Arg != nullptr)
+  //   {
+  //     std::cout << "selfarg: ";
+  //     __self_Arg->print ();
+  //   }
+
+  // std::cout << "\n---------------------\n";
+
   Module *nmod = new Module (ModuleType::Function);
 
   nmod->get_code_lines () = mod.get_code_lines ();
@@ -3349,6 +3512,12 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 {
                   if (__self_Arg == nullptr)
                     {
+                      // std::cout << cf->get_args ().get_size () << '\t'
+                      //           << fargs.get_size () << '\t'
+                      //           << fv->get_self_arg () << '\t'
+                      //           << (fname->get_self_arg () == nullptr) <<
+                      //           '\n';
+
                       if (fname->get_self_arg () != nullptr)
                         assert (cf->get_args ().get_size ()
                                 == fargs.get_size () + fv->get_self_arg ());
@@ -3567,10 +3736,19 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 {
                   if (fv->get_self_arg ())
                     {
-                      assert (fname->get_self_arg () != nullptr);
-                      fargs.insert (0, fname->get_self_arg ());
-                      self_arg = fname->get_self_arg ();
-                      IR (self_arg);
+                      if (fname->get_self_arg () != nullptr)
+                        // assert (fname->get_self_arg () != nullptr);
+                        {
+                          fargs.insert (0, fname->get_self_arg ());
+                          self_arg = fname->get_self_arg ();
+                          IR (self_arg);
+                        }
+                      else
+                        {
+                          assert (fargs.get_size ());
+                          self_arg = fargs[0];
+                          IR (self_arg);
+                        }
 
                       switch (self_arg->get_type ())
                         {
@@ -3649,19 +3827,54 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
       }
       break;
 
+      // case ObjectType::HalfFunction:
+      //   {
+      //     HalfFunction *hf = static_cast<HalfFunction *> (fname);
+
+      //     Object *&fobj = hf->get_function_obj ();
+      //     Vec<Object *> &fargs = hf->get_args ();
+      //   }
+      //   break;
+
     case ObjectType::SfClass:
       {
         SfClass *sfc = static_cast<SfClass *> (fname);
-        Module *&sm = sfc->get_mod ();
-
+        ClassDeclStatement *cds
+            = static_cast<ClassDeclStatement *> (sfc->get_cds ());
         Module *objm = new Module (ModuleType::Class);
         objm->get_code_lines () = mod.get_code_lines ();
+
+        objm->set_parent (sfc->get_mod ()->get_parent ());
+        objm->get_stmts () = cds->get_body ();
+
+        TC (mod_exec (*objm));
+
+        Vec<Object *> inhs;
+        for (Expr *&i : cds->get_inhs ())
+          {
+            Object *o;
+            TC (o = expr_eval (mod, i));
+
+            inhs.push_back (o);
+          }
 
         Object *co = static_cast<Object *> (new ClassObject (objm));
         IR (co); /* prevent from deallocation in _init */
 
-        for (auto &&i : sm->get_vtable ())
-          objm->set_variable (i.first, i.second);
+        for (auto &&i : objm->get_vtable ())
+          {
+            Object *&v = i.second;
+
+            if (v->get_type () == ObjectType::FuncObject)
+              {
+                FunctionObject *fo = static_cast<FunctionObject *> (v);
+
+                if (fo->get_v ()->get_self_arg ())
+                  {
+                    fo->get_self_arg () = co;
+                  }
+              }
+          }
 
         /**
          * Create class objects of inherited classes
@@ -3675,8 +3888,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
         Vec<Object *> inh_objs;
         Vec<Object *> mro;
 
-        for (int i = sfc->get_inhs ().get_size () - 1; i > -1; i--)
-          inh_objs.push_back (sfc->get_inhs ()[i]);
+        for (int i = inhs.get_size () - 1; i > -1; i--)
+          inh_objs.push_back (inhs[i]);
 
         while (inh_objs.get_size ())
           {
@@ -3755,9 +3968,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
               throw std::runtime_error ("class._init is not callable");
 
             // args_eval.insert (0, co);
-            objm->set_parent (sm->get_parent ());
 
-            Object *ret = call_func (*sm->get_parent (), f_init, fargs, co);
+            Object *ret = call_func (mod, f_init, fargs, co);
             // TODO: Ambig check
             DR (ret);
           }

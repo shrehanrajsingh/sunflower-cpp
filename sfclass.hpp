@@ -62,72 +62,6 @@ public:
   ~ClassObject ();
 };
 
-class SfClass : public Object
-{
-private:
-  Module *mod;
-  Str name;
-  Vec<Object *> inhs;
-
-public:
-  SfClass ();
-  SfClass (Str, Module *);
-
-  inline Module *&
-  get_mod ()
-  {
-    return mod;
-  }
-
-  inline const Module *
-  get_mod () const
-  {
-    return mod;
-  }
-
-  inline Str &
-  get_name ()
-  {
-    return name;
-  }
-
-  inline const Str &
-  get_name () const
-  {
-    return name;
-  }
-
-  std::string get_stdout_repr () override;
-
-  std::string
-  get_stdout_repr_in_container () override
-  {
-    return get_stdout_repr ();
-  }
-
-  inline Vec<Object *> &
-  get_inhs ()
-  {
-    return inhs;
-  }
-
-  inline const Vec<Object *> &
-  get_inhs () const
-  {
-    return inhs;
-  }
-
-  void
-  print () override
-  {
-    std::cout << "SfClass \"" << name
-              << "\": mod_ref = " << (mod == nullptr ? "nullptr" : (void *)mod)
-              << std::endl;
-  }
-
-  ~SfClass ();
-};
-
 class ClassDeclStatement : public Statement
 {
 private:
@@ -197,5 +131,85 @@ public:
   }
 
   ~ClassDeclStatement ();
+};
+
+class SfClass : public Object
+{
+private:
+  Module *mod = nullptr;
+  Str name;
+  Vec<Object *> inhs;
+  ClassDeclStatement *cds = nullptr;
+
+public:
+  SfClass ();
+  SfClass (Str, Module *);
+  SfClass (Str, Module *, ClassDeclStatement *);
+
+  inline Module *&
+  get_mod ()
+  {
+    return mod;
+  }
+
+  inline ClassDeclStatement *&
+  get_cds ()
+  {
+    return cds;
+  }
+
+  inline const ClassDeclStatement *
+  get_cds () const
+  {
+    return cds;
+  }
+
+  inline const Module *
+  get_mod () const
+  {
+    return mod;
+  }
+
+  inline Str &
+  get_name ()
+  {
+    return name;
+  }
+
+  inline const Str &
+  get_name () const
+  {
+    return name;
+  }
+
+  std::string get_stdout_repr () override;
+
+  std::string
+  get_stdout_repr_in_container () override
+  {
+    return get_stdout_repr ();
+  }
+
+  inline Vec<Object *> &
+  get_inhs ()
+  {
+    return inhs;
+  }
+
+  inline const Vec<Object *> &
+  get_inhs () const
+  {
+    return inhs;
+  }
+
+  void
+  print () override
+  {
+    std::cout << "SfClass \"" << name
+              << "\": mod_ref = " << (mod == nullptr ? "nullptr" : (void *)mod)
+              << std::endl;
+  }
+
+  ~SfClass ();
 };
 } // namespace sf

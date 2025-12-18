@@ -37,6 +37,12 @@ create (Module *mod)
   assert (fname->get_type () == ObjectType::FuncObject
           && "Callable in thread must be a function");
 
+  // std::cout << (fname->get_self_arg () == nullptr) << '\n';
+  // fname->print ();
+  // std::cout << '\n';
+  // fargs->print ();
+  // std::cout << '\n';
+
   ThreadHandle *th = new ThreadHandle (
       fname, fargs,
       mod->get_parent ()); /* TODO: mod instance might be different */
@@ -62,6 +68,12 @@ _run_cf_rt (ThreadHandle *th, std::promise<Object *> &prm, Module *m,
   try
     {
       // call_func (*m, fname, vobj);
+      // fname->print ();
+      // for (Object *&i : vobj)
+      //   {
+      //     i->print ();
+      //     std::cout << '\n';
+      //   }
       prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
       th->set_has_result (true);
       // IR (th->get_ret ());
@@ -123,6 +135,7 @@ join (Module *mod)
 SF_API Object *
 run (Module *mod)
 {
+  // std::lock_guard<std::mutex> lock (threadmap_mutex);
   Object *o_id = mod->get_variable ("id");
 
   assert (OBJ_IS_INT (o_id) && "thread id must be an integer");

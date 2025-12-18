@@ -59,6 +59,7 @@ enum class ObjectType
   ClassObj = 5,
   AmbigObject = 6,
   ModuleObject = 7,
+  HalfFunction = 8,
   NoObject,
 };
 
@@ -211,8 +212,15 @@ public:
 
   ~FunctionObject ()
   {
+    // if (v != nullptr)
+    //   delete v;
+
     if (v != nullptr)
-      delete v;
+      {
+        // here;
+        // std::cout << v->get_ref_count () << '\n';
+        DR__func (v);
+      }
   }
 };
 
@@ -293,6 +301,96 @@ public:
   }
 
   ~ModuleObject ();
+};
+
+class HalfFunction : public Object
+{
+private:
+  Object *function_obj = nullptr;
+  Vec<Object *> args; /* these go at the start of function arg list */
+
+public:
+  HalfFunction () : Object (ObjectType::HalfFunction), function_obj (nullptr)
+  {
+  }
+
+  HalfFunction (FunctionObject *fo)
+      : Object (ObjectType::HalfFunction),
+        function_obj (static_cast<Object *> (fo))
+  {
+    IR (function_obj);
+  }
+
+  HalfFunction (FunctionObject *fo, Vec<Object *> &f_args)
+      : Object (ObjectType::HalfFunction),
+        function_obj (static_cast<Object *> (fo)), args (f_args)
+  {
+    IR (function_obj);
+
+    for (Object *&i : args)
+      IR (i);
+  }
+
+  HalfFunction (FunctionObject *fo, Vec<Object *> &&f_args)
+      : Object (ObjectType::HalfFunction),
+        function_obj (static_cast<Object *> (fo)), args (std::move (f_args))
+  {
+    IR (function_obj);
+
+    for (Object *&i : args)
+      IR (i);
+  }
+
+  inline Object *&
+  get_function_obj ()
+  {
+    return function_obj;
+  }
+
+  inline Object *const &
+  get_function_obj () const
+  {
+    return function_obj;
+  }
+
+  inline Vec<Object *> &
+  get_args ()
+  {
+    return args;
+  }
+
+  inline const Vec<Object *> &
+  get_args () const
+  {
+    return args;
+  }
+
+  std::string get_stdout_repr () override;
+  std::string
+  get_stdout_repr_in_container () override
+  {
+    return get_stdout_repr ();
+  }
+
+  void
+  print () override
+  {
+    std::cout << "HalfFunction: ";
+
+    if (function_obj == nullptr)
+      std::cout << "nullptr\n";
+    else
+      function_obj->print ();
+  }
+
+  ~HalfFunction ()
+  {
+    if (function_obj != nullptr)
+      DR (function_obj);
+
+    for (Object *&i : args)
+      DR (i);
+  }
 };
 
 #define OBJ_IS_INT(X)                                                         \

@@ -39,9 +39,14 @@ class Server
         self.r_post[route] = callback
     
     fun gen_response (self, route)
-        a = self.r_get[route] ({})
+        a = self.r_get[route] ()
+        p = a['status']
+        as_str = p.to_string ()
 
-        r = "HTTP/1.1 " + a['status'].to_string () + ' ' + codes[a['status'].to_string ()] + '\r\n'
+        if not as_str in codes
+            return ''
+
+        r = "HTTP/1.1 " + as_str + ' ' + codes[as_str] + '\r\n'
         for j in a
             if not j in ['status', 'body']
                 r = r + j + ': ' + a[j] + '\r\n'
@@ -55,31 +60,45 @@ class Server
     fun process (self, cs)
         req = s.read (cs)
         protocol = req[0 to req.find (' ')]
-        path = req[len (protocol) + 1 to req[len (protocol) + 1 to len (req)].find (' ') + len (protocol) + 1]
+
+        lreq = len (req)
+        lp1 = len (protocol) + 1
+        rf = req[lp1 to lreq].find (' ')
+        rf = rf + lp1
+        path = req[lp1 to rf]
         
         m = path
 
         if protocol == 'GET'
             if not path in self.r_get
                 m = none
+        else
+            m = none
 
-        write ("Got route:", path, "Protocol:", protocol)
-        if m
+
+        write ("Got route:", path, "Protocol:", protocol, "m:", m)
+        if m != none
             s.send (cs, self.gen_response (m))
-            s.shutdown (cs, shut_codes['SHUT_WR'])
-            s.close (cs)
         else
             write ('path not found (path:', path + ')')
+        
+        s.shutdown (cs, shut_codes['SHUT_WR'])
+        s.close (cs)
+    
+    fun abort (self, cs)
+        s.shutdown (cs, 1)
+        s.close (cs)
     
     fun serve (self)
         sock = s.socket ()
         s.bind (sock, self.host, self.port)
-        s.listen (sock, 10)
+        s.listen (sock, 5000)
 
         while 1
             try
                 cs = s.accept (sock, self.host, self.port)
-                th = thread (self.process, [self, cs])
+                a = [cs]
+                th = thread (self.process, a)
 
                 th.run ()
             catch E

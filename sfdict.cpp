@@ -26,8 +26,12 @@ DictObject::get_stdout_repr ()
       << ", ";
 
   std::string res = s.str ();
-  res.pop_back ();
-  res.pop_back ();
+
+  if (vals.size ())
+    {
+      res.pop_back (); // eat comma
+      res.pop_back (); // eat space
+    }
 
   return res + "}";
 }

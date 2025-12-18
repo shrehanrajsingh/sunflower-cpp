@@ -3,6 +3,24 @@
 namespace sf
 {
 _MemNode &
+_MemNode::__mn_inc (std::thread::id _this_thread)
+{
+  if (_this_thread != creator_id)
+    return *this;
+
+  return ++(*this);
+}
+
+_MemNode &
+_MemNode::__mn_dec (std::thread::id _this_thread)
+{
+  if (_this_thread != creator_id)
+    return *this;
+
+  return --(*this);
+}
+
+_MemNode &
 _MemNode::operator-- ()
 {
   --ref_count;

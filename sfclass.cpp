@@ -52,7 +52,10 @@ ClassObject::~ClassObject ()
     delete mod;
 }
 
-SfClass::SfClass () : Object (ObjectType::SfClass), mod (nullptr) {}
+SfClass::SfClass ()
+    : Object (ObjectType::SfClass), mod (nullptr), cds (nullptr)
+{
+}
 
 std::string
 SfClass::get_stdout_repr ()
@@ -61,7 +64,12 @@ SfClass::get_stdout_repr ()
 }
 
 SfClass::SfClass (Str n, Module *m)
-    : Object (ObjectType::SfClass), mod (m), name (n)
+    : Object (ObjectType::SfClass), mod (m), name (n), cds (nullptr)
+{
+}
+
+SfClass::SfClass (Str s, Module *m, ClassDeclStatement *c)
+    : Object (ObjectType::SfClass), mod (m), name (s), cds (c)
 {
 }
 

@@ -29,7 +29,7 @@ public:
   void
   print () override
   {
-    std::cout << "Dict Object: " << this << std::endl;
+    std::cout << "Dict Object: " << this << " " << vals.size () << std::endl;
 
     for (auto &&i : vals)
       {

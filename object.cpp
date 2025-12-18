@@ -6,23 +6,30 @@ namespace sf
 void
 _sfobj_refcheck (Object *&obj)
 {
-  if (obj->get_type () == ObjectType::FuncObject)
-    {
-      FunctionObject *fo = static_cast<FunctionObject *> (obj);
+  // if (obj->get_type () == ObjectType::FuncObject)
+  //   {
+  //     FunctionObject *fo = static_cast<FunctionObject *> (obj);
 
-      if (fo->get_v () != nullptr && fo->get_v ()->get_self_arg ())
-        {
-          if (obj->get_self_arg () != nullptr)
-            {
-              // std::cout << obj->get_self_arg ()->get_ref_count () << '\n';
-              DR (obj->get_self_arg ());
-              obj->get_self_arg () = nullptr;
-            }
-        }
-    }
+  //     if (fo->get_v () != nullptr && fo->get_v ()->get_self_arg ())
+  //       {
+  //         if (obj->get_self_arg () != nullptr)
+  //           {
+  //             // std::cout << obj->get_self_arg ()->get_ref_count () <<
+  //             '\n'; DR (obj->get_self_arg ()); obj->get_self_arg () =
+  //             nullptr;
+  //           }
+  //       }
+  //   }
 
   if (obj->get_ref_count () < 1)
     {
+      if (obj->get_type () == ObjectType::FuncObject)
+        {
+          FunctionObject *fo = static_cast<FunctionObject *> (obj);
+
+          if (fo->get_self_arg () != nullptr)
+            DR (fo->get_self_arg ());
+        }
       // if (obj->get_type () == ObjectType::ModuleObject)
       //   {
       //     ModuleObject *mo = static_cast<ModuleObject *> (obj);
@@ -47,7 +54,7 @@ _sfobj_refcheck (Object *&obj)
 
               Vec<Object *> args;
               // args.push_back (obj);
-              IR (obj);
+              // IR (obj);
               kill_fun->get_self_arg () = obj;
               Object *res
                   = call_func (*mco->get_parent (), kill_fun, args, obj);
@@ -212,7 +219,7 @@ _sfobj_cmp (Object *&lval, Object *&rval, ConditionalType t)
             ConstantObject *lc = static_cast<ConstantObject *> (lval);
             ConstantObject *rc = static_cast<ConstantObject *> (rval);
 
-            float f1, f2;
+            float f1 = 0.0, f2 = 0.0;
 
             Constant *lcc = lc->get_c ().get ();
             Constant *rcc = rc->get_c ().get ();
@@ -323,7 +330,7 @@ _sfobj_cmp (Object *&lval, Object *&rval, ConditionalType t)
             ConstantObject *lc = static_cast<ConstantObject *> (lval);
             ConstantObject *rc = static_cast<ConstantObject *> (rval);
 
-            float f1, f2;
+            float f1 = 0.0, f2 = 0.0;
 
             Constant *lcc = lc->get_c ().get ();
             Constant *rcc = rc->get_c ().get ();
@@ -435,7 +442,7 @@ _sfobj_cmp (Object *&lval, Object *&rval, ConditionalType t)
             ConstantObject *lc = static_cast<ConstantObject *> (lval);
             ConstantObject *rc = static_cast<ConstantObject *> (rval);
 
-            float f1, f2;
+            float f1 = 0.0, f2 = 0.0;
 
             Constant *lcc = lc->get_c ().get ();
             Constant *rcc = rc->get_c ().get ();
@@ -488,7 +495,7 @@ _sfobj_cmp (Object *&lval, Object *&rval, ConditionalType t)
             ConstantObject *lc = static_cast<ConstantObject *> (lval);
             ConstantObject *rc = static_cast<ConstantObject *> (rval);
 
-            float f1, f2;
+            float f1 = 0.0, f2 = 0.0;
 
             Constant *lcc = lc->get_c ().get ();
             Constant *rcc = rc->get_c ().get ();
@@ -541,7 +548,7 @@ _sfobj_cmp (Object *&lval, Object *&rval, ConditionalType t)
             ConstantObject *lc = static_cast<ConstantObject *> (lval);
             ConstantObject *rc = static_cast<ConstantObject *> (rval);
 
-            float f1, f2;
+            float f1 = 0.0, f2 = 0.0;
 
             Constant *lcc = lc->get_c ().get ();
             Constant *rcc = rc->get_c ().get ();
@@ -594,7 +601,7 @@ _sfobj_cmp (Object *&lval, Object *&rval, ConditionalType t)
             ConstantObject *lc = static_cast<ConstantObject *> (lval);
             ConstantObject *rc = static_cast<ConstantObject *> (rval);
 
-            float f1, f2;
+            float f1 = 0.0, f2 = 0.0;
 
             Constant *lcc = lc->get_c ().get ();
             Constant *rcc = rc->get_c ().get ();
@@ -813,6 +820,15 @@ std::string
 ModuleObject::get_stdout_repr ()
 {
   return "<module>";
+}
+
+std::string
+HalfFunction::get_stdout_repr ()
+{
+  std::stringstream s;
+  s << "<hfunction " << function_obj << ">";
+
+  return s.str ();
 }
 
 bool
