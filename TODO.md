@@ -67,4 +67,4 @@ Each method requires:
 - [x] reverse.hpp and reverse.cpp
 - [x] sort.hpp and sort.cpp
 - [x] Update native/native.cpp for all methods
-- [ ] Format all files with clang-format
+- [x] Format all files with clang-format
