@@ -1,10 +1,27 @@
-import 'thread' as thread
+import 'socket' as s
+import 'file' as file
 
-fun test ()
-    a = 0
-    return a
+a = s.Server ('0.0.0.0', 8000)
 
-while 1
-    a = thread (test, [])
-    a.run ()
-    write (a.join ())
+fun home ()
+    a = file ('../../tests/server_assets/contact.html', 'r')
+    r = a.read ()
+    a.close ()
+
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': r
+    }
+
+fun contact ()
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': '<h1>Contact</h1>'
+    }
+
+a.add_get ('/', home)
+a.add_get ('/contact', contact)
+
+a.serve ()

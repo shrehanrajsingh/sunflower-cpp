@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <condition_variable>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -11,6 +12,8 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <thread>

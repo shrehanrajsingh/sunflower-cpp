@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thread.hpp"
+#include "thread3.hpp"
 
 namespace sf
 {

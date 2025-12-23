@@ -433,7 +433,7 @@ main (int argc, char const *argv[])
     }
 
   sf::native_mod::nmod_init ();
-  // sf::native_mod::Thread::init_runtime_threads ();
+  sf::native_mod::Thread::init_runtime_threads ();
 
   TEST (4);
   // std::cout << "Program ended." << std::endl;
