@@ -24,7 +24,7 @@ private:
   std::promise<Object *> promise;
   std::thread th_handle;
   std::future<Object *> future;
-  bool is_deleted;
+  bool is_deleted = false;
 
 public:
   ThreadHandle (Object *_Fname, Object *_Fargs, Module *_Mod)

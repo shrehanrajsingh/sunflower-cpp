@@ -780,6 +780,8 @@ mod_exec (Module &mod)
 
             if (mod.get_saw_ambig ())
               {
+                mod.get_exec_signal () = es_pres;
+                mod.get_stmts () = mod_body_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
                       mod.get_code_lines ()[st->get_line_number ()] });
@@ -787,6 +789,8 @@ mod_exec (Module &mod)
               }
             else
               AMBIG_CHECK (it_eval, {
+                mod.get_exec_signal () = es_pres;
+                mod.get_stmts () = mod_body_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
                       mod.get_code_lines ()[st->get_line_number ()] });
@@ -1064,6 +1068,8 @@ mod_exec (Module &mod)
 
             if (mod.get_saw_ambig ())
               {
+                mod.get_inside_loop () = gil_pres;
+                mod.get_exec_signal () = es_pres;
                 mod.get_stmts () = st_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
@@ -1072,6 +1078,8 @@ mod_exec (Module &mod)
               }
             else
               AMBIG_CHECK (cond_eval, {
+                mod.get_inside_loop () = gil_pres;
+                mod.get_exec_signal () = es_pres;
                 mod.get_stmts () = st_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
@@ -1094,6 +1102,8 @@ mod_exec (Module &mod)
 
                 if (mod.get_saw_ambig ())
                   {
+                    mod.get_inside_loop () = gil_pres;
+                    mod.get_exec_signal () = es_pres;
                     mod.get_stmts () = st_pres;
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
@@ -1102,6 +1112,8 @@ mod_exec (Module &mod)
                   }
                 else
                   AMBIG_CHECK (cond_eval, {
+                    mod.get_inside_loop () = gil_pres;
+                    mod.get_exec_signal () = es_pres;
                     mod.get_stmts () = st_pres;
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
@@ -1110,6 +1122,27 @@ mod_exec (Module &mod)
               }
 
             DR (cond_eval);
+
+            if (mod.get_saw_ambig ())
+              {
+                mod.get_inside_loop () = gil_pres;
+                mod.get_exec_signal () = es_pres;
+                mod.get_stmts () = st_pres;
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+                goto ambig_test;
+              }
+            else
+              AMBIG_CHECK (cond_eval, {
+                mod.get_inside_loop () = gil_pres;
+                mod.get_exec_signal () = es_pres;
+                mod.get_stmts () = st_pres;
+                mod.get_backtrace ().push_back (
+                    { st->get_line_number (),
+                      mod.get_code_lines ()[st->get_line_number ()] });
+              });
+
             mod.get_inside_loop () = gil_pres;
             mod.get_exec_signal () = es_pres;
             mod.get_stmts () = st_pres;
@@ -1478,7 +1511,8 @@ mod_exec (Module &mod)
 
 ambig_test:
   mod.get_saw_ambig () = true;
-  if (mod.get_parent () == nullptr) /* only check in top-level module */
+  if (mod.get_parent () == nullptr
+      && !mod.get_inside_loop ()) /* only check in top-level module */
     {
       Object *amb = mod.get_ambig ();
 
@@ -3637,7 +3671,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
               mod_exec (*nmod);
 
-              Object *ret;
+              Object *ret = nullptr;
 
               if (nmod->get_saw_ambig ())
                 {
@@ -3684,7 +3718,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 }
 
               res = ret;
-              IR (ret);
+              IR (res);
             }
             break;
 

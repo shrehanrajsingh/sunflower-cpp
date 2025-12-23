@@ -164,6 +164,8 @@ public:
             DR (it->second);
           }
       }
+
+    get_backtrace ().clear ();
   }
 
   inline ModuleType

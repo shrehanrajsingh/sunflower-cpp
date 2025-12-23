@@ -74,7 +74,11 @@ _run_cf_rt (ThreadHandle *th, std::promise<Object *> &prm, Module *m,
       //     i->print ();
       //     std::cout << '\n';
       //   }
-      prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
+      // prm.set_value (th->get_ret () = call_func (*m, fname, vobj));
+      // th->set_has_result (true);
+      Object *r = call_func (*m, fname, vobj);
+      DR (r);
+      prm.set_value (th->get_ret () = nullptr);
       th->set_has_result (true);
       // IR (th->get_ret ());
     }
@@ -111,6 +115,8 @@ join (Module *mod)
   //   assert (th->get_th ().joinable () && "thread is not joinable");
   if (!th->get_th ().joinable ())
     {
+      th->get_is_deleted () = true;
+      __sf_thread_cleanup ();
       Object *o = static_cast<Object *> (
           new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
       IR (o);
@@ -119,8 +125,17 @@ join (Module *mod)
     }
 
   th->get_th ().join ();
-  Object *ret = th->get_ret ();
-  assert (ret != nullptr);
+  Object *ret = th->get_ret (); /* internall calls call_func so IR is present,
+                                   but thread destructor calls a DR */
+
+  th->get_is_deleted () = true;
+  __sf_thread_cleanup ();
+
+  if (ret == nullptr)
+    {
+      ret = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+    }
 
   IR (ret);
 
@@ -153,8 +168,15 @@ run (Module *mod)
   Object *fargs = th->get_fargs ();
   Module *fmod = th->get_mod ();
 
+  assert (fname->get_type () == ObjectType::FuncObject
+          || fname->get_type () == ObjectType::HalfFunction);
+
   Module *nmod = new Module (ModuleType::Function);
   nmod->set_parent (fmod);
+  nmod->get_code_lines () = static_cast<FunctionObject *> (fname)
+                                ->get_v ()
+                                ->get_parent ()
+                                ->get_code_lines ();
 
   assert (fargs->get_type () == ObjectType::ArrayObj
           && "parameters object is not an array");
@@ -241,7 +263,7 @@ __sf_thread_cleanup ()
     {
       ThreadHandle *th = it->second;
 
-      if (th->get_is_deleted () && !th->get_th ().joinable ())
+      if (!th->get_th ().joinable ())
         {
           delete th;
           it = threadmap.erase (it);
