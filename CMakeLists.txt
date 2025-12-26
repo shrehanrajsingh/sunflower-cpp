@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 4.1.2)
 project(sunflower VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -44,3 +44,23 @@ add_library(sunflower
 
     sunflower.hpp sunflower.cpp)
 
+    
+include(InstallRequiredSystemLibraries)
+
+set(CPACK_ENABLE_COMPONENT_INSTALL ON)
+set(CPACK_MONOLITHIC_INSTALL OFF)
+
+set(CPACK_COMPONENTS_ALL Runtime)
+set(CPACK_COMPONENT_RUNTIME_DISPLAY_NAME "Sunflower Runtime")
+set(CPACK_COMPONENT_RUNTIME_REQUIRED ON)
+
+set (CPACK_GENERATOR "productbuild")
+
+set(CPACK_PACKAGE_NAME "sf")
+set(CPACK_PACKAGE_VENDOR "shrehanrajsingh")
+set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Sunflower - A scripting language")
+set(CPACK_PACKAGE_CONTACT "shrehanofficial@gmail.com")
+
+
+include(CPack)
