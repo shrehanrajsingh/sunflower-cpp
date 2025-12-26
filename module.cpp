@@ -1121,8 +1121,6 @@ mod_exec (Module &mod)
                   });
               }
 
-            DR (cond_eval);
-
             if (mod.get_saw_ambig ())
               {
                 mod.get_inside_loop () = gil_pres;
@@ -1142,6 +1140,8 @@ mod_exec (Module &mod)
                     { st->get_line_number (),
                       mod.get_code_lines ()[st->get_line_number ()] });
               });
+
+            DR (cond_eval);
 
             mod.get_inside_loop () = gil_pres;
             mod.get_exec_signal () = es_pres;
@@ -1519,7 +1519,6 @@ ambig_test:
       std::cerr << "\n====== EXECUTION ERROR ======\n";
       std::cerr << "Error: Uncaught Ambiguity\n";
 
-      // Display detailed ambiguity information if available
       if (OBJ_IS_AMBIG (amb))
         {
           AmbigObject *ao = static_cast<AmbigObject *> (amb);
@@ -1533,7 +1532,6 @@ ambig_test:
           amb->print ();
         }
 
-      // Display backtrace information
       std::cerr << "\n------ Backtrace ------\n";
       if (!mod.get_backtrace ().get_size ())
         {
@@ -1848,6 +1846,8 @@ expr_eval (Module &mod, Expr *e)
                   while (idx < 0)
                     idx += ao->get_vals ().get_size ();
 
+                  // std::cout << idx << '\t' << ao->get_vals ().get_size ()
+                  //           << '\n';
                   assert (idx < ao->get_vals ().get_size ()
                           && "Array index out of bounds.");
 
@@ -2331,6 +2331,8 @@ expr_eval (Module &mod, Expr *e)
                   if (fargs.get_size () == 1)
                     {
                       res = call_func (mod, fobj, args_eval, fargs[0]);
+                      // res = new ConstantObject (new NoneConstant ());
+                      // IR (res);
                     }
                   else
                     assert (0 && "TODO");
@@ -2527,36 +2529,23 @@ expr_eval (Module &mod, Expr *e)
                           .get_internal_buffer ());
                 }
 
-              res = mod.get_variable (meth_name.get_internal_buffer ());
+              Object *o_meth
+                  = mod.get_variable (meth_name.get_internal_buffer ());
 
-              IR (res);
-              AMBIG_CHECK (res, {});
-
-              if (res->get_type () == ObjectType::FuncObject
-                  && static_cast<FunctionObject *> (res)
+              if (o_meth->get_type () == ObjectType::FuncObject
+                  && static_cast<FunctionObject *> (o_meth)
                          ->get_v ()
                          ->get_self_arg ())
                 {
-                  // if (res->get_self_arg () != nullptr)
-                  //   {
-                  //     DR (res->get_self_arg ());
-                  //     res->get_self_arg () = nullptr;
-                  //   }
+                  HalfFunction *hf = new HalfFunction (
+                      static_cast<FunctionObject *> (o_meth), { o_parent });
 
-                  // res->get_self_arg () = o_parent;
-
-                  if (res->get_self_arg () == nullptr)
-                    {
-                      res->get_self_arg () = o_parent;
-                    }
-
-                  /**
-                   * This leaks memory for some reason
-                   * I figured constants and arrays don't need
-                   * to tract their parent in self arg
-                   */
-                  // IR (o_parent);
+                  res = static_cast<Object *> (hf);
                 }
+              else
+                res = o_meth;
+
+              IR (res);
             }
             break;
 
@@ -3707,8 +3696,9 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                         static_cast<Constant *> (new NoneConstant ())));
                 }
 
-              if (__self_Arg != nullptr)
+              if (self_arg != nullptr)
                 {
+                  // std::cout << self_arg->get_ref_count () << '\n';
                   DR (self_arg);
                 }
               else
@@ -3851,6 +3841,17 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
               TC (ret = nf->call (fmod));
               res = ret;
+
+              if (self_arg != nullptr)
+                {
+                  // std::cout << self_arg->get_ref_count () << '\n';
+                  DR (self_arg);
+                }
+              else
+                {
+                  if (fv->get_self_arg ())
+                    DR (self_arg);
+                }
 
               delete fmod;
             }

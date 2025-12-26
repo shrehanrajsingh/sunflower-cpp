@@ -383,14 +383,14 @@ public:
       function_obj->print ();
   }
 
-  ~HalfFunction ()
-  {
-    if (function_obj != nullptr)
-      DR (function_obj);
+  // ~HalfFunction ()
+  // {
+  //   if (function_obj != nullptr)
+  //     DR (function_obj);
 
-    for (Object *&i : args)
-      DR (i);
-  }
+  //   for (Object *&i : args)
+  //     DR (i);
+  // }
 };
 
 #define OBJ_IS_INT(X)                                                         \

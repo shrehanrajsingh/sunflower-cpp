@@ -4,7 +4,7 @@ import 'file' as file
 a = s.Server ('0.0.0.0', 8000)
 
 fun home ()
-    a = file ('../../tests/server_assets/contact.html', 'r')
+    a = file ('server_assets/contact.html', 'r')
     r = a.read ()
     a.close ()
 

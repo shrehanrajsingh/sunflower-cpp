@@ -12,6 +12,7 @@ _native_list_push (Module *mod)
           && "self is not an array");
 
   ArrayObject *ao = static_cast<ArrayObject *> (self_obj);
+  // std::cout << ao << '\t' << ao->get_vals ().get_size () << '\n';
   ao->get_vals ().push_back (a_obj);
   IR (a_obj);
 

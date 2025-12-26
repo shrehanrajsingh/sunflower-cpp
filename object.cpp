@@ -30,6 +30,17 @@ _sfobj_refcheck (Object *&obj)
           if (fo->get_self_arg () != nullptr)
             DR (fo->get_self_arg ());
         }
+
+      if (obj->get_type () == ObjectType::HalfFunction)
+        {
+          HalfFunction *hf = static_cast<HalfFunction *> (obj);
+
+          if (hf->get_function_obj () != nullptr)
+            DR (hf->get_function_obj ());
+
+          for (Object *&i : hf->get_args ())
+            DR (i);
+        }
       // if (obj->get_type () == ObjectType::ModuleObject)
       //   {
       //     ModuleObject *mo = static_cast<ModuleObject *> (obj);

@@ -60,13 +60,30 @@ main (int argc, char *argv[])
   cmd_line_args args = parse_cmdline (argc, argv);
 
   sf_env = new sf::Environment ();
-  sf_env->add_path ("../lib/");
+  std::string can_path = std::filesystem::canonical (argv[0]).c_str ();
+
+  size_t last_slash = 0;
+  for (size_t i = 0; i < can_path.size (); i++)
+    {
+      if (can_path[i] == '/')
+        last_slash = i;
+    }
+
+  can_path = can_path.substr (0, last_slash + 1);
+
+  sf_env->add_path (can_path.c_str ());
+  sf_env->add_path ((can_path + "lib/").c_str ());
+
+  // for (sf::Str &i : sf_env->get_syspaths ())
+  //   std::cout << i << '\n';
+
   for (int i = 0; i < argc; i++)
     {
       sf_env->add_arg (argv[i]);
     }
 
   sf::native_mod::nmod_init ();
+  sf::native_mod::Thread::init_runtime_threads ();
 
   if (args.help_requested)
     {

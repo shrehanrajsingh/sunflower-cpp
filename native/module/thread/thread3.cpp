@@ -41,7 +41,9 @@ worker_loop ()
         t_cv.wait (lock, [] { return shutting_down || !q_jobs.empty (); });
 
         if (shutting_down && q_jobs.empty ())
-          return;
+          {
+            return;
+          }
 
         th = q_jobs.front ();
         q_jobs.pop ();
@@ -52,6 +54,7 @@ worker_loop ()
 
       Module *m = new Module (ModuleType::Function);
       m->set_parent (th->get_mod ());
+      m->get_code_lines () = th->get_mod ()->get_code_lines ();
 
       try
         {
@@ -59,6 +62,69 @@ worker_loop ()
               *m, th->get_name (),
               static_cast<ArrayObject *> (th->get_args ())->get_vals ());
 
+          if (m->get_saw_ambig ())
+            {
+              Object *amb = m->get_ambig ();
+
+              std::cerr << "Error thrown in a thread:\n";
+
+              std::cerr << "\n====== EXECUTION ERROR ======\n";
+              std::cerr << "Error: Uncaught Ambiguity\n";
+
+              if (OBJ_IS_AMBIG (amb))
+                {
+                  AmbigObject *ao = static_cast<AmbigObject *> (amb);
+                  if (ao->get_val () != nullptr)
+                    std::cerr
+                        << "Value: " << ao->get_val ()->get_stdout_repr ()
+                        << "\n";
+                }
+              else if (amb != nullptr)
+                {
+                  std::cerr << "Associated Object: ";
+                  amb->print ();
+                }
+
+              std::cerr << "\n------ Backtrace ------\n";
+              if (!m->get_backtrace ().get_size ())
+                {
+                  std::cerr << "No backtrace information available.\n";
+                }
+              else
+                {
+                  // for (int i = 0; i < m->get_backtrace ().get_size (); i++)
+                  //   {
+                  //     std::cerr << "#" << (i + 1) << " ";
+                  //     if (m->get_backtrace ()[i] < m->get_code_lines
+                  //     ().get_size
+                  //     ()
+                  //         && m->get_backtrace ()[i] - 1
+                  //                < m->get_code_lines ().get_size ())
+                  //       {
+
+                  //       }
+                  //     else
+                  //       {
+                  //         std::cerr << "Line " << m->get_backtrace ()[i]
+                  //                   << ": <source not available>\n";
+                  //       }
+                  //   }
+
+                  for (int i = 0; i < m->get_backtrace ().get_size (); i++)
+                    {
+                      std::string s = m->get_backtrace ()[i]
+                                          .second.get_internal_buffer ();
+                      while (s.front () == ' ' || s.front () == '\t')
+                        s.erase (s.begin ());
+
+                      std::cerr << "Line "
+                                << (m->get_backtrace ()[i].first + 1) << ": "
+                                << s << "\n";
+                    }
+                }
+              std::cerr << "========================\n\n";
+            }
+          // else
           DR (ret);
         }
       catch (const std::exception &e)
@@ -200,6 +266,15 @@ join (Module *mod)
 SF_API Object *
 join_all (Module *mod)
 {
+  for (ThreadHandle *&th : v_handles)
+    {
+      if (th == nullptr)
+        continue;
+
+      while (!th->get_done ())
+        ;
+    }
+
   Object *ret = static_cast<Object *> (
       new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
 
@@ -246,6 +321,18 @@ close (Module *mod)
 SF_API void
 __sf_thread_cleanup ()
 {
+  {
+    std::lock_guard<std::mutex> lock (wl_mutex);
+    shutting_down = true;
+  }
+
+  t_cv.notify_all ();
+
+  for (std::thread &t : v_workers)
+    if (t.joinable ())
+      t.join ();
+
+  v_workers.clear ();
 }
 } // namespace Thread
 } // namespace native_mod
