@@ -26,6 +26,12 @@
 #include <cstdlib>
 #include <cstring>
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#endif
+
 #define SF_API
 #define ERRMSG(X)                                                             \
   {                                                                           \

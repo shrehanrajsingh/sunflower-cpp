@@ -54,13 +54,43 @@ parse_cmdline (int argc, char *argv[])
 
 sf::Environment *sf_env = nullptr;
 
+std::filesystem::path
+get_exe_path ()
+{
+#if defined(__linux__)
+  return std::filesystem::read_symlink ("/proc/self/exe");
+
+#elif defined(__APPLE__)
+  char buf[PATH_MAX];
+  uint32_t size = sizeof (buf);
+
+  if (_NSGetExecutablePath (buf, &size) != 0)
+    throw std::runtime_error ("Executable path too long");
+  return std::filesystem::canonical (buf);
+
+#elif defined(_WIN32)
+  std::vector<wchar_t> buffer (32768);
+  DWORD len = GetModuleFileNameW (nullptr, buffer.data (),
+                                  static_cast<DWORD> (buffer.size ()));
+
+  if (len == 0)
+    throw std::runtime_error ("GetModuleFileNameW failed");
+
+  return std::filesystem::path (buffer.data ());
+
+#else
+  return std::filename::absolute (".");
+
+#endif // __linux__
+}
+
 int
 main (int argc, char *argv[])
 {
   cmd_line_args args = parse_cmdline (argc, argv);
 
   sf_env = new sf::Environment ();
-  std::string can_path = std::filesystem::canonical (argv[0]).c_str ();
+  std::string can_path = get_exe_path ();
 
   size_t last_slash = 0;
   for (size_t i = 0; i < can_path.size (); i++)
@@ -73,6 +103,7 @@ main (int argc, char *argv[])
 
   sf_env->add_path (can_path.c_str ());
   sf_env->add_path ((can_path + "lib/").c_str ());
+  sf_env->add_path (std::filesystem::current_path ().c_str ());
 
   // for (sf::Str &i : sf_env->get_syspaths ())
   //   std::cout << i << '\n';
