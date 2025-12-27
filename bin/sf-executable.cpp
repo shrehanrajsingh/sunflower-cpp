@@ -79,7 +79,7 @@ get_exe_path ()
   return std::filesystem::path (buffer.data ());
 
 #else
-  return std::filename::absolute (".");
+  return std::filesystem::absolute (".");
 
 #endif // __linux__
 }
