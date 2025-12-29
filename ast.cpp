@@ -1129,7 +1129,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                   }
 
                 size_t last_op_idx = i + 1;
-                a.push_back (new AVOperator (opv.get_internal_buffer ()));
+                a.push_back (new AVOperator (opv.to_std_string ().c_str ()));
                 int gb = 0;
                 bool all_const = static_cast<AVOperand *> (a.front ())
                                      ->get_val ()
@@ -1160,8 +1160,9 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                             // e->print ();
                             a.push_back (
                                 static_cast<AVBase *> (new AVOperand (e)));
-                            a.push_back (static_cast<AVBase *> (
-                                new AVOperator (dop.get_internal_buffer ())));
+                            a.push_back (
+                                static_cast<AVBase *> (new AVOperator (
+                                    dop.to_std_string ().c_str ())));
 
                             last_op_idx = j + 1;
                           }

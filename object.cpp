@@ -754,9 +754,7 @@ ConstantObject::get_stdout_repr ()
       break;
 
     case ConstantType::String:
-      res = static_cast<StringConstant *> (cp)
-                ->get_value ()
-                .get_internal_buffer ();
+      res = static_cast<StringConstant *> (cp)->get_value ().to_std_string ();
       break;
 
     default:

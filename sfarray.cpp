@@ -12,25 +12,36 @@ ArrayObject::ArrayObject (Vec<Object *> &&v)
 {
 }
 
+std::mutex array_mutex;
+
 std::string
 ArrayObject::get_stdout_repr ()
 {
-  std::stringstream s;
+  // std::lock_guard<std::mutex> lock (array_mutex);
+  std::string s = "";
 
-  s << "[";
+  s += "[";
 
   if (!vals.get_size ())
-    s << "]";
+    s += "]";
   for (size_t i = 0; i < vals.get_size (); i++)
     {
-      s << vals[i]->get_stdout_repr_in_container ();
+      // std::cout << "entry: " << vals[i]->get_stdout_repr_in_container ()
+      //           << std::endl;
+      s += vals[i]->get_stdout_repr_in_container ();
+      // std::string p = vals[i]->get_stdout_repr_in_container ();
+
+      // std::cout << p.size () << '\t' << p[0] << p[1] << '\n';
+
       if (i != vals.get_size () - 1)
-        s << ", ";
+        s += ", ";
       else
-        s << ']';
+        s += ']';
+
+      // std::cout << s << '\n';
     }
 
-  return s.str ();
+  return s;
 }
 
 ArrayObject::~ArrayObject ()

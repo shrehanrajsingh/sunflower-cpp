@@ -10,18 +10,19 @@ namespace sf
 Object *
 Module::get_variable (std::string s)
 {
-  if (!vtable.count (s)) /* not found */
+  Module *cur = this;
+
+  while (cur != nullptr)
     {
-      if (parent == nullptr)
-        {
-          std::cout << s << ": ";
-          throw "module_var_does_not_exist"; /* temp fix */
-        }
-      else
-        return parent->get_variable (s);
+      auto it = cur->vtable.find (s);
+
+      if (it != cur->vtable.end ())
+        return it->second;
+
+      cur = cur->parent;
     }
 
-  return vtable.at (s);
+  return nullptr;
 }
 
 void
@@ -111,9 +112,10 @@ mod_exec (Module &mod)
                 {
                   VariableExpr *nv = static_cast<VariableExpr *> (ne);
 
-                  char *p = (char *)nv->get_name ().get_internal_buffer ();
-                  mod.set_variable (p, val_eval); /* set_variable takes care of
-                                                     ref_count increment */
+                  std::string p = nv->get_name ().to_std_string ();
+                  mod.set_variable (p.c_str (),
+                                    val_eval); /* set_variable takes care of
+                                         ref_count increment */
                 }
                 break;
 
@@ -156,14 +158,12 @@ mod_exec (Module &mod)
 
                                       Object *&v = vao->get_vals ()[i];
 
-                                      char *p
-                                          = (char *)ive->get_name ().c_str ();
+                                      std::string p
+                                          = ive->get_name ().to_std_string ();
                                       mod.set_variable (
                                           p, v); /* set_variable takes
                                                            care of ref_count
                                                            increment */
-
-                                      delete[] p;
                                     }
                                     break;
 
@@ -189,8 +189,8 @@ mod_exec (Module &mod)
                   Expr *arr = ac->get_arr ();
                   Expr *idx = ac->get_idx ();
 
-                  Object *oarr;
-                  Object *oidx;
+                  Object *oarr = nullptr;
+                  Object *oidx = nullptr;
 
                   TC (oarr = expr_eval (mod, arr));
 
@@ -241,6 +241,9 @@ mod_exec (Module &mod)
                                          .get ())
                                      ->get_value ();
 
+                        while (iv < 0)
+                          iv += ao->get_vals ().get_size ();
+
                         assert (iv > -1 && iv < ao->get_vals ().get_size ()
                                 && "Index out of bounds");
 
@@ -264,8 +267,7 @@ mod_exec (Module &mod)
                                          .get ())
                                      ->get_value ();
 
-                        char *p = k.c_str ();
-                        std::string sp = p;
+                        std::string sp = k.to_std_string ();
 
                         if (dobj->get_vals ().find (sp)
                             != dobj->get_vals ().end ())
@@ -277,7 +279,7 @@ mod_exec (Module &mod)
                         dobj->get_vals ()[sp] = val_eval;
                         IR (val_eval);
 
-                        delete[] p;
+                        ;
                       }
                       break;
 
@@ -458,7 +460,7 @@ mod_exec (Module &mod)
                         ClassObject *co
                             = static_cast<ClassObject *> (o_parent);
                         co->get_mod ()->set_variable (
-                            member.get_internal_buffer (), val_eval);
+                            member.to_std_string ().c_str (), val_eval);
                       }
                       break;
 
@@ -466,7 +468,7 @@ mod_exec (Module &mod)
                       {
                         SfClass *cl = static_cast<SfClass *> (o_parent);
                         cl->get_mod ()->set_variable (
-                            member.get_internal_buffer (), val_eval);
+                            member.to_std_string ().c_str (), val_eval);
                       }
                       break;
 
@@ -524,6 +526,14 @@ mod_exec (Module &mod)
             for (auto j : fst->get_args ())
               {
                 Object *t = nullptr;
+                // Module *mm = &mod;
+
+                // while (mm != nullptr)
+                //   {
+                //     std::cout << mm << '\n';
+                //     mm = mm->get_parent ();
+                //   }
+
                 TC (t = expr_eval (mod, j));
 
                 if (mod.get_saw_ambig ())
@@ -846,12 +856,12 @@ mod_exec (Module &mod)
                             {
                             case ExprType::Variable:
                               {
-                                char *p = static_cast<VariableExpr *> (v)
-                                              ->get_name ()
-                                              .c_str ();
+                                std::string p = static_cast<VariableExpr *> (v)
+                                                    ->get_name ()
+                                                    .to_std_string ();
                                 mod.set_variable (p, av);
 
-                                delete[] p;
+                                ;
                               }
                               break;
 
@@ -883,16 +893,16 @@ mod_exec (Module &mod)
                                           {
                                           case ExprType::Variable:
                                             {
-                                              char *p
+                                              std::string p
                                                   = static_cast<
                                                         VariableExpr *> (vv)
                                                         ->get_name ()
-                                                        .c_str ();
+                                                        .to_std_string ();
 
                                               mod.set_variable (
                                                   p, avo->get_vals ()[vi++]);
 
-                                              delete[] p;
+                                              ;
                                             }
                                             break;
 
@@ -946,12 +956,12 @@ mod_exec (Module &mod)
                         {
                         case ExprType::Variable:
                           {
-                            char *p = static_cast<VariableExpr *> (v)
-                                          ->get_name ()
-                                          .c_str ();
+                            std::string p = static_cast<VariableExpr *> (v)
+                                                ->get_name ()
+                                                .to_std_string ();
                             mod.set_variable (p, kobj);
 
-                            delete[] p;
+                            ;
                           }
                           break;
 
@@ -989,10 +999,10 @@ mod_exec (Module &mod)
 
             FunctionObject *fo = new FunctionObject (cd);
 
-            char *p = fds->get_name ().c_str ();
+            std::string p = fds->get_name ().to_std_string ();
             mod.set_variable (p, fo);
 
-            delete[] p;
+            ;
           }
           break;
 
@@ -1246,7 +1256,7 @@ mod_exec (Module &mod)
             SfClass *sfc = new SfClass (cds->get_name (), cmod, cds);
             sfc->get_inhs () = inhs;
 
-            mod.set_variable (sfc->get_name ().get_internal_buffer (),
+            mod.set_variable (sfc->get_name ().to_std_string ().c_str (),
                               static_cast<Object *> (sfc));
           }
           break;
@@ -1257,7 +1267,7 @@ mod_exec (Module &mod)
             Str &alias = ist->get_alias ();
             Str &path = ist->get_filepath ();
 
-            std::ifstream mfp (path.get_internal_buffer ());
+            std::ifstream mfp (path.to_std_string ().c_str ());
             std::ifstream main_f;
 
             bool file_opened = false;
@@ -1285,15 +1295,16 @@ mod_exec (Module &mod)
                         Str np = pt + path;
 
                         if (std::filesystem::is_directory (
-                                np.get_internal_buffer ()))
+                                np.to_std_string ().c_str ()))
                           np = np + "/_init.sf";
 
-                        std::ifstream file_np (np.get_internal_buffer ());
+                        std::ifstream file_np (np.to_std_string ().c_str ());
 
                         if (!!file_np) /* found file in env */
                           {
                             file_np.close ();
-                            main_f = std::ifstream (np.get_internal_buffer ());
+                            main_f
+                                = std::ifstream (np.to_std_string ().c_str ());
 
                             int p_sl = path.find ('/');
 
@@ -1317,7 +1328,7 @@ mod_exec (Module &mod)
               {
                 file_opened = true;
                 mfp.close ();
-                main_f = std::ifstream (path.get_internal_buffer ());
+                main_f = std::ifstream (path.to_std_string ().c_str ());
               }
 
             Module *m = nullptr;
@@ -1325,7 +1336,8 @@ mod_exec (Module &mod)
             if (!file_opened)
               {
                 /* check through native modules */
-                Module *gm = native_mod::get_mod (path.get_internal_buffer ());
+                Module *gm
+                    = native_mod::get_mod (path.to_std_string ().c_str ());
 
                 if (gm != nullptr)
                   {
@@ -1372,6 +1384,7 @@ mod_exec (Module &mod)
                 native::add_natives (ast);
 
                 m = new Module (ModuleType::File, ast, lines);
+                m->set_parent (nullptr);
 
                 // std::cout << n_env->get_syspaths ().get_size () << '\n';
                 // for (auto i : n_env->get_syspaths ())
@@ -1397,7 +1410,7 @@ mod_exec (Module &mod)
 
             Object *mo = static_cast<Object *> (new ModuleObject (m));
 
-            mod.set_variable (alias.get_internal_buffer (), mo);
+            mod.set_variable (alias.to_std_string ().c_str (), mo);
             main_f.close ();
 
             // for (Statement *i : m->get_stmts ())
@@ -1420,6 +1433,7 @@ mod_exec (Module &mod)
 
             Module *m = new Module (ModuleType::File, try_body,
                                     mod.get_code_lines ());
+            m->get_env () = mod.get_env ();
             m->set_parent (&mod);
 
             mod_exec (*m);
@@ -1449,7 +1463,8 @@ mod_exec (Module &mod)
                       Str &vname = static_cast<VariableExpr *> (catch_clause)
                                        ->get_name ();
 
-                      m->set_variable (vname.get_internal_buffer (), amb_val);
+                      m->set_variable (vname.to_std_string ().c_str (),
+                                       amb_val);
                     }
                     break;
 
@@ -1581,7 +1596,7 @@ ambig_test:
           for (int i = 0; i < mod.get_backtrace ().get_size (); i++)
             {
               std::string s
-                  = mod.get_backtrace ()[i].second.get_internal_buffer ();
+                  = mod.get_backtrace ()[i].second.to_std_string ().c_str ();
               while (s.front () == ' ' || s.front () == '\t')
                 s.erase (s.begin ());
 
@@ -1635,14 +1650,12 @@ expr_eval (Module &mod, Expr *e)
             break;
           case ConstantType::String:
             {
-              char *p = (char *)((static_cast<StringConstant *> (cc))
-                                     ->get_value ()
-                                     .c_str ());
+              std::string p = (static_cast<StringConstant *> (cc))
+                                  ->get_value ()
+                                  .to_std_string ();
 
               res = static_cast<Object *> (new ConstantObject (
-                  static_cast<Constant *> (new StringConstant (p))));
-
-              delete[] p;
+                  static_cast<Constant *> (new StringConstant (p.c_str ()))));
             }
             break;
 
@@ -1686,7 +1699,15 @@ expr_eval (Module &mod, Expr *e)
     case ExprType::Variable:
       {
         VariableExpr *ve = static_cast<VariableExpr *> (e);
-        char *p = (char *)ve->get_name ().c_str ();
+        std::string p = ve->get_name ().to_std_string ();
+
+        // Module *mm = &mod;
+        // while (mm != nullptr)
+        //   {
+        //     std::cout << mm << '\n';
+        //     mm = mm->get_parent ();
+        //   }
+
         try
           {
             Object *o = mod.get_variable (p);
@@ -1699,14 +1720,10 @@ expr_eval (Module &mod, Expr *e)
             IR (res);
 
             AMBIG_CHECK (res, {});
-
-            delete[] p;
           }
         catch (const char *&e)
           {
             std::cerr << e << '\n';
-
-            delete[] p;
             exit (EXIT_FAILURE);
           }
       }
@@ -1817,17 +1834,16 @@ expr_eval (Module &mod, Expr *e)
             assert (OBJ_IS_STR (keval)
                     && "Dictionaries only support string keys.");
 
-            char *k
+            std::string k
                 = static_cast<StringConstant *> (
                       static_cast<ConstantObject *> (keval)->get_c ().get ())
                       ->get_value ()
-                      .c_str ();
+                      .to_std_string ();
+
+            // std::cout << "KEYYYY: " << k << '\n';
 
             TC (ev_idcs[std::string (k)] = expr_eval (mod, i.second));
-            AMBIG_CHECK (ev_idcs[std::string (k)],
-                         { res = ev_idcs[std::string (k)]; });
-
-            delete[] k;
+            AMBIG_CHECK (ev_idcs[k], { res = ev_idcs[k]; });
             DR (keval);
           }
 
@@ -1835,6 +1851,7 @@ expr_eval (Module &mod, Expr *e)
           DR (res);
 
         res = new DictObject (ev_idcs);
+        // std::cout << "DICTTTT: " << res->get_stdout_repr () << '\n';
         IR (res);
       }
       break;
@@ -1926,7 +1943,8 @@ expr_eval (Module &mod, Expr *e)
                                      ->get_c ()
                                      .get ())
                                  ->get_value ()
-                                 .get_internal_buffer ());
+                                 .to_std_string ()
+                                 .c_str ());
 
               // dobj->print ();
               // std::cout << "(" << k << ")" << '\n';
@@ -1978,7 +1996,7 @@ expr_eval (Module &mod, Expr *e)
                   break;
                 case ObjectType::ArrayObj:
                   {
-                    Str rs{ "" };
+                    std::string rs = "";
 
                     ArrayObject *iao = static_cast<ArrayObject *> (idx_eval);
                     Vec<Object *> &viao = iao->get_vals ();
@@ -2002,8 +2020,9 @@ expr_eval (Module &mod, Expr *e)
                     if (res != nullptr)
                       DR (res);
 
-                    res = static_cast<Object *> (new ConstantObject (
-                        static_cast<Constant *> (new StringConstant (rs))));
+                    res = static_cast<Object *> (
+                        new ConstantObject (static_cast<Constant *> (
+                            new StringConstant (rs.c_str ()))));
 
                     IR (res);
                   }
@@ -2243,17 +2262,25 @@ expr_eval (Module &mod, Expr *e)
                                                ->get_c ()
                                                .get ())
                                            ->get_value ()
-                                           .get_internal_buffer ();
+                                           .to_std_string ();
                     std::string val2 = static_cast<StringConstant *> (
                                            static_cast<ConstantObject *> (l2)
                                                ->get_c ()
                                                .get ())
                                            ->get_value ()
-                                           .get_internal_buffer ();
+                                           .to_std_string ();
+
+                    // std::cout << "val1: " << val1 << '\n';
+                    // std::cout << "val2: " << val2 << '\n';
+                    std::string vl3 = val1 + val2;
+                    // std::cout << "val3: " << vl3 << '\n';
 
                     res_op = static_cast<Object *> (
                         new ConstantObject (static_cast<Constant *> (
-                            new StringConstant ((val1 + val2).c_str ()))));
+                            new StringConstant (vl3.c_str ()))));
+
+                    // res_op->print ();
+                    // std::cout << std::endl << "-----------" << std::endl;
                   }
                 else
                   {
@@ -2433,7 +2460,7 @@ expr_eval (Module &mod, Expr *e)
               //   }
 
               if (!co->get_mod ()->has_variable (
-                      member.get_internal_buffer ()))
+                      member.to_std_string ().c_str ()))
                 {
                   // check mro
                   bool got_var = false;
@@ -2447,10 +2474,12 @@ expr_eval (Module &mod, Expr *e)
                       //   std::cout << j.first << '\n';
 
                       if (mco->get_mod ()->has_variable (
-                              member.get_internal_buffer ()))
+                              member.to_std_string ().c_str ()))
                         {
                           res = mco->get_mod ()->get_variable (
-                              member.get_internal_buffer ());
+                              member.to_std_string ().c_str ());
+
+                          assert (res != nullptr);
                           got_var = true;
                           break;
                         }
@@ -2459,11 +2488,13 @@ expr_eval (Module &mod, Expr *e)
                   if (!got_var)
                     throw std::runtime_error (
                         (Str{ "Class does not have member " } + member)
-                            .get_internal_buffer ());
+                            .to_std_string ()
+                            .c_str ());
                 }
               else
-                res = comod->get_variable (member.get_internal_buffer ());
+                res = comod->get_variable (member.to_std_string ().c_str ());
 
+              assert (res != nullptr);
               IR (res);
               AMBIG_CHECK (res, {});
               // std::cout << int (res->get_type ()) << '\t'
@@ -2509,14 +2540,16 @@ expr_eval (Module &mod, Expr *e)
               SfClass *cl = static_cast<SfClass *> (o_parent);
 
               if (!cl->get_mod ()->has_variable (
-                      member.get_internal_buffer ()))
+                      member.to_std_string ().c_str ()))
                 throw std::runtime_error (
                     (Str{ "Class does not have member " } + member)
-                        .get_internal_buffer ());
+                        .to_std_string ()
+                        .c_str ());
 
               res = cl->get_mod ()->get_variable (
-                  member.get_internal_buffer ());
+                  member.to_std_string ().c_str ());
 
+              assert (res != nullptr);
               IR (res);
               AMBIG_CHECK (res, {});
             }
@@ -2527,15 +2560,17 @@ expr_eval (Module &mod, Expr *e)
               ModuleObject *mo = static_cast<ModuleObject *> (o_parent);
               Module *mo_mod = mo->get_mod ();
 
-              if (!mo_mod->has_variable (member.get_internal_buffer ()))
+              if (!mo_mod->has_variable (member.to_std_string ().c_str ()))
                 {
                   throw std::runtime_error (
                       (Str{ "Module does not have member " } + member)
-                          .get_internal_buffer ());
+                          .to_std_string ()
+                          .c_str ());
                 }
 
-              res = mo_mod->get_variable (member.get_internal_buffer ());
+              res = mo_mod->get_variable (member.to_std_string ().c_str ());
 
+              assert (res != nullptr);
               IR (res);
               AMBIG_CHECK (res, {});
             }
@@ -2545,16 +2580,51 @@ expr_eval (Module &mod, Expr *e)
             {
               Str meth_name = Str{ "[]." } + member;
 
-              if (!mod.has_variable (meth_name.get_internal_buffer ()))
+              if (!mod.has_variable (meth_name.to_std_string ().c_str ()))
                 {
                   throw std::runtime_error (
                       (Str{ "No such native method found: " } + meth_name)
-                          .get_internal_buffer ());
+                          .to_std_string ()
+                          .c_str ());
                 }
 
               Object *o_meth
-                  = mod.get_variable (meth_name.get_internal_buffer ());
+                  = mod.get_variable (meth_name.to_std_string ().c_str ());
 
+              assert (o_meth != nullptr);
+              if (o_meth->get_type () == ObjectType::FuncObject
+                  && static_cast<FunctionObject *> (o_meth)
+                         ->get_v ()
+                         ->get_self_arg ())
+                {
+                  HalfFunction *hf = new HalfFunction (
+                      static_cast<FunctionObject *> (o_meth), { o_parent });
+
+                  res = static_cast<Object *> (hf);
+                }
+              else
+                res = o_meth;
+
+              IR (res);
+            }
+            break;
+
+          case ObjectType::DictObj:
+            {
+              Str meth_name = Str{ "{:}." } + member;
+
+              if (!mod.has_variable (meth_name.to_std_string ().c_str ()))
+                {
+                  throw std::runtime_error (
+                      (Str{ "No such native method found: " } + meth_name)
+                          .to_std_string ()
+                          .c_str ());
+                }
+
+              Object *o_meth
+                  = mod.get_variable (meth_name.to_std_string ().c_str ());
+
+              assert (o_meth != nullptr);
               if (o_meth->get_type () == ObjectType::FuncObject
                   && static_cast<FunctionObject *> (o_meth)
                          ->get_v ()
@@ -2583,12 +2653,14 @@ expr_eval (Module &mod, Expr *e)
                   {
                     Str meth_name = Str{ "''." } + member;
 
-                    if (!mod.has_variable (meth_name.get_internal_buffer ()))
+                    if (!mod.has_variable (
+                            meth_name.to_std_string ().c_str ()))
                       {
                         throw std::runtime_error (
                             (Str{ "No such native method found: " }
                              + meth_name)
-                                .get_internal_buffer ());
+                                .to_std_string ()
+                                .c_str ());
                       }
 
                     // res = mod.get_variable (meth_name.get_internal_buffer
@@ -2618,9 +2690,10 @@ expr_eval (Module &mod, Expr *e)
                     //     //   }
                     //   }
 
-                    Object *o_meth
-                        = mod.get_variable (meth_name.get_internal_buffer ());
+                    Object *o_meth = mod.get_variable (
+                        meth_name.to_std_string ().c_str ());
 
+                    assert (o_meth != nullptr);
                     if (o_meth->get_type () == ObjectType::FuncObject
                         && static_cast<FunctionObject *> (o_meth)
                                ->get_v ()
@@ -2643,12 +2716,14 @@ expr_eval (Module &mod, Expr *e)
                   {
                     Str meth_name = Str{ "0." } + member;
 
-                    if (!mod.has_variable (meth_name.get_internal_buffer ()))
+                    if (!mod.has_variable (
+                            meth_name.to_std_string ().c_str ()))
                       {
                         throw std::runtime_error (
                             (Str{ "No such native method found: " }
                              + meth_name)
-                                .get_internal_buffer ());
+                                .to_std_string ()
+                                .c_str ());
                       }
 
                     // res = mod.get_variable (meth_name.get_internal_buffer
@@ -2678,9 +2753,10 @@ expr_eval (Module &mod, Expr *e)
                     //     //   }
                     //   }
 
-                    Object *o_meth
-                        = mod.get_variable (meth_name.get_internal_buffer ());
+                    Object *o_meth = mod.get_variable (
+                        meth_name.to_std_string ().c_str ());
 
+                    assert (o_meth != nullptr);
                     if (o_meth->get_type () == ObjectType::FuncObject
                         && static_cast<FunctionObject *> (o_meth)
                                ->get_v ()
@@ -3118,12 +3194,12 @@ expr_eval (Module &mod, Expr *e)
                         {
                         case ExprType::Variable:
                           {
-                            char *p = static_cast<VariableExpr *> (v)
-                                          ->get_name ()
-                                          .c_str ();
+                            std::string p = static_cast<VariableExpr *> (v)
+                                                ->get_name ()
+                                                .to_std_string ();
                             mod.set_variable (p, av);
 
-                            delete[] p;
+                            ;
                           }
                           break;
 
@@ -3154,16 +3230,16 @@ expr_eval (Module &mod, Expr *e)
                                       {
                                       case ExprType::Variable:
                                         {
-                                          char *p
+                                          std::string p
                                               = static_cast<VariableExpr *> (
                                                     vv)
                                                     ->get_name ()
-                                                    .c_str ();
+                                                    .to_std_string ();
 
                                           mod.set_variable (
                                               p, avo->get_vals ()[vi++]);
 
-                                          delete[] p;
+                                          ;
                                         }
                                         break;
 
@@ -3217,12 +3293,10 @@ expr_eval (Module &mod, Expr *e)
                     {
                     case ExprType::Variable:
                       {
-                        char *p = static_cast<VariableExpr *> (v)
-                                      ->get_name ()
-                                      .c_str ();
+                        std::string p = static_cast<VariableExpr *> (v)
+                                            ->get_name ()
+                                            .to_std_string ();
                         mod.set_variable (p, kobj);
-
-                        delete[] p;
                       }
                       break;
 
@@ -3297,7 +3371,7 @@ expr_eval (Module &mod, Expr *e)
 
                     Module *m = new Module (ModuleType::File);
                     m->get_code_lines () = mod.get_code_lines ();
-                    m->set_variable (vn.get_internal_buffer (), aov);
+                    m->set_variable (vn.to_std_string ().c_str (), aov);
                     m->set_parent (&mod);
 
                     res = expr_eval (*m, e_catch);
@@ -3385,7 +3459,7 @@ expr_eval (Module &mod, Expr *e)
 
                   for (auto &&i : dobj->get_vals ())
                     {
-                      if (i.first == s.get_internal_buffer ())
+                      if (i.first == s.to_std_string ().c_str ())
                         {
                           r = true;
                           break;
@@ -3509,10 +3583,17 @@ ret:
 bool
 Module::has_variable (std::string rhs)
 {
-  if (!vtable.count (rhs))
-    return parent == nullptr ? false : parent->has_variable (rhs);
+  Module *cur = this;
 
-  return true;
+  while (cur != nullptr)
+    {
+      if (cur->vtable.count (rhs))
+        return true;
+
+      cur = cur->parent;
+    }
+
+  return false;
 }
 
 Object *
@@ -3590,29 +3671,31 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                   IR (self_arg);
                   fargs.insert (0, self_arg);
 
-                  switch (self_arg->get_type ())
-                    {
-                    case ObjectType::ClassObj:
-                      {
-                        ClassObject *co
-                            = static_cast<ClassObject *> (self_arg);
+                  // switch (self_arg->get_type ())
+                  //   {
+                  //   case ObjectType::ClassObj:
+                  //     {
+                  //       ClassObject *co
+                  //           = static_cast<ClassObject *> (self_arg);
 
-                        Module *co_mod = co->get_mod ();
-                        nmod->set_parent (co_mod->get_parent ());
-                      }
-                      break;
+                  //       Module *co_mod = co->get_mod ();
+                  //       nmod->set_parent (co_mod->get_parent ());
+                  //     }
+                  //     break;
 
-                    case ObjectType::Constant:
-                    case ObjectType::ArrayObj:
-                      {
-                        nmod->set_parent (cf->get_parent ());
-                      }
-                      break;
+                  //   case ObjectType::Constant:
+                  //   case ObjectType::ArrayObj:
+                  //     {
+                  //       nmod->set_parent (cf->get_parent ());
+                  //     }
+                  //     break;
 
-                    default:
-                      assert (0 && "TODO");
-                      break;
-                    }
+                  //   default:
+                  //     assert (0 && "TODO");
+                  //     break;
+                  //   }
+
+                  nmod->set_parent (cf->get_parent ());
                 }
               else
                 {
@@ -3632,29 +3715,31 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                           IR (self_arg);
                         }
 
-                      switch (self_arg->get_type ())
-                        {
-                        case ObjectType::ClassObj:
-                          {
-                            ClassObject *co
-                                = static_cast<ClassObject *> (self_arg);
+                      // switch (self_arg->get_type ())
+                      //   {
+                      //   case ObjectType::ClassObj:
+                      //     {
+                      //       ClassObject *co
+                      //           = static_cast<ClassObject *> (self_arg);
 
-                            Module *co_mod = co->get_mod ();
-                            nmod->set_parent (co_mod->get_parent ());
-                          }
-                          break;
+                      //       Module *co_mod = co->get_mod ();
+                      //       nmod->set_parent (co_mod->get_parent ());
+                      //     }
+                      //     break;
 
-                        case ObjectType::Constant:
-                        case ObjectType::ArrayObj:
-                          {
-                            nmod->set_parent (cf->get_parent ());
-                          }
-                          break;
+                      //   case ObjectType::Constant:
+                      //   case ObjectType::ArrayObj:
+                      //     {
+                      //       nmod->set_parent (cf->get_parent ());
+                      //     }
+                      //     break;
 
-                        default:
-                          assert (0 && "TODO");
-                          break;
-                        }
+                      //   default:
+                      //     assert (0 && "TODO");
+                      //     break;
+                      //   }
+
+                      nmod->set_parent (cf->get_parent ());
                     }
                   else
                     nmod->set_parent (cf->get_parent ());
@@ -3669,12 +3754,10 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                     {
                     case ExprType::Variable:
                       {
-                        char *p = static_cast<VariableExpr *> (a)
-                                      ->get_name ()
-                                      .c_str ();
+                        std::string p = static_cast<VariableExpr *> (a)
+                                            ->get_name ()
+                                            .to_std_string ();
                         nmod->set_variable (p, fargs[j++]);
-
-                        delete[] p;
                       }
                       break;
 
@@ -3683,6 +3766,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                     }
                 }
 
+              // for (auto &&i : nmod->get_stmts ())
+              //   i->print ();
               mod_exec (*nmod);
 
               Object *ret = nullptr;
@@ -3757,29 +3842,30 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                   IR (self_arg);
                   fargs.insert (0, self_arg);
 
-                  switch (self_arg->get_type ())
-                    {
-                    case ObjectType::ClassObj:
-                      {
-                        ClassObject *co
-                            = static_cast<ClassObject *> (self_arg);
+                  // switch (self_arg->get_type ())
+                  //   {
+                  //   case ObjectType::ClassObj:
+                  //     {
+                  //       ClassObject *co
+                  //           = static_cast<ClassObject *> (self_arg);
 
-                        Module *co_mod = co->get_mod ();
-                        nmod->set_parent (co_mod->get_parent ());
-                      }
-                      break;
+                  //       Module *co_mod = co->get_mod ();
+                  //       nmod->set_parent (co_mod->get_parent ());
+                  //     }
+                  //     break;
 
-                    case ObjectType::Constant:
-                    case ObjectType::ArrayObj:
-                      {
-                        nmod->set_parent (nf->get_parent ());
-                      }
-                      break;
+                  //   case ObjectType::Constant:
+                  //   case ObjectType::ArrayObj:
+                  //   case ObjectType::DictObj:
+                  //     {
+                  //       nmod->set_parent (nf->get_parent ());
+                  //     }
+                  //     break;
 
-                    default:
-                      assert (0 && "TODO");
-                      break;
-                    }
+                  //   default:
+                  //     assert (0 && "TODO");
+                  //     break;
+                  //   }
                 }
               else
                 {
@@ -3799,33 +3885,35 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                           IR (self_arg);
                         }
 
-                      switch (self_arg->get_type ())
-                        {
-                        case ObjectType::ClassObj:
-                          {
-                            ClassObject *co
-                                = static_cast<ClassObject *> (self_arg);
+                      // switch (self_arg->get_type ())
+                      //   {
+                      //   case ObjectType::ClassObj:
+                      //     {
+                      //       ClassObject *co
+                      //           = static_cast<ClassObject *> (self_arg);
 
-                            Module *co_mod = co->get_mod ();
-                            nmod->set_parent (co_mod->get_parent ());
-                          }
-                          break;
+                      //       Module *co_mod = co->get_mod ();
+                      //       nmod->set_parent (co_mod->get_parent ());
+                      //     }
+                      //     break;
 
-                        case ObjectType::Constant:
-                        case ObjectType::ArrayObj:
-                          {
-                            nmod->set_parent (nf->get_parent ());
-                          }
-                          break;
+                      //   case ObjectType::Constant:
+                      //   case ObjectType::ArrayObj:
+                      //     {
+                      //       nmod->set_parent (nf->get_parent ());
+                      //     }
+                      //     break;
 
-                        default:
-                          assert (0 && "TODO");
-                          break;
-                        }
+                      //   default:
+                      //     assert (0 && "TODO");
+                      //     break;
+                      //   }
                     }
                   else
                     nmod->set_parent (nf->get_parent ());
                 }
+
+              nmod->set_parent (nf->get_parent ());
 
               Module *fmod
                   = new Module (ModuleType::Function, Vec<Statement *> (),
@@ -3845,22 +3933,20 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
                   ArrayObject *ao = new ArrayObject (fargs);
 
-                  char *p = arg_a.c_str ();
+                  std::string p = arg_a.to_std_string ();
                   fmod->set_variable (p, ao);
-
-                  delete[] p;
                 }
               else
                 {
                   size_t j = 0;
                   for (Str &a : nf->get_args ())
                     {
-                      char *p = a.c_str ();
+                      std::string p = a.to_std_string ();
                       fmod->set_variable (p, fargs[j++]);
-
-                      delete[] p;
                     }
                 }
+
+              nf->set_parent (nmod->get_parent ());
 
               Object *ret;
 
@@ -3902,12 +3988,16 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
         ClassDeclStatement *cds
             = static_cast<ClassDeclStatement *> (sfc->get_cds ());
         Module *objm = new Module (ModuleType::Class);
-        objm->get_code_lines () = sfc->get_mod ()->get_code_lines ();
+
+        objm->get_code_lines ()
+            = sfc->get_mod ()->get_parent ()->get_code_lines ();
 
         objm->set_parent (sfc->get_mod ()->get_parent ());
         objm->get_stmts () = cds->get_body ();
 
-        TC (mod_exec (*objm));
+        // for (auto &&i : objm->get_stmts ())
+        //   i->print ();
+        mod_exec (*objm);
 
         Vec<Object *> inhs;
         for (Expr *&i : cds->get_inhs ())
@@ -4024,8 +4114,11 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
           {
             Object *f_init = objm->get_variable ("_init");
 
+            assert (f_init != nullptr);
             if (!_sfobj_iscallable (*objm, f_init))
-              throw std::runtime_error ("class._init is not callable");
+              {
+                throw std::runtime_error ("class._init is not callable");
+              }
 
             // args_eval.insert (0, co);
 
@@ -4047,6 +4140,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
           {
             Object *mo_init = mo_mod->get_variable ("_init");
 
+            assert (mo_init != nullptr);
             if (mo_init->get_type ()
                 != ObjectType::FuncObject) /* only functions for now
                                             */
@@ -4058,7 +4152,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
             Function *fv = fo->get_v ();
 
-            Object *o_init = call_func (*mo_mod, mo_init, fargs);
+            Module *pm = fv->get_parent ();
+            Object *o_init = call_func (*pm, mo_init, fargs);
 
             if (mo_mod->get_saw_ambig ())
               {

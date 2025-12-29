@@ -113,7 +113,8 @@ worker_loop ()
                   for (int i = 0; i < m->get_backtrace ().get_size (); i++)
                     {
                       std::string s = m->get_backtrace ()[i]
-                                          .second.get_internal_buffer ();
+                                          .second.to_std_string ()
+                                          .c_str ();
                       while (s.front () == ' ' || s.front () == '\t')
                         s.erase (s.begin ());
 
@@ -133,6 +134,9 @@ worker_loop ()
         }
 
       th->get_done () = true;
+
+      DR (th->get_name ());
+      DR (th->get_args ());
 
       /**
        * closed before thread finished

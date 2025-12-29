@@ -17,6 +17,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -25,6 +26,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
+#if !defined(_WIN32)
+#include <unistd.h>
+#endif
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>

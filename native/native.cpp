@@ -26,6 +26,9 @@ add_natives (Vec<Statement *> &m)
   /* list methods */
   _add_native_list_push (m);
   _add_native_list_pop (m);
+
+  /* dict methods */
+  _add_native_dict_to_string (m);
 }
 } // namespace native
 } // namespace sf

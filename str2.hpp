@@ -45,6 +45,13 @@ public:
 
   Str (const char *s) : len (0), cap (DEFAULT_VEC_CAP)
   {
+    if (s == nullptr)
+      {
+        v = new char[cap];
+        v[0] = '\0';
+        return;
+      }
+
     size_t s_len = strlen (s);
     if (s_len + 1 > cap)
       {
@@ -156,16 +163,22 @@ public:
     return v[i];
   }
 
-  char *
+  const char *
   c_str () const
   {
-    return strdup (v);
+    return v;
   }
 
-  char *
-  get_internal_buffer ()
+  const char *
+  get_internal_buffer () const
   {
     return v;
+  }
+
+  std::string
+  to_std_string () const
+  {
+    return std::string (v, len);
   }
 
   friend std::ostream &

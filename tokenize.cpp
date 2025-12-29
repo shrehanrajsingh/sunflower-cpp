@@ -40,7 +40,7 @@ tokenize (char *p)
               d = *++p;
             }
 
-          if (_is_keyword (v.get_internal_buffer ()))
+          if (_is_keyword (v.to_std_string ().c_str ()))
             res.push_back (new KeywordToken (v));
           else if (v == "true" || v == "false")
             res.push_back (new BooleanToken (v == "true"));
@@ -78,9 +78,11 @@ tokenize (char *p)
             }
 
           if (saw_dot)
-            res.push_back (new FloatToken (atof (v.get_internal_buffer ())));
+            res.push_back (
+                new FloatToken (atof (v.to_std_string ().c_str ())));
           else
-            res.push_back (new IntegerToken (atoi (v.get_internal_buffer ())));
+            res.push_back (
+                new IntegerToken (atoi (v.to_std_string ().c_str ())));
 
           goto end_skip_inc;
         }

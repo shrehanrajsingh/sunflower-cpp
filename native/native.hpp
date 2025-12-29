@@ -25,6 +25,9 @@
 #include "list/pop.hpp"
 #include "list/push.hpp"
 
+/* dict methods */
+#include "dict/to_string.hpp"
+
 namespace sf
 {
 namespace native

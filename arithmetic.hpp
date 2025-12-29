@@ -36,7 +36,14 @@ class AVOperator : public AVBase
 
 public:
   AVOperator () : AVBase (AVTypeEnum::Operator) {}
+
   AVOperator (char *_Op) : AVBase (AVTypeEnum::Operator)
+  {
+    strncpy (op, _Op, sizeof (op) - 1);
+    op[sizeof (op) - 1] = '\0';
+  }
+
+  AVOperator (const char *_Op) : AVBase (AVTypeEnum::Operator)
   {
     strncpy (op, _Op, sizeof (op) - 1);
     op[sizeof (op) - 1] = '\0';

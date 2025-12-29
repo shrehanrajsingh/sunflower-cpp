@@ -49,9 +49,9 @@ open (Module *mod)
   std::string file_name;
 
   if (fname[0] == '/') /* absolute path */
-    file_name = fname.get_internal_buffer ();
+    file_name = fname.to_std_string ().c_str ();
   else
-    file_name = _file_path + fname.get_internal_buffer ();
+    file_name = _file_path + fname.to_std_string ().c_str ();
 
   // std::cout << "opening file: " << file_name << '\n';
   std::fstream fs (file_name, mode);
@@ -142,7 +142,7 @@ write (Module *mod)
                 static_cast<ConstantObject *> (fstr)->get_c ().get ())
                 ->get_value ();
 
-  fs << vl.get_internal_buffer ();
+  fs << vl.to_std_string ().c_str ();
 
   Object *r = static_cast<Object *> (
       new ConstantObject (static_cast<Constant *> (new NoneConstant ())));

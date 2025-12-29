@@ -264,8 +264,7 @@ send (Module *mod)
                  static_cast<ConstantObject *> (o_msg)->get_c ().get ())
                  ->get_value ();
 
-  ::send (fd, static_cast<void *> (msg.get_internal_buffer ()), msg.size (),
-          0);
+  ::send (fd, (void *)(msg.to_std_string ().c_str ()), msg.size (), 0);
 
   Object *res;
   res = static_cast<Object *> (

@@ -69,8 +69,8 @@ public:
 
   ~ThreadHandle ()
   {
-    DR (name);
-    DR (args);
+    // DR (name);
+    // DR (args);
   }
 };
 

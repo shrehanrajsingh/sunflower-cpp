@@ -44,4 +44,5 @@ class File
             self.id = 0
 
 fun _init (name, perms)
-    return File (name, perms)
+    a = File (name, perms)
+    return a

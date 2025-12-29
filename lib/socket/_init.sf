@@ -38,8 +38,8 @@ class Server
     fun add_post (self, route, callback)
         self.r_post[route] = callback
     
-    fun gen_response (self, route)
-        a = self.r_get[route] ()
+    fun gen_response (self, route, req)
+        a = self.r_get[route] (req)
         p = a['status']
         as_str = p.to_string ()
 
@@ -52,9 +52,10 @@ class Server
                 r = r + j + ': ' + a[j] + '\r\n'
         
         if 'body' in a
-            r = r + 'Content-Length: ' + len (a['body']).to_string () + '\r\n'
+            l = len (a['body'])
+            r = r + 'Content-Length: ' + l.to_string () + '\r\n'
             r = r + '\r\n' + a['body']
-
+                
         return r
     
     fun process (self, cs)
@@ -63,10 +64,65 @@ class Server
 
         lreq = len (req)
         lp1 = len (protocol) + 1
-        rf = req[lp1 to lreq].find (' ')
+        rf = req[lp1 to lreq]
+        rf = rf.find (' ')
         rf = rf + lp1
         path = req[lp1 to rf]
+
+        rsp = [""]
+        for i in 0 to len (req)
+            if req[i] == '\n'
+                rsp.push ('')
+            else
+                rsp[-1] = rsp[-1] + req[i]
         
+        req_dict = {}
+        for i in rsp
+            if ':' in i
+                # key = ''
+                # val = ''
+                # saw_colon = false
+
+                # for jk in 0 to len (i)
+                #     j = i[jk]
+                #     if j == ':' and not saw_colon
+                #         saw_colon = true
+                #         continue
+                    
+                #     if saw_colon
+                #         val = val + j
+                #     else
+                #         key = key + j
+                
+                # sfr = 0
+                # while key[sfr] == ' '
+                #     sfr = sfr + 1
+
+                # key = key[sfr to len (key)]
+
+                # sfr = 0
+                # while val[sfr] == ' '
+                #     sfr = sfr + 1
+
+                # val = val[sfr to len (val)]
+                # req_dict[key] = val
+
+                colon_idx = 0
+
+                for jk in 0 to len (i)
+                    j = i[jk]
+
+                    if j == ':'
+                        colon_idx = jk
+                        break
+                
+                key = i[0 to colon_idx]
+                li = len (i)
+                val = i[colon_idx to li]
+                val = val.replace ('\r', '')
+
+                req_dict[key] = val
+
         m = path
 
         if protocol == 'GET'
@@ -78,7 +134,7 @@ class Server
 
         write ("Got route:", path, "Protocol:", protocol, "m:", m)
         if m != none
-            r = self.gen_response (m)
+            r = self.gen_response (m, req_dict)
             s.send (cs, r)
         else
             write ('path not found (path:', path + ')')

@@ -14,26 +14,30 @@ DictObject::DictObject (std::map<std::string, Object *> &&rhs)
 {
 }
 
+std::mutex dict_mutex;
+
 std::string
 DictObject::get_stdout_repr ()
 {
-  std::stringstream s;
-  size_t j = 0;
+  // std::lock_guard<std::mutex> lock (dict_mutex);
+  std::string s = "";
 
-  s << "{";
+  s += "{";
   for (auto &&i : vals)
-    s << '\'' << i.first << "': " << i.second->get_stdout_repr_in_container ()
-      << ", ";
-
-  std::string res = s.str ();
+    {
+      auto rep = i.second->get_stdout_repr_in_container ();
+      // std::cout << i.first << '\t' << rep << '\n';
+      s += '\'' + i.first + "': " + rep + ", ";
+    }
 
   if (vals.size ())
     {
-      res.pop_back (); // eat comma
-      res.pop_back (); // eat space
+      s.pop_back (); // eat comma
+      s.pop_back (); // eat space
     }
 
-  return res + "}";
+  s += "}";
+  return s;
 }
 
 DictObject::~DictObject ()

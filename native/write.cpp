@@ -4,6 +4,8 @@ namespace sf
 {
 namespace native
 {
+std::mutex write_lock;
+
 SF_API Object *
 _native_write (Module *m)
 {
@@ -11,16 +13,33 @@ _native_write (Module *m)
   TC (a = m->get_variable ("a"));
 
   sf::ArrayObject *ao = static_cast<sf::ArrayObject *> (a);
+  std::string buffer = "";
 
   for (size_t i = 0; i < ao->get_vals ().get_size (); i++)
     {
-      std::cout << ao->get_vals ()[i]->get_stdout_repr ();
+      // buffer += ao->get_vals ()[i]->get_stdout_repr ();
+
+      auto s = ao->get_vals ()[i]->get_stdout_repr ();
+      // std::cerr << "repr addr = " << (const void *)s.data () << "\n";
+      buffer += s;
 
       if (i != ao->get_vals ().get_size () - 1)
-        std::cout << ' ';
+        buffer += ' ';
       else
-        std::cout << std::endl;
+        buffer += '\n';
     }
+
+  {
+    std::lock_guard<std::mutex> lock (write_lock);
+
+#if defined(_WIN32)
+    DWORD bytes_written = 0;
+    WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), buffer.data (),
+               (DWORD)buffer.size (), &bytes_written, NULL);
+#else
+    ::write (STDOUT_FILENO, buffer.data (), buffer.size ());
+#endif
+  }
 
   sf::Object *r = static_cast<sf::Object *> (new sf::ConstantObject (
       static_cast<sf::Constant *> (new sf::NoneConstant ())));
