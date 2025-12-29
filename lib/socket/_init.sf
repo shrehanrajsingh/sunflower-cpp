@@ -78,7 +78,8 @@ class Server
 
         write ("Got route:", path, "Protocol:", protocol, "m:", m)
         if m != none
-            s.send (cs, self.gen_response (m))
+            r = self.gen_response (m)
+            s.send (cs, r)
         else
             write ('path not found (path:', path + ')')
         
@@ -97,8 +98,7 @@ class Server
         while 1
             try
                 cs = s.accept (sock, self.host, self.port)
-                a = [cs]
-                th = thread (self.process, a)
+                th = thread (self.process, [cs])
 
                 th.run ()
             catch E

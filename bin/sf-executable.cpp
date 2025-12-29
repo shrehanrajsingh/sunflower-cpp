@@ -93,16 +93,24 @@ main (int argc, char *argv[])
   std::string can_path = get_exe_path ();
 
   size_t last_slash = 0;
+  bool saw_slash = false;
   for (size_t i = 0; i < can_path.size (); i++)
     {
       if (can_path[i] == '/')
-        last_slash = i;
+        {
+          saw_slash = true;
+          last_slash = i;
+        }
     }
 
-  can_path = can_path.substr (0, last_slash + 1);
+  if (saw_slash)
+    {
+      can_path = can_path.substr (0, last_slash + 1);
 
-  sf_env->add_path (can_path.c_str ());
-  sf_env->add_path ((can_path + "lib/").c_str ());
+      sf_env->add_path (can_path.c_str ());
+      sf_env->add_path ((can_path + "lib/").c_str ());
+    }
+
   sf_env->add_path (std::filesystem::current_path ().c_str ());
 
   // for (sf::Str &i : sf_env->get_syspaths ())
@@ -119,6 +127,8 @@ main (int argc, char *argv[])
   if (args.help_requested)
     {
       print_help ();
+
+      sf::native_mod::nmod_destroy ();
       return 0;
     }
 
@@ -126,6 +136,8 @@ main (int argc, char *argv[])
     {
       std::cerr << "Error: No input files specified.\n";
       print_help ();
+
+      sf::native_mod::nmod_destroy ();
       return 1;
     }
 
@@ -139,8 +151,37 @@ main (int argc, char *argv[])
       if (!ifs)
         {
           std::cerr << "Invalid file path '" << fp << "'" << std::endl;
+          sf::native_mod::nmod_destroy ();
+
           exit (EXIT_FAILURE);
         }
+
+      std::filesystem::path full_path (fp);
+      std::filesystem::path abc_can = std::filesystem::canonical (full_path);
+
+      std::string abc_c_path = abc_can.c_str ();
+      size_t last_slash = 0;
+      bool saw_slash = false;
+
+      for (size_t i = 0; i < abc_c_path.size (); i++)
+        {
+          if (abc_c_path[i] == '/')
+            {
+              saw_slash = true;
+              last_slash = i;
+            }
+        }
+
+      if (saw_slash)
+        {
+          abc_c_path = abc_c_path.substr (0, last_slash + 1);
+          sf_env->add_path (abc_c_path.c_str ());
+
+          sf::__sf_get_global_env ().add ("FILE_PATH", abc_c_path);
+        }
+
+      // for (sf::Str &i : sf_env->get_syspaths ())
+      //   std::cout << i << '\n';
 
       std::string s, p;
       while (std::getline (ifs, p))

@@ -525,7 +525,6 @@ mod_exec (Module &mod)
               {
                 Object *t = nullptr;
                 TC (t = expr_eval (mod, j));
-                assert (t != nullptr);
 
                 if (mod.get_saw_ambig ())
                   {
@@ -541,10 +540,15 @@ mod_exec (Module &mod)
                     //   DR (k);
 
                     DR (name_eval);
+
+                    // std::cout << mod.get_code_lines ().get_size () << '\t'
+                    //           << st->get_line_number () << '\n';
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
                           mod.get_code_lines ()[st->get_line_number ()] });
                   });
+
+                assert (t != nullptr);
 
                 /**
                  * We could use DR here
@@ -623,6 +627,16 @@ mod_exec (Module &mod)
                       ret = call_func (mod, fobj, args_eval);
                     }
 
+                  if (mod.get_saw_ambig ())
+                    {
+                      DR (name_eval);
+                      mod.get_backtrace ().push_back (
+                          { st->get_line_number (),
+                            mod.get_code_lines ()[st->get_line_number ()] });
+                      DR (ret);
+                      goto ambig_test;
+                    }
+
                   if (ret != nullptr)
                     DR (ret);
                 }
@@ -630,6 +644,14 @@ mod_exec (Module &mod)
               case ObjectType::SfClass:
                 {
                   Object *obj = call_func (mod, name_eval, args_eval);
+
+                  AMBIG_CHECK (obj, {
+                    DR (name_eval);
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          mod.get_code_lines ()[st->get_line_number ()] });
+                  });
+
                   DR (obj);
                 }
                 break;
@@ -1298,7 +1320,7 @@ mod_exec (Module &mod)
                 main_f = std::ifstream (path.get_internal_buffer ());
               }
 
-            Module *m;
+            Module *m = nullptr;
 
             if (!file_opened)
               {
@@ -1320,23 +1342,23 @@ mod_exec (Module &mod)
                 exit (-1);
               }
 
-            std::string s, p;
-            while (std::getline (main_f, p))
-              s += p + '\n';
-
-            Vec<Str> lines;
-            lines.push_back ("");
-
-            for (char c : s)
-              {
-                if (c == '\n')
-                  lines.push_back ("");
-                else
-                  lines.back ().push_back (c);
-              }
-
             if (!is_native_module)
               {
+                std::string s, p;
+                while (std::getline (main_f, p))
+                  s += p + '\n';
+
+                Vec<Str> lines;
+                lines.push_back ("");
+
+                for (char c : s)
+                  {
+                    if (c == '\n')
+                      lines.push_back ("");
+                    else
+                      lines.back ().push_back (c);
+                  }
+
                 // std::cout << "(" << s << ")" << std::endl;
                 Vec<Token *> r = tokenize ((char *)s.c_str ());
                 // Vec<Token *> r;
@@ -2370,6 +2392,7 @@ expr_eval (Module &mod, Expr *e)
         //     R (o);
         //   }
         DR (name_eval);
+        AMBIG_CHECK (res, {});
       }
       break;
 
@@ -3558,6 +3581,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                 assert (cf->get_args ().get_size ()
                         > 0); /* at least one arg */
 
+              nmod->get_code_lines () = cf->get_parent ()->get_code_lines ();
+
               Object *self_arg = __self_Arg;
 
               if (self_arg != nullptr)
@@ -3877,7 +3902,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
         ClassDeclStatement *cds
             = static_cast<ClassDeclStatement *> (sfc->get_cds ());
         Module *objm = new Module (ModuleType::Class);
-        objm->get_code_lines () = mod.get_code_lines ();
+        objm->get_code_lines () = sfc->get_mod ()->get_code_lines ();
 
         objm->set_parent (sfc->get_mod ()->get_parent ());
         objm->get_stmts () = cds->get_body ();

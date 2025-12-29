@@ -16,7 +16,7 @@ file(GLOB_RECURSE NATIVE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/native/*.cpp" "${C
 
 
 add_library(sunflower
-    header.hpp
+    header.hpp header.cpp
     vec.hpp vec.cpp
     str.hpp str2.cpp
     tokenize.hpp tokenize.cpp

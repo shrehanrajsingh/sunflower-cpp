@@ -213,6 +213,7 @@ test4 ()
   std::ifstream fl ("../../tests/test.sf");
 
   sf_env->add_path ("../../tests/");
+  __sf_get_global_env ().add ("FILE_PATH", "../../tests/");
 
   if (!fl)
     {

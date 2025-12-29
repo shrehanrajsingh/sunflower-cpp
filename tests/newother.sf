@@ -1,0 +1,6 @@
+import 'file' as file
+
+fun _init ()
+    a = file ('ther.sf', 'r')
+    write (a.read ())
+    a.close ()

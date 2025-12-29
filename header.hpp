@@ -42,3 +42,36 @@
 #define here std::cout << __FILE__ << '(' << __LINE__ << ")" << std::endl;
 
 #define SF_STANDARD_TABSIZE (4)
+
+namespace sf
+{
+class GlobalEnv
+{
+private:
+  std::map<std::string, std::string> gmap;
+
+public:
+  GlobalEnv () {}
+  ~GlobalEnv () {}
+
+  inline void
+  add (std::string k, std::string v)
+  {
+    gmap[k] = v;
+  }
+
+  inline std::string &
+  get (std::string k)
+  {
+    return gmap[k];
+  }
+};
+
+using global_env_t = GlobalEnv;
+SF_API global_env_t &__sf_get_global_env ();
+
+#if !defined(SF_ENV)
+#define SF_ENV(X) (__sf_get_global_env ().get ((X)))
+#endif
+
+} // namespace sf

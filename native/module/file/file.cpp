@@ -26,6 +26,8 @@ open (Module *mod)
                    static_cast<ConstantObject *> (o_perms)->get_c ().get ())
                    ->get_value ();
 
+  std::string &_file_path = SF_ENV ("FILE_PATH");
+
   size_t fmid = ++fmap_id;
   while (filemap.count (fmid))
     fmid++;
@@ -44,7 +46,15 @@ open (Module *mod)
   if (perms.find ('a') != -1)
     mode |= std::ios::app;
 
-  std::fstream fs (fname.get_internal_buffer (), mode);
+  std::string file_name;
+
+  if (fname[0] == '/') /* absolute path */
+    file_name = fname.get_internal_buffer ();
+  else
+    file_name = _file_path + fname.get_internal_buffer ();
+
+  // std::cout << "opening file: " << file_name << '\n';
+  std::fstream fs (file_name, mode);
 
   if (!fs)
     {

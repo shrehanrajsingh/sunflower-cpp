@@ -183,6 +183,13 @@ create (Module *mod)
   assert (o_fname->get_type () == ObjectType::FuncObject);
   assert (o_fargs->get_type () == ObjectType::ArrayObj);
 
+  // std::cout << "lines: "
+  //           << static_cast<FunctionObject *> (o_fname)
+  //                  ->get_v ()
+  //                  ->get_parent ()
+  //                  ->get_code_lines ()
+  //                  .get_size ()
+  //           << '\n';
   ThreadHandle *th = new ThreadHandle (
       o_fname, o_fargs,
       static_cast<FunctionObject *> (o_fname)->get_v ()->get_parent ());
