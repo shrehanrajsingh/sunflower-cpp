@@ -1,4 +1,5 @@
 #include "native.hpp"
+#include "string/isalnum.hpp"
 
 namespace sf
 {
@@ -15,6 +16,7 @@ add_natives (Vec<Statement *> &m)
   _add_native_len (m);
 
   /* string methods */
+  _add_native_isalnum (m);
   _add_native_replace (m);
   _add_native_find (m);
   _add_native_count (m);
