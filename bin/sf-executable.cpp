@@ -165,7 +165,7 @@ main (int argc, char *argv[])
 
       for (size_t i = 0; i < abc_c_path.size (); i++)
         {
-          if (abc_c_path[i] == '/')
+          if (abc_c_path[i] == '/' || abc_c_path[i] == '\\')
             {
               saw_slash = true;
               last_slash = i;
