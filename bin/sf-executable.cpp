@@ -87,8 +87,18 @@ get_exe_path ()
 void
 signal_catch (int signal)
 {
-  sf::native_mod::nmod_destroy ();
-  exit (1);
+  switch (signal)
+    {
+    case SIGINT:
+      {
+        sf::native_mod::nmod_destroy ();
+        exit (1);
+      }
+      break;
+
+    default:
+      break;
+    }
 }
 
 int
