@@ -84,9 +84,18 @@ get_exe_path ()
 #endif // __linux__
 }
 
+void
+signal_catch (int signal)
+{
+  sf::native_mod::nmod_destroy ();
+  exit (1);
+}
+
 int
 main (int argc, char *argv[])
 {
+  std::signal (SIGINT, signal_catch);
+
   cmd_line_args args = parse_cmdline (argc, argv);
 
   sf_env = new sf::Environment ();

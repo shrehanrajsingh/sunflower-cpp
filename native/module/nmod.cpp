@@ -5,6 +5,7 @@ namespace sf
 namespace native_mod
 {
 static std::map<std::string, std::function<Module *(void)>> modmap;
+static bool destroy_called = false;
 
 SF_API ModMap_Type &
 get_modmap ()
@@ -38,8 +39,12 @@ nmod_init ()
 SF_API void
 nmod_destroy ()
 {
-  File::destroy ();
-  Thread::__sf_thread_cleanup ();
+  if (!destroy_called)
+    {
+      destroy_called = true;
+      File::destroy ();
+      Thread::__sf_thread_cleanup ();
+    }
 }
 
 } // namespace native_mod

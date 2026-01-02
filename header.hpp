@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <cassert>
+#include <csignal>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
