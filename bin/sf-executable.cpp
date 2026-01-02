@@ -96,7 +96,7 @@ main (int argc, char *argv[])
   bool saw_slash = false;
   for (size_t i = 0; i < can_path.size (); i++)
     {
-      if (can_path[i] == '/')
+      if (can_path[i] == '/' || can_path[i] == '\\')
         {
           saw_slash = true;
           last_slash = i;
