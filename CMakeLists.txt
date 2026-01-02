@@ -66,7 +66,7 @@ elseif(UNIX)
     set(CPACK_GENERATOR "DEB;RPM;TGZ")
 endif()
 
-set(CPACK_PACKAGE_NAME "sf")
+set(CPACK_PACKAGE_NAME "Sunflower")
 set(CPACK_PACKAGE_VENDOR "shrehanrajsingh")
 set(CPACK_PACKAGE_VERSION "1.0.0")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Sunflower - A scripting language")
