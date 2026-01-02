@@ -52,8 +52,7 @@ class Server
                 r = r + j + ': ' + a[j] + '\r\n'
         
         if 'body' in a
-            l = len (a['body'])
-            r = r + 'Content-Length: ' + l.to_string () + '\r\n'
+            r = r + 'Content-Length: ' + len (a['body']).to_string () + '\r\n'
             r = r + '\r\n' + a['body']
                 
         return r
