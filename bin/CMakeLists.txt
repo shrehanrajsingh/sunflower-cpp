@@ -2,10 +2,6 @@ include_directories(../)
 add_executable(sfexe sf-executable.hpp sf-executable.cpp)
 target_link_libraries(sfexe sunflower)
 
-if(WIN32)
-    target_link_libraries(sfexe PRIVATE ws2_32)
-endif()
-
 set_target_properties(sfexe PROPERTIES OUTPUT_NAME sunflower)
 
 install(

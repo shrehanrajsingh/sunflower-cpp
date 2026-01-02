@@ -45,7 +45,7 @@ add_library(sunflower
     sunflower.hpp sunflower.cpp)
 
 if(WIN32)
-    target_link_libraries(sunflower PRIVATE ws2_32)
+    target_link_libraries(sunflower PUBLIC ws2_32)
 endif()
 
     
