@@ -7,6 +7,22 @@ namespace native_mod
 namespace Socket
 {
 
+#ifdef _WIN32
+static bool wsa_init = false;
+
+static void
+ensure_wsa_initialized ()
+{
+  if (!wsa_init)
+    {
+      WSADATA wsa_data;
+      int result = WSAStartup (MAKEWORD (2, 2), &wsa_data);
+      assert (result == 0 && "WSAStartup failed");
+      wsa_init = true;
+    }
+}
+#endif
+
 /**
  * By default a TCP socket
  * SOCK_STREAM
@@ -18,6 +34,8 @@ socket (Module *mod)
   Object *res;
 
 #ifdef _WIN32
+  ensure_wsa_initialized ();
+
   SOCKET fd = ::socket (AF_INET, SOCK_STREAM, 0);
 
   assert (fd != INVALID_SOCKET && "failed to create socket");
