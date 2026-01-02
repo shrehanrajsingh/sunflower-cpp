@@ -3,7 +3,7 @@
 #include "header.hpp"
 #include "str.hpp"
 
-enum class TokenType
+enum class SFTokenType
 {
   Identifier = 0,
   Operator = 1,
@@ -22,15 +22,15 @@ namespace sf
 {
 class Token
 {
-  TokenType type;
+  SFTokenType type;
   int line_number;
   int line_col;
 
 public:
-  Token () : line_number{ 0 }, line_col{ 0 } { type = TokenType::EndOfFile; }
-  Token (TokenType t) : type (t), line_number{ 0 }, line_col{ 0 } {}
+  Token () : line_number{ 0 }, line_col{ 0 } { type = SFTokenType::EndOfFile; }
+  Token (SFTokenType t) : type (t), line_number{ 0 }, line_col{ 0 } {}
 
-  inline TokenType
+  inline SFTokenType
   get_type () const
   {
     return type;
@@ -77,7 +77,7 @@ private:
   Str val;
 
 public:
-  IdentifierToken (Str v) : Token (TokenType::Identifier), val (v) {};
+  IdentifierToken (Str v) : Token (SFTokenType::Identifier), val (v) {};
   ~IdentifierToken () = default;
 
   inline Str &
@@ -99,7 +99,7 @@ private:
   Str val;
 
 public:
-  OperatorToken (Str v) : Token (TokenType::Operator), val (v) {};
+  OperatorToken (Str v) : Token (SFTokenType::Operator), val (v) {};
   ~OperatorToken () = default;
 
   inline Str &
@@ -121,7 +121,7 @@ private:
   size_t val;
 
 public:
-  TabspaceToken (size_t v) : Token (TokenType::Tabspace), val (v) {};
+  TabspaceToken (size_t v) : Token (SFTokenType::Tabspace), val (v) {};
   ~TabspaceToken () = default;
 
   inline size_t &
@@ -140,7 +140,7 @@ public:
 class NewlineToken : public Token
 {
 public:
-  NewlineToken () : Token (TokenType::Newline) {};
+  NewlineToken () : Token (SFTokenType::Newline) {};
   ~NewlineToken () = default;
 
   void
@@ -156,7 +156,7 @@ private:
   Str val;
 
 public:
-  StringToken (Str v) : Token (TokenType::String), val (v) {};
+  StringToken (Str v) : Token (SFTokenType::String), val (v) {};
   ~StringToken () = default;
 
   inline Str &
@@ -178,7 +178,7 @@ private:
   int val;
 
 public:
-  IntegerToken (int v) : Token (TokenType::Integer), val (v) {};
+  IntegerToken (int v) : Token (SFTokenType::Integer), val (v) {};
   ~IntegerToken () = default;
 
   inline int
@@ -200,7 +200,7 @@ private:
   float val;
 
 public:
-  FloatToken (float v) : Token (TokenType::Float), val (v) {};
+  FloatToken (float v) : Token (SFTokenType::Float), val (v) {};
   ~FloatToken () = default;
 
   inline float
@@ -222,7 +222,7 @@ private:
   Str val;
 
 public:
-  KeywordToken (Str v) : Token (TokenType::Keyword), val (v) {};
+  KeywordToken (Str v) : Token (SFTokenType::Keyword), val (v) {};
   ~KeywordToken () = default;
 
   inline Str &
@@ -244,7 +244,7 @@ private:
   bool val;
 
 public:
-  BooleanToken (bool v) : Token (TokenType::Boolean), val (v) {};
+  BooleanToken (bool v) : Token (SFTokenType::Boolean), val (v) {};
   ~BooleanToken () = default;
 
   inline bool
@@ -263,14 +263,14 @@ public:
 class NoneToken : public Token
 {
 public:
-  NoneToken () : Token (TokenType::NoneType) {}
+  NoneToken () : Token (SFTokenType::NoneType) {}
   ~NoneToken () = default;
 };
 
 class EndOfFileToken : public Token
 {
 public:
-  EndOfFileToken () : Token (TokenType::EndOfFile) {}
+  EndOfFileToken () : Token (SFTokenType::EndOfFile) {}
   ~EndOfFileToken () = default;
 };
 

@@ -18,7 +18,13 @@ socket (Module *mod)
   Object *res;
 
 #ifdef _WIN32
-  /* TODO */
+  SOCKET fd = ::socket (AF_INET, SOCK_STREAM, 0);
+
+  assert (fd != INVALID_SOCKET && "failed to create socket");
+
+  res = static_cast<Object *> (new ConstantObject (
+      static_cast<Constant *> (new IntegerConstant (static_cast<int> (fd)))));
+
 #else
   int fd = ::socket (AF_INET, SOCK_STREAM, 0);
 
@@ -51,7 +57,27 @@ bind (Module *mod)
                  ->get_value ();
 
 #ifdef _WIN32
+  sockaddr_in address;
+  address.sin_addr.s_addr = INADDR_ANY;
+  address.sin_port = htons (static_cast<u_short> (port));
+  address.sin_family = AF_INET;
 
+  const char opt = 1;
+  ::setsockopt (static_cast<SOCKET> (fd), SOL_SOCKET, SO_REUSEADDR, &opt,
+                sizeof (opt));
+
+  if (::bind (static_cast<SOCKET> (fd), (sockaddr *)&address, sizeof (address))
+      == SOCKET_ERROR)
+    {
+      std::cerr << "failed to bind socket\n";
+      ::closesocket (static_cast<SOCKET> (fd));
+
+      Object *r = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+      IR (r);
+      return r;
+    }
 #else
   sockaddr_in address;
   address.sin_addr.s_addr = INADDR_ANY;
@@ -98,7 +124,7 @@ listen (Module *mod)
                   ->get_value ();
 
 #ifdef _WIN32
-
+  assert (::listen (static_cast<SOCKET> (sock), count) != SOCKET_ERROR);
 #else
   assert (::listen (sock, count) >= 0 && "listen failed");
 #endif
@@ -129,7 +155,29 @@ accept (Module *mod)
                  ->get_value ();
 
 #ifdef _WIN32
+  sockaddr_in address;
+  address.sin_addr.s_addr = INADDR_ANY;
+  address.sin_port = htons (static_cast<ushort> (port));
+  address.sin_family = AF_INET;
+  int addr_len = sizeof (address);
+  SOCKET sid;
 
+  if ((sid
+       = ::accept (static_cast<SOCKET> (fd), (sockaddr *)&address, &addr_len))
+      == INVALID_SOCKET)
+    {
+      std::cerr << "failed to accept socket\n";
+      ::close (fd);
+
+      Object *r = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+      IR (r);
+      return r;
+    }
+
+  Object *res = static_cast<Object *> (new ConstantObject (
+      static_cast<Constant *> (new IntegerConstant (static_cast<int> (sid)))));
 #else
   sockaddr_in address;
   address.sin_addr.s_addr = INADDR_ANY;
@@ -149,10 +197,10 @@ accept (Module *mod)
       IR (r);
       return r;
     }
-#endif
 
   Object *res = static_cast<Object *> (new ConstantObject (
       static_cast<Constant *> (new IntegerConstant (sid))));
+#endif
 
   IR (res);
   return res;
@@ -173,6 +221,18 @@ read (Module *mod)
 
   while (1)
     {
+#ifdef _WIN32
+      ssize_t n = ::recv (static_cast<SOCKET> (fd), buf, 1024, 0);
+
+      if (n == SOCKET_ERROR)
+        {
+          int err = WSAGetLastError ();
+          if (err == WSAEINTR)
+            continue;
+
+          throw std::runtime_error ("read failed");
+        }
+#else
       ssize_t n = ::read (fd, static_cast<void *> (buf), 1024);
 
       if (n < 0)
@@ -182,6 +242,7 @@ read (Module *mod)
 
           throw std::runtime_error ("read failed");
         }
+#endif
 
       if (n == 0)
         break; /* client closed */
@@ -230,7 +291,11 @@ read (Module *mod)
 
   while (static_cast<int> (body.size ()) < content_length)
     {
+#ifdef _WIN32
+      int n = ::recv (static_cast<SOCKET> (fd), buf, sizeof (buf), 0);
+#else
       ssize_t n = ::read (fd, buf, sizeof (buf));
+#endif
       if (n <= 0)
         break;
 
@@ -264,7 +329,12 @@ send (Module *mod)
                  static_cast<ConstantObject *> (o_msg)->get_c ().get ())
                  ->get_value ();
 
+#ifdef _WIN32
+  ::send (static_cast<SOCKET> (fd), msg.to_std_string ().c_str (),
+          static_cast<int> (msg.size ()), 0);
+#else
   ::send (fd, (void *)(msg.to_std_string ().c_str ()), msg.size (), 0);
+#endif
 
   Object *res;
   res = static_cast<Object *> (
@@ -285,7 +355,11 @@ close (Module *mod)
                static_cast<ConstantObject *> (o_sock)->get_c ().get ())
                ->get_value ();
 
+#ifdef _WIN32
+  ::closesocket (static_cast<SOCKET> (fd));
+#else
   ::close (fd);
+#endif
 
   Object *res;
   res = static_cast<Object *> (
@@ -312,7 +386,11 @@ shutdown (Module *mod)
                  static_cast<ConstantObject *> (o_mode)->get_c ().get ())
                  ->get_value ();
 
+#ifdef _WIN32
+  ::shutdown (static_cast<SOCKET> (fd), mode);
+#else
   ::shutdown (fd, mode);
+#endif
 
   Object *res;
   res = static_cast<Object *> (

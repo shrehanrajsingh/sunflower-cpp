@@ -205,11 +205,11 @@ tokenize (char *p)
           {
             if (res.get_size ())
               {
-                if (res.back ()->get_type () == TokenType::Tabspace)
+                if (res.back ()->get_type () == SFTokenType::Tabspace)
                   static_cast<TabspaceToken *> (res.back ())->get_val () += 1;
 
                 else if (*(p - 1) == ' '
-                         && res.back ()->get_type () == TokenType::Newline)
+                         && res.back ()->get_type () == SFTokenType::Newline)
                   res.push_back (new TabspaceToken (2));
               }
           }
@@ -219,11 +219,11 @@ tokenize (char *p)
           {
             if (res.get_size ())
               {
-                if (res.back ()->get_type () == TokenType::Tabspace)
+                if (res.back ()->get_type () == SFTokenType::Tabspace)
                   static_cast<TabspaceToken *> (res.back ())->get_val ()
                       += SF_STANDARD_TABSIZE;
 
-                else if (res.back ()->get_type () == TokenType::Newline)
+                else if (res.back ()->get_type () == SFTokenType::Newline)
                   res.push_back (new TabspaceToken (SF_STANDARD_TABSIZE));
               }
           }

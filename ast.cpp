@@ -35,7 +35,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -46,7 +46,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -62,7 +62,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                     switch (c->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           Str &dop
                               = static_cast<OperatorToken *> (d)->get_val ();
@@ -74,7 +74,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                         }
                         break;
 
-                      case TokenType::Keyword:
+                      case SFTokenType::Keyword:
                         {
                           Str &kw
                               = static_cast<KeywordToken *> (d)->get_val ();
@@ -116,7 +116,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                       {
                         Token *c2 = toks[catch_kwidx + 2];
 
-                        if (c2->get_type () == TokenType::Operator
+                        if (c2->get_type () == SFTokenType::Operator
                             && static_cast<OperatorToken *> (c2)->get_val ()
                                    == "->")
                           {
@@ -153,7 +153,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -164,7 +164,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -183,7 +183,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           Str &dop
                               = static_cast<OperatorToken *> (d)->get_val ();
@@ -203,7 +203,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                         }
                         break;
 
-                      case TokenType::Keyword:
+                      case SFTokenType::Keyword:
                         {
                           Str &kw
                               = static_cast<KeywordToken *> (d)->get_val ();
@@ -257,7 +257,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -268,7 +268,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -305,7 +305,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -316,7 +316,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -335,7 +335,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *t = static_cast<OperatorToken *> (d);
                           Str &tv = t->get_val ();
@@ -347,7 +347,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                         }
                         break;
 
-                      case TokenType::Keyword:
+                      case SFTokenType::Keyword:
                         {
                           KeywordToken *kt = static_cast<KeywordToken *> (d);
                           Str &ktv = kt->get_val ();
@@ -403,7 +403,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -414,7 +414,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -451,7 +451,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -462,7 +462,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -501,7 +501,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             OperatorToken *opt = static_cast<OperatorToken *> (c);
             Str &opv = opt->get_val ();
@@ -578,7 +578,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -589,7 +589,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -625,7 +625,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -636,7 +636,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &ktv = kt->get_val ();
@@ -671,7 +671,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -708,7 +708,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -745,7 +745,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -792,7 +792,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             Str &cop = static_cast<OperatorToken *> (c)->get_val ();
 
@@ -825,7 +825,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             OperatorToken *opt = static_cast<OperatorToken *> (c);
             Str &opv = opt->get_val ();
@@ -865,7 +865,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                         switch (d->get_type ())
                           {
-                          case TokenType::Operator:
+                          case SFTokenType::Operator:
                             {
                               OperatorToken *t
                                   = static_cast<OperatorToken *> (d);
@@ -912,7 +912,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                         switch (d->get_type ())
                           {
-                          case TokenType::Operator:
+                          case SFTokenType::Operator:
                             {
                               OperatorToken *t
                                   = static_cast<OperatorToken *> (d);
@@ -974,7 +974,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *t = static_cast<OperatorToken *> (d);
                           Str &tv = t->get_val ();
@@ -1040,7 +1040,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                       {
                         Token *d = toks[j];
 
-                        if (d->get_type () == TokenType::Operator)
+                        if (d->get_type () == SFTokenType::Operator)
                           {
                             Str &dop
                                 = static_cast<OperatorToken *> (d)->get_val ();
@@ -1087,7 +1087,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                       {
                         Token *&d = toks[br_end_idx];
 
-                        if (d->get_type () == TokenType::Operator)
+                        if (d->get_type () == SFTokenType::Operator)
                           {
                             Str &dop
                                 = static_cast<OperatorToken *> (d)->get_val ();
@@ -1140,7 +1140,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                   {
                     Token *d = toks[j];
 
-                    if (d->get_type () == TokenType::Operator)
+                    if (d->get_type () == SFTokenType::Operator)
                       {
                         Str &dop
                             = static_cast<OperatorToken *> (d)->get_val ();
@@ -1204,7 +1204,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
                 assert (i + 1 < ed);
                 Token *n = toks[i + 1];
 
-                if (n->get_type () != TokenType::Identifier)
+                if (n->get_type () != SFTokenType::Identifier)
                   {
                     here;
                     n->print ();
@@ -1244,7 +1244,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Identifier:
+        case SFTokenType::Identifier:
           {
             IdentifierToken *idt = static_cast<IdentifierToken *> (c);
 
@@ -1255,7 +1255,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Float:
+        case SFTokenType::Float:
           {
             if (res != nullptr)
               delete res;
@@ -1266,7 +1266,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Integer:
+        case SFTokenType::Integer:
           {
             if (res != nullptr)
               delete res;
@@ -1278,7 +1278,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::String:
+        case SFTokenType::String:
           {
             if (res != nullptr)
               delete res;
@@ -1290,7 +1290,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::Boolean:
+        case SFTokenType::Boolean:
           {
             if (res != nullptr)
               delete res;
@@ -1302,7 +1302,7 @@ expr_gen (Vec<Token *> &toks, size_t st, size_t ed)
           }
           break;
 
-        case TokenType::NoneType:
+        case SFTokenType::NoneType:
           {
             if (res != nullptr)
               delete res;
@@ -1336,7 +1336,7 @@ stmt_gen (Vec<Token *> &toks)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             OperatorToken *opt = static_cast<OperatorToken *> (c);
             Str &opv = opt->get_val ();
@@ -1385,7 +1385,7 @@ stmt_gen (Vec<Token *> &toks)
                   {
                     while (j < toks.get_size ())
                       {
-                        if (toks[j]->get_type () == TokenType::Operator
+                        if (toks[j]->get_type () == SFTokenType::Operator
                             && static_cast<OperatorToken *> (toks[j])
                                        ->get_val ()
                                    == ')')
@@ -1408,7 +1408,7 @@ stmt_gen (Vec<Token *> &toks)
               }
           }
           break;
-        case TokenType::Keyword:
+        case SFTokenType::Keyword:
           {
             KeywordToken *kt = static_cast<KeywordToken *> (c);
             Str &kw = kt->get_val ();
@@ -1424,7 +1424,7 @@ stmt_gen (Vec<Token *> &toks)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *jop
                               = static_cast<OperatorToken *> (d);
@@ -1439,7 +1439,7 @@ stmt_gen (Vec<Token *> &toks)
                         }
                         break;
 
-                      case TokenType::Newline:
+                      case SFTokenType::Newline:
                         {
                           if (!gb)
                             {
@@ -1477,13 +1477,13 @@ stmt_gen (Vec<Token *> &toks)
               l5:
                 while (
                     block_end_idx < toks.get_size ()
-                    && (toks[block_end_idx]->get_type () == TokenType::Newline
+                    && (toks[block_end_idx]->get_type () == SFTokenType::Newline
                         || toks[block_end_idx]->get_type ()
-                               == TokenType::Tabspace))
+                               == SFTokenType::Tabspace))
                   block_end_idx++;
 
                 if (block_end_idx < toks.get_size ()
-                    && toks[block_end_idx]->get_type () == TokenType::Keyword
+                    && toks[block_end_idx]->get_type () == SFTokenType::Keyword
                     && static_cast<KeywordToken *> (toks[block_end_idx])
                                ->get_val ()
                            == "else")
@@ -1493,7 +1493,7 @@ stmt_gen (Vec<Token *> &toks)
                      */
                     if (block_end_idx < toks.get_size ()
                         && toks[block_end_idx + 1]->get_type ()
-                               == TokenType::Keyword
+                               == SFTokenType::Keyword
                         && static_cast<KeywordToken *> (
                                toks[block_end_idx + 1])
                                    ->get_val ()
@@ -1510,7 +1510,7 @@ stmt_gen (Vec<Token *> &toks)
 
                             switch (d->get_type ())
                               {
-                              case TokenType::Operator:
+                              case SFTokenType::Operator:
                                 {
                                   OperatorToken *jop
                                       = static_cast<OperatorToken *> (d);
@@ -1523,7 +1523,7 @@ stmt_gen (Vec<Token *> &toks)
                                 }
                                 break;
 
-                              case TokenType::Newline:
+                              case SFTokenType::Newline:
                                 {
                                   if (!gb)
                                     {
@@ -1601,7 +1601,7 @@ stmt_gen (Vec<Token *> &toks)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *jop
                               = static_cast<OperatorToken *> (d);
@@ -1623,7 +1623,7 @@ stmt_gen (Vec<Token *> &toks)
                         }
                         break;
 
-                      case TokenType::Keyword:
+                      case SFTokenType::Keyword:
                         {
                           KeywordToken *kwt = static_cast<KeywordToken *> (d);
 
@@ -1654,7 +1654,7 @@ stmt_gen (Vec<Token *> &toks)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *jop
                               = static_cast<OperatorToken *> (d);
@@ -1669,7 +1669,7 @@ stmt_gen (Vec<Token *> &toks)
                         }
                         break;
 
-                      case TokenType::Newline:
+                      case SFTokenType::Newline:
                         {
                           if (!gb)
                             goto l3;
@@ -1717,7 +1717,7 @@ stmt_gen (Vec<Token *> &toks)
                  */
 
                 if (i + 2 < toks.get_size ()
-                    && (toks[i + 2]->get_type () == TokenType::Operator)
+                    && (toks[i + 2]->get_type () == SFTokenType::Operator)
                     && static_cast<OperatorToken *> (toks[i + 2])->get_val ()
                            == '(')
                   is_simple = true;
@@ -1727,7 +1727,7 @@ stmt_gen (Vec<Token *> &toks)
                 if (is_simple)
                   {
                     Token *name_tok = toks[i + 1];
-                    assert (name_tok->get_type () == TokenType::Identifier);
+                    assert (name_tok->get_type () == SFTokenType::Identifier);
 
                     Str &name = static_cast<IdentifierToken *> (name_tok)
                                     ->get_val ();
@@ -1744,7 +1744,7 @@ stmt_gen (Vec<Token *> &toks)
 
                         switch (d->get_type ())
                           {
-                          case TokenType::Operator:
+                          case SFTokenType::Operator:
                             {
                               OperatorToken *t
                                   = static_cast<OperatorToken *> (d);
@@ -1819,7 +1819,7 @@ stmt_gen (Vec<Token *> &toks)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *t = static_cast<OperatorToken *> (d);
                           Str &tv = t->get_val ();
@@ -1830,7 +1830,7 @@ stmt_gen (Vec<Token *> &toks)
                             gb--;
                         }
                         break;
-                      case TokenType::Newline:
+                      case SFTokenType::Newline:
                         {
                           if (!gb)
                             {
@@ -1874,7 +1874,7 @@ stmt_gen (Vec<Token *> &toks)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *jop
                               = static_cast<OperatorToken *> (d);
@@ -1889,7 +1889,7 @@ stmt_gen (Vec<Token *> &toks)
                         }
                         break;
 
-                      case TokenType::Newline:
+                      case SFTokenType::Newline:
                         {
                           if (!gb)
                             {
@@ -1938,7 +1938,7 @@ stmt_gen (Vec<Token *> &toks)
 
                     switch (d->get_type ())
                       {
-                      case TokenType::Operator:
+                      case SFTokenType::Operator:
                         {
                           OperatorToken *jop
                               = static_cast<OperatorToken *> (d);
@@ -1953,7 +1953,7 @@ stmt_gen (Vec<Token *> &toks)
                         }
                         break;
 
-                      case TokenType::Newline:
+                      case SFTokenType::Newline:
                         {
                           if (!gb)
                             {
@@ -1995,20 +1995,20 @@ stmt_gen (Vec<Token *> &toks)
                 assert (i + 1 < toks.get_size ());
                 Token *name = toks[i + 1];
 
-                assert (name->get_type () == TokenType::Identifier);
+                assert (name->get_type () == SFTokenType::Identifier);
                 Str name_str
                     = static_cast<IdentifierToken *> (name)->get_val ();
 
                 // assert (i + 2 < toks.get_size ()
-                //         && toks[i + 2]->get_type () == TokenType::Newline);
+                //         && toks[i + 2]->get_type () == SFTokenType::Newline);
 
                 Token *next_name = toks[i + 2];
                 size_t block_st_idx;
                 Vec<Expr *> inhs;
 
-                if (next_name->get_type () == TokenType::Newline)
+                if (next_name->get_type () == SFTokenType::Newline)
                   block_st_idx = i + 2;
-                else if (next_name->get_type () == TokenType::Keyword
+                else if (next_name->get_type () == SFTokenType::Keyword
                          && static_cast<KeywordToken *> (next_name)->get_val ()
                                 == "extends")
                   {
@@ -2019,13 +2019,13 @@ stmt_gen (Vec<Token *> &toks)
                       {
                         Token *cr = toks[r];
 
-                        if (cr->get_type () == TokenType::Newline && !gb)
+                        if (cr->get_type () == SFTokenType::Newline && !gb)
                           {
                             inhs.push_back (expr_gen (toks, l, r));
                             break;
                           }
 
-                        if (cr->get_type () == TokenType::Operator)
+                        if (cr->get_type () == SFTokenType::Operator)
                           {
                             OperatorToken *ot
                                 = static_cast<OperatorToken *> (cr);
@@ -2072,15 +2072,15 @@ stmt_gen (Vec<Token *> &toks)
               {
                 assert (i + 3 < toks.get_size ());
                 Token *path = toks[i + 1];
-                assert (path->get_type () == TokenType::String);
+                assert (path->get_type () == SFTokenType::String);
 
                 Token *as_tok = toks[i + 2];
-                assert (as_tok->get_type () == TokenType::Keyword
+                assert (as_tok->get_type () == SFTokenType::Keyword
                         && static_cast<KeywordToken *> (as_tok)->get_val ()
                                == "as");
 
                 Token *alias = toks[i + 3];
-                assert (alias->get_type () == TokenType::Identifier);
+                assert (alias->get_type () == SFTokenType::Identifier);
 
                 Str alias_str
                     = static_cast<IdentifierToken *> (alias)->get_val ();
@@ -2111,13 +2111,13 @@ stmt_gen (Vec<Token *> &toks)
 
                 while (
                     block_end_idx < toks.get_size ()
-                    && (toks[block_end_idx]->get_type () == TokenType::Newline
+                    && (toks[block_end_idx]->get_type () == SFTokenType::Newline
                         || toks[block_end_idx]->get_type ()
-                               == TokenType::Tabspace))
+                               == SFTokenType::Tabspace))
                   block_end_idx++;
 
                 if (block_end_idx < toks.get_size ()
-                    && toks[block_end_idx]->get_type () == TokenType::Keyword
+                    && toks[block_end_idx]->get_type () == SFTokenType::Keyword
                     && static_cast<KeywordToken *> (toks[block_end_idx])
                                ->get_val ()
                            == "catch")
@@ -2127,7 +2127,7 @@ stmt_gen (Vec<Token *> &toks)
                     size_t cc_end_idx = block_end_idx;
                     for (size_t j = block_end_idx; j < toks.get_size (); j++)
                       {
-                        if (toks[j]->get_type () == TokenType::Newline)
+                        if (toks[j]->get_type () == SFTokenType::Newline)
                           {
                             cc_end_idx = j;
                             break;
@@ -2193,7 +2193,7 @@ _sf_ast_getline (Vec<Token *> &data, size_t st, Vec<Token *> &buf, bool rev)
         {
           switch (data[j]->get_type ())
             {
-            case TokenType::Operator:
+            case SFTokenType::Operator:
               {
                 OperatorToken *jop = static_cast<OperatorToken *> (data[j]);
 
@@ -2207,8 +2207,8 @@ _sf_ast_getline (Vec<Token *> &data, size_t st, Vec<Token *> &buf, bool rev)
               }
               break;
 
-            case TokenType::Newline:
-            case TokenType::Tabspace:
+            case SFTokenType::Newline:
+            case SFTokenType::Tabspace:
               {
                 if (!gb)
                   {
@@ -2232,7 +2232,7 @@ _sf_ast_getline (Vec<Token *> &data, size_t st, Vec<Token *> &buf, bool rev)
         {
           switch (data[j]->get_type ())
             {
-            case TokenType::Operator:
+            case SFTokenType::Operator:
               {
                 OperatorToken *jop = static_cast<OperatorToken *> (data[j]);
 
@@ -2246,8 +2246,8 @@ _sf_ast_getline (Vec<Token *> &data, size_t st, Vec<Token *> &buf, bool rev)
               }
               break;
 
-            case TokenType::Newline:
-            case TokenType::Tabspace:
+            case SFTokenType::Newline:
+            case SFTokenType::Tabspace:
               {
                 if (!gb)
                   {
@@ -2278,7 +2278,7 @@ _sf_ast_getline_idx (Vec<Token *> &data, size_t st, bool rev)
         {
           switch (data[j]->get_type ())
             {
-            case TokenType::Operator:
+            case SFTokenType::Operator:
               {
                 OperatorToken *jop = static_cast<OperatorToken *> (data[j]);
 
@@ -2292,8 +2292,8 @@ _sf_ast_getline_idx (Vec<Token *> &data, size_t st, bool rev)
               }
               break;
 
-            case TokenType::Newline:
-            case TokenType::Tabspace:
+            case SFTokenType::Newline:
+            case SFTokenType::Tabspace:
               {
                 if (!gb)
                   {
@@ -2315,7 +2315,7 @@ _sf_ast_getline_idx (Vec<Token *> &data, size_t st, bool rev)
         {
           switch (data[j]->get_type ())
             {
-            case TokenType::Operator:
+            case SFTokenType::Operator:
               {
                 OperatorToken *jop = static_cast<OperatorToken *> (data[j]);
 
@@ -2329,8 +2329,8 @@ _sf_ast_getline_idx (Vec<Token *> &data, size_t st, bool rev)
               }
               break;
 
-            case TokenType::Newline:
-            case TokenType::Tabspace:
+            case SFTokenType::Newline:
+            case SFTokenType::Tabspace:
               {
                 if (!gb)
                   {
@@ -2361,7 +2361,7 @@ _sf_ast_getarg_idx (Vec<Token *> &data, size_t st, int gb)
 
       switch (c->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             OperatorToken *jop = static_cast<OperatorToken *> (data[i]);
 
@@ -2402,7 +2402,7 @@ _sf_ast_gettabspace (Vec<Token *> &data, int st)
 
       switch (d->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             OperatorToken *jop = static_cast<OperatorToken *> (d);
 
@@ -2416,13 +2416,13 @@ _sf_ast_gettabspace (Vec<Token *> &data, int st)
           }
           break;
 
-        case TokenType::Tabspace:
+        case SFTokenType::Tabspace:
           {
             if (!gb)
               return static_cast<TabspaceToken *> (d)->get_val ();
           }
           break;
-        case TokenType::Newline:
+        case SFTokenType::Newline:
           {
             if (!gb)
               return 0;
@@ -2447,7 +2447,7 @@ _sf_ast_getblock_idx (Vec<Token *> &data, size_t st, size_t tb)
 
       switch (d->get_type ())
         {
-        case TokenType::Operator:
+        case SFTokenType::Operator:
           {
             OperatorToken *jop = static_cast<OperatorToken *> (d);
 
@@ -2461,7 +2461,7 @@ _sf_ast_getblock_idx (Vec<Token *> &data, size_t st, size_t tb)
           }
           break;
 
-        case TokenType::Newline:
+        case SFTokenType::Newline:
           {
             if (!gb)
               {
@@ -2469,10 +2469,10 @@ _sf_ast_getblock_idx (Vec<Token *> &data, size_t st, size_t tb)
                   {
                     Token *nd = data[i + 1];
 
-                    if (nd->get_type () == TokenType::Tabspace)
+                    if (nd->get_type () == SFTokenType::Tabspace)
                       {
                         if (i + 2 < data.get_size ()
-                            && data[i + 2]->get_type () == TokenType::Newline)
+                            && data[i + 2]->get_type () == SFTokenType::Newline)
                           continue;
 
                         if (static_cast<TabspaceToken *> (nd)->get_val ()
@@ -2481,7 +2481,7 @@ _sf_ast_getblock_idx (Vec<Token *> &data, size_t st, size_t tb)
                             return i;
                           }
                       }
-                    else if (nd->get_type () == TokenType::Newline)
+                    else if (nd->get_type () == SFTokenType::Newline)
                       continue;
                     else
                       {
