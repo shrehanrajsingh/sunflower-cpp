@@ -157,7 +157,7 @@ accept (Module *mod)
 #ifdef _WIN32
   sockaddr_in address;
   address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons (static_cast<ushort> (port));
+  address.sin_port = htons (static_cast<u_short> (port));
   address.sin_family = AF_INET;
   int addr_len = sizeof (address);
   SOCKET sid;
@@ -167,7 +167,7 @@ accept (Module *mod)
       == INVALID_SOCKET)
     {
       std::cerr << "failed to accept socket\n";
-      ::close (fd);
+      ::closesocket (fd);
 
       Object *r = static_cast<Object *> (
           new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
