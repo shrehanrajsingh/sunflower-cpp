@@ -90,7 +90,7 @@ main (int argc, char *argv[])
   cmd_line_args args = parse_cmdline (argc, argv);
 
   sf_env = new sf::Environment ();
-  std::string can_path = get_exe_path ();
+  std::string can_path = get_exe_path ().string ();
 
   size_t last_slash = 0;
   bool saw_slash = false;
@@ -111,7 +111,7 @@ main (int argc, char *argv[])
       sf_env->add_path ((can_path + "lib/").c_str ());
     }
 
-  sf_env->add_path (std::filesystem::current_path ().c_str ());
+  sf_env->add_path (std::filesystem::current_path ().string ().c_str ());
 
   // for (sf::Str &i : sf_env->get_syspaths ())
   //   std::cout << i << '\n';
@@ -159,7 +159,7 @@ main (int argc, char *argv[])
       std::filesystem::path full_path (fp);
       std::filesystem::path abc_can = std::filesystem::canonical (full_path);
 
-      std::string abc_c_path = abc_can.c_str ();
+      std::string abc_c_path = abc_can.string ().c_str ();
       size_t last_slash = 0;
       bool saw_slash = false;
 
