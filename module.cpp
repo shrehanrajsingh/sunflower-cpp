@@ -5,6 +5,38 @@
 
 #include "native/module/nmod.hpp"
 
+#define SF_ASSERT_mod_exec(X, Y)                                              \
+  if (!(X))                                                                   \
+    {                                                                         \
+      mod.get_continue_exec () = false;                                       \
+      mod.get_saw_ambig () = true;                                            \
+      Object *amb_val = static_cast<Object *> (new ConstantObject (           \
+          static_cast<Constant *> (new StringConstant ((Y)))));               \
+      IR (amb_val);                                                           \
+      mod.get_ambig () = static_cast<Object *> (new AmbigObject (amb_val));   \
+      mod.get_backtrace ().push_back (                                        \
+          { st->get_line_number (),                                           \
+            mod.get_code_lines ()[st->get_line_number ()] });                 \
+      goto ambig_test;                                                        \
+    }
+
+#define SF_ASSERT_eval_expr(X, Y)                                             \
+  if (!(X))                                                                   \
+    {                                                                         \
+      Object *amb_val = static_cast<Object *> (new ConstantObject (           \
+          static_cast<Constant *> (new StringConstant ((Y)))));               \
+      IR (amb_val);                                                           \
+      res = static_cast<Object *> (new AmbigObject (amb_val));                \
+      IR (res);                                                               \
+      goto ambig_test;                                                        \
+    }
+
+#define TODO                                                                  \
+  {                                                                           \
+    std::cerr << "TODO\n";                                                    \
+    exit (2);                                                                 \
+  }
+
 namespace sf
 {
 Object *
@@ -63,7 +95,6 @@ mod_exec (Module &mod)
 
             Object *val_eval;
             TC (val_eval = expr_eval (mod, nv));
-            assert (val_eval != nullptr);
 
             if (mod.get_saw_ambig ())
               {
@@ -141,8 +172,12 @@ mod_exec (Module &mod)
                             /**
                              * NOTE: for now
                              */
-                            assert (av->get_vals ().get_size ()
-                                    == vao->get_vals ().get_size ());
+
+                            SF_ASSERT_mod_exec (
+                                av->get_vals ().get_size ()
+                                    != vao->get_vals ().get_size (),
+                                "Different sizes to unpack in variable "
+                                "assignment");
 
                             for (size_t i = 0;
                                  i < vao->get_vals ().get_size (); i++)
@@ -168,9 +203,13 @@ mod_exec (Module &mod)
                                     break;
 
                                   default:
-                                    throw std::invalid_argument (
-                                        "[] = ... only supports variable "
-                                        "names in []");
+                                    // throw std::invalid_argument (
+                                    //     "[] = ... only supports variable "
+                                    //     "names in []");
+
+                                    SF_ASSERT_mod_exec (
+                                        0, "[] = ... only supports variable "
+                                           "names in []");
                                     break;
                                   }
                               }
@@ -232,8 +271,8 @@ mod_exec (Module &mod)
                       {
                         ArrayObject *ao = static_cast<ArrayObject *> (oarr);
 
-                        assert (OBJ_IS_INT (oidx)
-                                && "Index must be an integer");
+                        SF_ASSERT_mod_exec (OBJ_IS_INT (oidx),
+                                            "Index must be an integer");
 
                         int iv = static_cast<IntegerConstant *> (
                                      static_cast<ConstantObject *> (oidx)
@@ -244,8 +283,9 @@ mod_exec (Module &mod)
                         while (iv < 0)
                           iv += ao->get_vals ().get_size ();
 
-                        assert (iv > -1 && iv < ao->get_vals ().get_size ()
-                                && "Index out of bounds");
+                        SF_ASSERT_mod_exec (
+                            iv > -1 && iv < ao->get_vals ().get_size (),
+                            "Index out of bounds");
 
                         Object *prev = ao->get_vals ()[iv];
                         DR (prev);
@@ -258,8 +298,8 @@ mod_exec (Module &mod)
                       {
                         DictObject *dobj = static_cast<DictObject *> (oarr);
 
-                        assert (OBJ_IS_STR (oidx)
-                                && "Object key must be a string");
+                        SF_ASSERT_mod_exec (OBJ_IS_STR (oidx),
+                                            "Object key must be a string");
 
                         Str &k = static_cast<StringConstant *> (
                                      static_cast<ConstantObject *> (oidx)
@@ -294,10 +334,10 @@ mod_exec (Module &mod)
                           {
                           case ConstantType::String:
                             {
-                              assert (OBJ_IS_STR (val_eval)
-                                      && "Value for string "
-                                         "assignment must be "
-                                         "a string");
+                              SF_ASSERT_mod_exec (OBJ_IS_STR (val_eval),
+                                                  "Value for string "
+                                                  "assignment must be "
+                                                  "a string");
 
                               Str &rhs_val
                                   = static_cast<StringConstant *> (
@@ -334,13 +374,14 @@ mod_exec (Module &mod)
                                                            .get ())
                                                        ->get_value ();
 
-                                          assert (iv > -1
-                                                  && iv < sc_val.size ()
-                                                  && "Index out of bounds");
+                                          SF_ASSERT_mod_exec (
+                                              iv > -1 && iv < sc_val.size (),
+                                              "Index out of bounds");
 
-                                          assert (rhs_val.size () == 1
-                                                  && "Expected a single "
-                                                     "character");
+                                          SF_ASSERT_mod_exec (
+                                              rhs_val.size () == 1,
+                                              "Expected a single "
+                                              "character");
 
                                           sc_val[iv] = rhs_val[0];
                                         }
@@ -364,20 +405,21 @@ mod_exec (Module &mod)
 
                                     Vec<Object *> &ao_vals = ao->get_vals ();
 
-                                    assert (ao_vals.get_size ()
-                                                == rhs_val.size ()
-                                            && "String assignment requires "
-                                               "bounds to be equal to size of "
-                                               "value string");
+                                    SF_ASSERT_mod_exec (
+                                        ao_vals.get_size () == rhs_val.size (),
+                                        "String assignment requires "
+                                        "bounds to be equal to size of "
+                                        "value string");
 
                                     for (int i = 0; i < ao_vals.get_size ();
                                          i++)
                                       {
                                         Object *ao_i = ao_vals[i];
 
-                                        assert (OBJ_IS_INT (ao_i)
-                                                && "Values in array index "
-                                                   "must be integers");
+                                        SF_ASSERT_mod_exec (
+                                            OBJ_IS_INT (ao_i),
+                                            "Values in array index "
+                                            "must be integers");
 
                                         int iv
                                             = static_cast<IntegerConstant *> (
@@ -394,10 +436,9 @@ mod_exec (Module &mod)
 
                                 default:
                                   {
-                                    std::cerr << "Invalid index for string "
-                                                 "assignment.";
-
-                                    exit (-1);
+                                    SF_ASSERT_mod_exec (
+                                        0, "Invalid index for string "
+                                           "assignment.");
                                   }
                                   break;
                                 }
@@ -407,7 +448,8 @@ mod_exec (Module &mod)
                           default:
                             {
                               std::cerr << "Invalid constant assignment\n";
-                              exit (-1);
+                              SF_ASSERT_mod_exec (
+                                  0, "Invalid constant assignment");
                             }
                             break;
                           }
@@ -429,9 +471,13 @@ mod_exec (Module &mod)
                   Expr *&e_parent = da->get_parent ();
                   Expr *&e_child = da->get_child ();
 
-                  assert (e_parent != nullptr);
-                  assert (e_child != nullptr
-                          && e_child->get_type () == ExprType::Variable);
+                  SF_ASSERT_mod_exec (e_parent != nullptr,
+                                      "No such member 'none' to access from");
+
+                  SF_ASSERT_mod_exec (e_child != nullptr
+                                          && e_child->get_type ()
+                                                 == ExprType::Variable,
+                                      "Can only access named parameters");
 
                   Str &member
                       = static_cast<VariableExpr *> (e_child)->get_name ();
@@ -558,8 +604,6 @@ mod_exec (Module &mod)
                           mod.get_code_lines ()[st->get_line_number ()] });
                   });
 
-                assert (t != nullptr);
-
                 /**
                  * We could use DR here
                  * but we do not need
@@ -615,7 +659,10 @@ mod_exec (Module &mod)
                   Object *&fobj = hf->get_function_obj ();
                   Vec<Object *> &fargs = hf->get_args ();
 
-                  assert (fobj->get_type () == ObjectType::FuncObject);
+                  SF_ASSERT_mod_exec (fobj->get_type ()
+                                          == ObjectType::FuncObject,
+                                      "caller is not a function");
+
                   FunctionObject *fo = static_cast<FunctionObject *> (fobj);
 
                   Object *ret = nullptr;
@@ -627,7 +674,10 @@ mod_exec (Module &mod)
                           ret = call_func (mod, fobj, args_eval, fargs[0]);
                         }
                       else
-                        assert (0 && "TODO");
+                        {
+                          /* TODO */
+                          TODO;
+                        }
                     }
                   else
                     {
@@ -691,8 +741,13 @@ mod_exec (Module &mod)
                 break;
 
               default:
-                ERRMSG ("Entity with type " << (int)name_eval->get_type ()
-                                            << " is not callable");
+
+                std::stringstream ss;
+                ss << "Entity with type " << (int)name_eval->get_type ()
+                   << " is not callable";
+
+                SF_ASSERT_mod_exec (0, ss.str ().c_str ());
+
                 break;
               }
 
@@ -707,7 +762,6 @@ mod_exec (Module &mod)
         case StatementType::IfConstruct:
           {
             IfConstruct *ic = static_cast<IfConstruct *> (st);
-            assert (ic->get_cond () != nullptr);
 
             Object *cond_eval;
             TC (cond_eval = expr_eval (mod, ic->get_cond ()));
@@ -878,8 +932,11 @@ mod_exec (Module &mod)
                                 ArrayObject *avo
                                     = static_cast<ArrayObject *> (av);
 
-                                assert (avo->get_vals ().get_size ()
-                                        >= var_list.get_size ());
+                                SF_ASSERT_mod_exec (
+                                    avo->get_vals ().get_size ()
+                                        >= var_list.get_size (),
+                                    "Container is too small to "
+                                    "unpack so many variables");
 
                                 if (avo->get_vals ().get_size ()
                                     == var_list.get_size ())
@@ -949,7 +1006,10 @@ mod_exec (Module &mod)
 
                       IR (kobj);
 
-                      assert (var_list.get_size () == 1);
+                      SF_ASSERT_mod_exec (
+                          var_list.get_size () == 1,
+                          "dictionary iter expects one named variable");
+
                       Expr *v = var_list[0];
 
                       switch (v->get_type ())
@@ -1073,8 +1133,10 @@ mod_exec (Module &mod)
                   }
                 else
                   {
-                    std::cout << "return_used_outside_function\n";
-                    throw "return_used_outside_function";
+                    // std::cout << "return_used_outside_function\n";
+                    // throw "return_used_outside_function";
+
+                    SF_ASSERT_mod_exec (0, "return used outside function");
                   }
 
                 goto ret;
@@ -1201,7 +1263,9 @@ mod_exec (Module &mod)
                     { st->get_line_number (),
                       mod.get_code_lines ()[st->get_line_number ()] });
               });
-            assert (o_cond && OBJ_IS_INT (o_cond));
+
+            SF_ASSERT_mod_exec (o_cond && OBJ_IS_INT (o_cond),
+                                "repeat expression expects an integer");
 
             int ov
                 = static_cast<IntegerConstant *> (
@@ -1284,9 +1348,11 @@ mod_exec (Module &mod)
 
                 if (env == nullptr)
                   {
-                    std::cerr << "File '" << path << "' does not exist"
-                              << std::endl;
-                    exit (-1);
+                    // std::cerr << "File '" << path << "' does not exist"
+                    //           << std::endl;
+                    // exit (-1);
+                    SF_ASSERT_mod_exec (
+                        0, (Str ("File '") + path + "' does not exist"));
                   }
                 else
                   {
@@ -1349,9 +1415,8 @@ mod_exec (Module &mod)
 
             if (!file_opened)
               {
-                std::cerr << "File '" << path << "' does not exist"
-                          << std::endl;
-                exit (-1);
+                SF_ASSERT_mod_exec (
+                    0, (Str ("File '") + path + "' does not exist"));
               }
 
             if (!is_native_module)
@@ -1433,7 +1498,13 @@ mod_exec (Module &mod)
 
             Module *m = new Module (ModuleType::File, try_body,
                                     mod.get_code_lines ());
-            m->get_env () = mod.get_env ();
+
+            if (mod.get_env () != nullptr)
+              {
+                m->get_env () = new Environment;
+                *m->get_env () = *mod.get_env ();
+              }
+
             m->set_parent (&mod);
 
             mod_exec (*m);
@@ -1444,7 +1515,6 @@ mod_exec (Module &mod)
                 m->set_parent (nullptr);
 
                 Object *amb_obj = m->get_ambig ();
-                assert (OBJ_IS_AMBIG (amb_obj));
 
                 Object *amb_val
                     = static_cast<AmbigObject *> (amb_obj)->get_val ();
@@ -1519,8 +1589,11 @@ mod_exec (Module &mod)
 
         case StatementType::BreakStmt:
           {
-            if (!mod.get_inside_loop ())
-              ERRMSG ("Illegal call to break outside of a loop");
+            // if (!mod.get_inside_loop ())
+            //   ERRMSG ("Illegal call to break outside of a loop");
+
+            SF_ASSERT_mod_exec (mod.get_inside_loop (),
+                                "Illegal call to break outside of a loop");
 
             mod.set_signal_break ();
           }
@@ -1528,9 +1601,11 @@ mod_exec (Module &mod)
 
         case StatementType::ContinueStmt:
           {
-            if (!mod.get_inside_loop ())
-              ERRMSG ("Illegal call to continue outside of a loop");
+            // if (!mod.get_inside_loop ())
+            //   ERRMSG ("Illegal call to continue outside of a loop");
 
+            SF_ASSERT_mod_exec (mod.get_inside_loop (),
+                                "Illegal call to break outside of a loop");
             mod.set_signal_continue ();
           }
           break;
@@ -1716,7 +1791,11 @@ expr_eval (Module &mod, Expr *e)
               DR (res);
 
             res = o;
-            assert (res != nullptr);
+
+            SF_ASSERT_eval_expr (
+                res != nullptr,
+                ("Variable " + p + " does not exist").c_str ());
+
             IR (res);
 
             AMBIG_CHECK (res, {});
@@ -1831,8 +1910,8 @@ expr_eval (Module &mod, Expr *e)
             Object *keval;
             TC (keval = expr_eval (mod, i.first));
 
-            assert (OBJ_IS_STR (keval)
-                    && "Dictionaries only support string keys.");
+            SF_ASSERT_eval_expr (OBJ_IS_STR (keval),
+                                 "Dictionaries only support string keys");
 
             std::string k
                 = static_cast<StringConstant *> (
@@ -1887,8 +1966,8 @@ expr_eval (Module &mod, Expr *e)
 
                   // std::cout << idx << '\t' << ao->get_vals ().get_size ()
                   //           << '\n';
-                  assert (idx < ao->get_vals ().get_size ()
-                          && "Array index out of bounds.");
+                  SF_ASSERT_eval_expr (idx < ao->get_vals ().get_size (),
+                                       "Array index out of bounds");
 
                   if (res != nullptr)
                     DR (res);
@@ -1905,7 +1984,8 @@ expr_eval (Module &mod, Expr *e)
 
                   for (Object *&k : viao)
                     {
-                      assert (OBJ_IS_INT (k));
+                      SF_ASSERT_eval_expr (OBJ_IS_INT (k),
+                                           "Array index is not an integer");
 
                       int kv = static_cast<IntegerConstant *> (
                                    static_cast<ConstantObject *> (k)
@@ -1928,15 +2008,15 @@ expr_eval (Module &mod, Expr *e)
                 }
               else
                 {
-                  std::cerr << "Invalid array access. Exiting..." << std::endl;
-                  exit (EXIT_FAILURE);
+                  SF_ASSERT_eval_expr (0, "Invalid array access");
                 }
             }
             break;
           case ObjectType::DictObj:
             {
               DictObject *dobj = static_cast<DictObject *> (arr_eval);
-              assert (OBJ_IS_STR (idx_eval));
+              SF_ASSERT_eval_expr (OBJ_IS_STR (idx_eval),
+                                   "Dictionary access index must be a string");
 
               std::string k (static_cast<StringConstant *> (
                                  static_cast<ConstantObject *> (idx_eval)
@@ -1948,7 +2028,9 @@ expr_eval (Module &mod, Expr *e)
 
               // dobj->print ();
               // std::cout << "(" << k << ")" << '\n';
-              assert (dobj->get_vals ().find (k) != dobj->get_vals ().end ());
+              SF_ASSERT_eval_expr (
+                  dobj->get_vals ().find (k) != dobj->get_vals ().end (),
+                  ("Key " + k + " not found in dictionary").c_str ());
 
               if (res != nullptr)
                 DR (res);
@@ -1960,7 +2042,8 @@ expr_eval (Module &mod, Expr *e)
 
           case ObjectType::Constant:
             {
-              assert (OBJ_IS_STR (arr_eval));
+              SF_ASSERT_eval_expr (OBJ_IS_STR (arr_eval),
+                                   "Invalid constant used in array access");
 
               StringConstant *sc
                   = static_cast<StringConstant *> (static_cast<Constant *> (
@@ -1974,7 +2057,8 @@ expr_eval (Module &mod, Expr *e)
                 {
                 case ObjectType::Constant:
                   {
-                    assert (OBJ_IS_INT (idx_eval));
+                    SF_ASSERT_eval_expr (OBJ_IS_INT (idx_eval),
+                                         "Index is not an integer");
 
                     int iv = static_cast<IntegerConstant *> (
                                  static_cast<ConstantObject *> (idx_eval)
@@ -1982,8 +2066,8 @@ expr_eval (Module &mod, Expr *e)
                                      .get ())
                                  ->get_value ();
 
-                    assert (iv < s.size () && iv >= 0
-                            && "String index out of range");
+                    SF_ASSERT_eval_expr (iv < s.size () && iv >= 0,
+                                         "String index out of range");
 
                     if (res != nullptr)
                       DR (res);
@@ -2003,7 +2087,8 @@ expr_eval (Module &mod, Expr *e)
 
                     for (Object *&k : viao)
                       {
-                        assert (OBJ_IS_INT (k));
+                        SF_ASSERT_eval_expr (OBJ_IS_INT (k),
+                                             "Index is not an integer");
 
                         int kv = static_cast<IntegerConstant *> (
                                      static_cast<ConstantObject *> (k)
@@ -2030,8 +2115,11 @@ expr_eval (Module &mod, Expr *e)
 
                 default:
                   {
-                    ERRMSG ("Invalid index type '"
-                            << int (idx_eval->get_type ()) << "'");
+                    std::stringstream ss;
+                    ss << "Invalid index type '" << int (idx_eval->get_type ())
+                       << "'";
+
+                    SF_ASSERT_eval_expr (0, ss.str ().c_str ());
                   }
                   break;
                 }
@@ -2039,10 +2127,10 @@ expr_eval (Module &mod, Expr *e)
             break;
 
           default:
-            std::cerr << "Cannot overload [] on type "
-                      << (int)arr_eval->get_type () << ". Exiting..."
-                      << std::endl;
-            exit (EXIT_FAILURE);
+            std::stringstream ss;
+            ss << "Cannot overload [] on type " << (int)arr_eval->get_type ();
+
+            SF_ASSERT_eval_expr (0, ss.str ().c_str ());
             break;
           }
 
@@ -2103,9 +2191,15 @@ expr_eval (Module &mod, Expr *e)
             res = step_eval;
           });
 
-        assert (OBJ_IS_INT (lv_eval) && OBJ_IS_INT (rv_eval));
+        SF_ASSERT_eval_expr (OBJ_IS_INT (lv_eval),
+                             "lval is not an integer, in range loop");
+
+        SF_ASSERT_eval_expr (OBJ_IS_INT (rv_eval),
+                             "lval is not an integer, in range loop");
+
         if (step_eval != nullptr)
-          assert (OBJ_IS_INT (step_eval));
+          SF_ASSERT_eval_expr (OBJ_IS_INT (step_eval),
+                               "step is not an integer, in range loop");
 
         int lvi = static_cast<IntegerConstant *> (
                       static_cast<ConstantObject *> (lv_eval)->get_c ().get ())
@@ -2185,7 +2279,8 @@ expr_eval (Module &mod, Expr *e)
           {
             if (j->get_type () == AVTypeEnum::Operator)
               {
-                assert (st.get_size () > 1);
+                SF_ASSERT_eval_expr (st.get_size () > 1,
+                                     "Invalid arithmetic expression");
 
                 /* l1 op l2 */
                 Object *l2 = st.pop_back ();
@@ -2234,12 +2329,13 @@ expr_eval (Module &mod, Expr *e)
                       case '/':
                         cast_int = false;
                         if (val2 == 0)
-                          throw "division_by_zero";
+                          {
+                            SF_ASSERT_eval_expr (0, "Division by 0");
+                          }
                         result = val1 / val2;
                         break;
                       default:
-                        std::cout << op->get_op () << '\n';
-                        throw "unsupported_float_operation";
+                        SF_ASSERT_eval_expr (0, "Unsupported float operation");
                       }
 
                     if (cast_int && result != int (result)) /* no data loss */
@@ -2284,12 +2380,13 @@ expr_eval (Module &mod, Expr *e)
                   }
                 else
                   {
-                    l1->print ();
-                    std::cout << '\n';
-                    l2->print ();
-                    std::cout << '\n';
+                    // l1->print ();
+                    // std::cout << '\n';
+                    // l2->print ();
+                    // std::cout << '\n';
 
-                    throw "unsupported_arithmetic_operation";
+                    SF_ASSERT_eval_expr (0,
+                                         "Unsupported arithmetic operation");
                   }
 
                 IR (res_op);
@@ -2372,7 +2469,9 @@ expr_eval (Module &mod, Expr *e)
               Object *&fobj = hf->get_function_obj ();
               Vec<Object *> &fargs = hf->get_args ();
 
-              assert (fobj->get_type () == ObjectType::FuncObject);
+              SF_ASSERT_eval_expr (fobj->get_type () == ObjectType::FuncObject,
+                                   "caller is not a function");
+
               FunctionObject *fo = static_cast<FunctionObject *> (fobj);
 
               if (fo->get_v ()->get_self_arg ())
@@ -2384,7 +2483,7 @@ expr_eval (Module &mod, Expr *e)
                       // IR (res);
                     }
                   else
-                    assert (0 && "TODO");
+                    TODO;
                 }
               else
                 {
@@ -2409,8 +2508,11 @@ expr_eval (Module &mod, Expr *e)
             break;
 
           default:
-            ERRMSG ("Entity with type " << (int)name_eval->get_type ()
-                                        << " is not callable");
+            std::stringstream ss;
+            ss << "Entity with type " << (int)name_eval->get_type ()
+               << " is not callable";
+
+            SF_ASSERT_eval_expr (0, ss.str ().c_str ());
             break;
           }
 
@@ -2428,11 +2530,13 @@ expr_eval (Module &mod, Expr *e)
         DotAccess *da = static_cast<DotAccess *> (e);
 
         Expr *&e_parent = da->get_parent ();
-        assert (e_parent != nullptr);
+        SF_ASSERT_eval_expr (e_parent != nullptr,
+                             "No such member 'none' to access from");
 
         Expr *&e_child = da->get_child ();
-        assert (e_child != nullptr
-                && e_child->get_type () == ExprType::Variable);
+        SF_ASSERT_eval_expr (e_child != nullptr
+                                 && e_child->get_type () == ExprType::Variable,
+                             "Can only access named parameters");
 
         Str &member = static_cast<VariableExpr *> (e_child)->get_name ();
 
@@ -2467,7 +2571,10 @@ expr_eval (Module &mod, Expr *e)
 
                   for (Object *&i : co->get_mro ())
                     {
-                      assert (i->get_type () == ObjectType::ClassObj);
+                      SF_ASSERT_eval_expr (i->get_type ()
+                                               == ObjectType::ClassObj,
+                                           "MRO members need to be classes");
+
                       ClassObject *mco = static_cast<ClassObject *> (i);
 
                       // for (auto &&j : mco->get_mod ()->get_vtable ())
@@ -2479,24 +2586,32 @@ expr_eval (Module &mod, Expr *e)
                           res = mco->get_mod ()->get_variable (
                               member.to_std_string ().c_str ());
 
-                          assert (res != nullptr);
+                          // unreachable
+                          // SF_ASSERT_eval_expr (res != nullptr,
+                          //                      "Variable not found");
                           got_var = true;
                           break;
                         }
                     }
 
                   if (!got_var)
-                    throw std::runtime_error (
-                        (Str{ "Class does not have member " } + member)
-                            .to_std_string ()
-                            .c_str ());
+                    {
+                      SF_ASSERT_eval_expr (
+                          0, Str{ "Class does not have member " } + member);
+                    }
                 }
               else
                 res = comod->get_variable (member.to_std_string ().c_str ());
 
-              assert (res != nullptr);
-              IR (res);
-              AMBIG_CHECK (res, {});
+              if (res != nullptr)
+                {
+                  IR (res);
+                  AMBIG_CHECK (res, {});
+                }
+              else
+                SF_ASSERT_eval_expr (0, Str{ "Class does not have member " }
+                                            + member);
+
               // std::cout << int (res->get_type ()) << '\t'
               //           << static_cast<FunctionObject *> (res)
               //                  ->get_v ()
@@ -2541,15 +2656,15 @@ expr_eval (Module &mod, Expr *e)
 
               if (!cl->get_mod ()->has_variable (
                       member.to_std_string ().c_str ()))
-                throw std::runtime_error (
-                    (Str{ "Class does not have member " } + member)
-                        .to_std_string ()
-                        .c_str ());
+                SF_ASSERT_eval_expr (0, Str{ "Class does not have member " }
+                                            + member);
 
               res = cl->get_mod ()->get_variable (
                   member.to_std_string ().c_str ());
 
-              assert (res != nullptr);
+              SF_ASSERT_eval_expr (res != nullptr,
+                                   Str{ "Class does not have member " }
+                                       + member);
               IR (res);
               AMBIG_CHECK (res, {});
             }
@@ -2562,15 +2677,14 @@ expr_eval (Module &mod, Expr *e)
 
               if (!mo_mod->has_variable (member.to_std_string ().c_str ()))
                 {
-                  throw std::runtime_error (
-                      (Str{ "Module does not have member " } + member)
-                          .to_std_string ()
-                          .c_str ());
+                  SF_ASSERT_eval_expr (0, Str{ "Module does not have member " }
+                                              + member);
                 }
 
               res = mo_mod->get_variable (member.to_std_string ().c_str ());
 
-              assert (res != nullptr);
+              SF_ASSERT_eval_expr (0, Str{ "Module does not have member " }
+                                          + member);
               IR (res);
               AMBIG_CHECK (res, {});
             }
@@ -2582,16 +2696,17 @@ expr_eval (Module &mod, Expr *e)
 
               if (!mod.has_variable (meth_name.to_std_string ().c_str ()))
                 {
-                  throw std::runtime_error (
-                      (Str{ "No such native method found: " } + meth_name)
-                          .to_std_string ()
-                          .c_str ());
+                  SF_ASSERT_eval_expr (
+                      0, Str{ "No such native method found: " } + meth_name);
                 }
 
               Object *o_meth
                   = mod.get_variable (meth_name.to_std_string ().c_str ());
 
-              assert (o_meth != nullptr);
+              SF_ASSERT_eval_expr (o_meth != nullptr,
+                                   Str{ "No such native method found: " }
+                                       + meth_name);
+
               if (o_meth->get_type () == ObjectType::FuncObject
                   && static_cast<FunctionObject *> (o_meth)
                          ->get_v ()
@@ -2615,16 +2730,17 @@ expr_eval (Module &mod, Expr *e)
 
               if (!mod.has_variable (meth_name.to_std_string ().c_str ()))
                 {
-                  throw std::runtime_error (
-                      (Str{ "No such native method found: " } + meth_name)
-                          .to_std_string ()
-                          .c_str ());
+                  SF_ASSERT_eval_expr (
+                      0, Str{ "No such native method found: " } + meth_name);
                 }
 
               Object *o_meth
                   = mod.get_variable (meth_name.to_std_string ().c_str ());
 
-              assert (o_meth != nullptr);
+              SF_ASSERT_eval_expr (o_meth != nullptr,
+                                   Str{ "No such native method found: " }
+                                       + meth_name);
+
               if (o_meth->get_type () == ObjectType::FuncObject
                   && static_cast<FunctionObject *> (o_meth)
                          ->get_v ()
@@ -2656,11 +2772,9 @@ expr_eval (Module &mod, Expr *e)
                     if (!mod.has_variable (
                             meth_name.to_std_string ().c_str ()))
                       {
-                        throw std::runtime_error (
-                            (Str{ "No such native method found: " }
-                             + meth_name)
-                                .to_std_string ()
-                                .c_str ());
+                        SF_ASSERT_eval_expr (
+                            0, Str{ "No such native method found: " }
+                                   + meth_name);
                       }
 
                     // res = mod.get_variable (meth_name.get_internal_buffer
@@ -2693,7 +2807,10 @@ expr_eval (Module &mod, Expr *e)
                     Object *o_meth = mod.get_variable (
                         meth_name.to_std_string ().c_str ());
 
-                    assert (o_meth != nullptr);
+                    SF_ASSERT_eval_expr (o_meth != nullptr,
+                                         Str{ "No such native method found: " }
+                                             + meth_name);
+
                     if (o_meth->get_type () == ObjectType::FuncObject
                         && static_cast<FunctionObject *> (o_meth)
                                ->get_v ()
@@ -2719,11 +2836,9 @@ expr_eval (Module &mod, Expr *e)
                     if (!mod.has_variable (
                             meth_name.to_std_string ().c_str ()))
                       {
-                        throw std::runtime_error (
-                            (Str{ "No such native method found: " }
-                             + meth_name)
-                                .to_std_string ()
-                                .c_str ());
+                        SF_ASSERT_eval_expr (
+                            0, Str{ "No such native method found: " }
+                                   + meth_name);
                       }
 
                     // res = mod.get_variable (meth_name.get_internal_buffer
@@ -2756,7 +2871,10 @@ expr_eval (Module &mod, Expr *e)
                     Object *o_meth = mod.get_variable (
                         meth_name.to_std_string ().c_str ());
 
-                    assert (o_meth != nullptr);
+                    SF_ASSERT_eval_expr (o_meth != nullptr,
+                                         Str{ "No such native method found: " }
+                                             + meth_name);
+
                     if (o_meth->get_type () == ObjectType::FuncObject
                         && static_cast<FunctionObject *> (o_meth)
                                ->get_v ()
@@ -2895,8 +3013,11 @@ expr_eval (Module &mod, Expr *e)
         TC (o_right = expr_eval (mod, right));
         AMBIG_CHECK (o_right, {});
 
-        assert (o_left && OBJ_IS_INT (o_left));
-        assert (o_right && OBJ_IS_INT (o_right));
+        SF_ASSERT_eval_expr (o_left && OBJ_IS_INT (o_left),
+                             "lval is not an integer in '<<'");
+
+        SF_ASSERT_eval_expr (o_right && OBJ_IS_INT (o_right),
+                             "rval is not an integer in '<<'");
 
         int lv = static_cast<IntegerConstant *> (
                      static_cast<ConstantObject *> (o_left)->get_c ().get ())
@@ -2935,8 +3056,11 @@ expr_eval (Module &mod, Expr *e)
         TC (o_right = expr_eval (mod, right));
         AMBIG_CHECK (o_right, {});
 
-        assert (o_left && OBJ_IS_INT (o_left));
-        assert (o_right && OBJ_IS_INT (o_right));
+        SF_ASSERT_eval_expr (o_left && OBJ_IS_INT (o_left),
+                             "lval is not an integer in '>>'");
+
+        SF_ASSERT_eval_expr (o_right && OBJ_IS_INT (o_right),
+                             "rval is not an integer in '>>'");
 
         int lv = static_cast<IntegerConstant *> (
                      static_cast<ConstantObject *> (o_left)->get_c ().get ())
@@ -2982,8 +3106,13 @@ expr_eval (Module &mod, Expr *e)
           DR (o_right);
         });
 
-        assert (o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)));
-        assert (o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)));
+        SF_ASSERT_eval_expr (
+            o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)),
+            "expected integer or boolean, but lval is neither");
+
+        SF_ASSERT_eval_expr (
+            o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)),
+            "expected integer or boolean, but rval is neither");
 
         int lv = OBJ_IS_INT (o_left)
                      ? static_cast<IntegerConstant *> (
@@ -3045,8 +3174,13 @@ expr_eval (Module &mod, Expr *e)
           DR (o_right);
         });
 
-        assert (o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)));
-        assert (o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)));
+        SF_ASSERT_eval_expr (
+            o_left && (OBJ_IS_INT (o_left) || OBJ_IS_BOOL (o_left)),
+            "expected integer or boolean, but lval is neither");
+
+        SF_ASSERT_eval_expr (
+            o_right && (OBJ_IS_INT (o_right) || OBJ_IS_BOOL (o_right)),
+            "expected integer or boolean, but rval is neither");
 
         int lv = OBJ_IS_INT (o_left)
                      ? static_cast<IntegerConstant *> (
@@ -3097,7 +3231,9 @@ expr_eval (Module &mod, Expr *e)
             res = o_v;
             DR (o_v);
           });
-        assert (o_v && OBJ_IS_INT (o_v));
+
+        SF_ASSERT_eval_expr (o_v && OBJ_IS_INT (o_v),
+                             "negate expected an integer");
 
         int vv = static_cast<IntegerConstant *> (
                      static_cast<ConstantObject *> (o_v)->get_c ().get ())
@@ -3131,7 +3267,8 @@ expr_eval (Module &mod, Expr *e)
           DR (o_times);
         });
 
-        assert (o_times && OBJ_IS_INT (o_times));
+        SF_ASSERT_eval_expr (o_times && OBJ_IS_INT (o_times),
+                             "repeat expression expects an integer");
 
         int t = static_cast<IntegerConstant *> (
                     static_cast<ConstantObject *> (o_times)->get_c ().get ())
@@ -3215,8 +3352,10 @@ expr_eval (Module &mod, Expr *e)
                           {
                             ArrayObject *avo = static_cast<ArrayObject *> (av);
 
-                            assert (avo->get_vals ().get_size ()
-                                    >= vars.get_size ());
+                            SF_ASSERT_eval_expr (avo->get_vals ().get_size ()
+                                                     >= vars.get_size (),
+                                                 "Container is too small to "
+                                                 "unpack so many variables");
 
                             if (avo->get_vals ().get_size ()
                                 == vars.get_size ())
@@ -3286,7 +3425,10 @@ expr_eval (Module &mod, Expr *e)
 
                   IR (kobj);
 
-                  assert (vars.get_size () == 1);
+                  SF_ASSERT_eval_expr (
+                      vars.get_size () == 1,
+                      "dictionary iter expects one named variable");
+
                   Expr *v = vars[0];
 
                   switch (v->get_type ())
@@ -3365,7 +3507,10 @@ expr_eval (Module &mod, Expr *e)
                   }
                 else
                   {
-                    assert (e_catch_var->get_type () == ExprType::Variable);
+                    SF_ASSERT_eval_expr (
+                        e_catch_var->get_type () == ExprType::Variable,
+                        "catch clause expects a named argument to capture");
+
                     Str &vn = static_cast<VariableExpr *> (e_catch_var)
                                   ->get_name ();
 
@@ -3516,15 +3661,15 @@ expr_eval (Module &mod, Expr *e)
       break;
 
     default:
-      std::cerr << "invalid expr type: " << (int)e->get_type () << std::endl;
+
+      std::stringstream ss;
+      ss << "invalid expr type: " << (int)e->get_type ();
+      SF_ASSERT_eval_expr (0, ss.str ().c_str ());
       break;
     }
 
-  if (res == nullptr)
-    {
-      std::cout << "res_expr_is_null";
-      throw "res_expr_is_null";
-    }
+  SF_ASSERT_eval_expr (res != nullptr,
+                       "expression evaluated to null (not none)");
 
   if (!res->get_ref_count ())
     {

@@ -128,14 +128,14 @@ public:
 
     if (ambig != nullptr)
       {
-        Object *vo = static_cast<AmbigObject *> (ambig)->get_val ();
+        // Object *vo = static_cast<AmbigObject *> (ambig)->get_val ();
 
-        if (vo != nullptr)
-          {
-            // std::cout << vo->get_ref_count () << '\n';
-            // while (vo->get_ref_count () > 0)
-            DR (vo);
-          }
+        // if (vo != nullptr)
+        //   {
+        //     // std::cout << vo->get_ref_count () << '\n';
+        //     // while (vo->get_ref_count () > 0)
+        //     DR (vo);
+        //   }
         DR (ambig);
       }
 
