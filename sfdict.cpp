@@ -20,6 +20,16 @@ std::string
 DictObject::get_stdout_repr ()
 {
   // std::lock_guard<std::mutex> lock (dict_mutex);
+  static thread_local int recur_count = 0;
+
+  recur_count++;
+
+  if (recur_count > 100)
+    {
+      recur_count--;
+      return "[...]";
+    }
+
   std::string s = "";
 
   s += "{";
@@ -27,7 +37,7 @@ DictObject::get_stdout_repr ()
     {
       auto rep = i.second->get_stdout_repr_in_container ();
       // std::cout << i.first << '\t' << rep << '\n';
-      s += '\'' + i.first + "': " + rep + ", ";
+      s += '\"' + i.first + "\": " + rep + ", ";
     }
 
   if (vals.size ())
@@ -37,6 +47,7 @@ DictObject::get_stdout_repr ()
     }
 
   s += "}";
+  recur_count--;
   return s;
 }
 

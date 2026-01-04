@@ -18,6 +18,16 @@ std::string
 ArrayObject::get_stdout_repr ()
 {
   // std::lock_guard<std::mutex> lock (array_mutex);
+  static thread_local int recur_count = 0;
+
+  recur_count++;
+
+  if (recur_count > 100)
+    {
+      recur_count--;
+      return "{...}";
+    }
+
   std::string s = "";
 
   s += "[";
@@ -41,6 +51,7 @@ ArrayObject::get_stdout_repr ()
       // std::cout << s << '\n';
     }
 
+  recur_count--;
   return s;
 }
 
