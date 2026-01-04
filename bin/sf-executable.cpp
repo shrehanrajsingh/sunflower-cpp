@@ -126,7 +126,7 @@ main (int argc, char *argv[])
     {
       can_path = can_path.substr (0, last_slash + 1);
 
-      sf_env->add_path (can_path.c_str ());
+      // sf_env->add_path (can_path.c_str ());
       sf_env->add_path ((can_path + "lib/").c_str ());
     }
 

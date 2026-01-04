@@ -1,2 +1,5 @@
-a = [1, 2]
-write (a[2])
+import 'socket' as s
+import 'file' as file
+
+write (s.Server)
+a = s.Server ('0.0.0.0', 8000)

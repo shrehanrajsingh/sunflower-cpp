@@ -2594,11 +2594,8 @@ expr_eval (Module &mod, Expr *e)
                         }
                     }
 
-                  if (!got_var)
-                    {
-                      SF_ASSERT_eval_expr (
-                          0, Str{ "Class does not have member " } + member);
-                    }
+                  SF_ASSERT_eval_expr (
+                      got_var, Str{ "Class does not have member " } + member);
                 }
               else
                 res = comod->get_variable (member.to_std_string ().c_str ());
@@ -2654,10 +2651,10 @@ expr_eval (Module &mod, Expr *e)
             {
               SfClass *cl = static_cast<SfClass *> (o_parent);
 
-              if (!cl->get_mod ()->has_variable (
-                      member.to_std_string ().c_str ()))
-                SF_ASSERT_eval_expr (0, Str{ "Class does not have member " }
-                                            + member);
+              SF_ASSERT_eval_expr (cl->get_mod ()->has_variable (
+                                       member.to_std_string ().c_str ()),
+                                   Str{ "Class does not have member " }
+                                       + member);
 
               res = cl->get_mod ()->get_variable (
                   member.to_std_string ().c_str ());
@@ -2675,16 +2672,15 @@ expr_eval (Module &mod, Expr *e)
               ModuleObject *mo = static_cast<ModuleObject *> (o_parent);
               Module *mo_mod = mo->get_mod ();
 
-              if (!mo_mod->has_variable (member.to_std_string ().c_str ()))
-                {
-                  SF_ASSERT_eval_expr (0, Str{ "Module does not have member " }
-                                              + member);
-                }
+              SF_ASSERT_eval_expr (
+                  mo_mod->has_variable (member.to_std_string ().c_str ()),
+                  Str{ "Module does not have member " } + member);
 
               res = mo_mod->get_variable (member.to_std_string ().c_str ());
 
-              SF_ASSERT_eval_expr (0, Str{ "Module does not have member " }
-                                          + member);
+              SF_ASSERT_eval_expr (res != nullptr,
+                                   Str{ "Module does not have member " }
+                                       + member);
               IR (res);
               AMBIG_CHECK (res, {});
             }
@@ -2694,11 +2690,9 @@ expr_eval (Module &mod, Expr *e)
             {
               Str meth_name = Str{ "[]." } + member;
 
-              if (!mod.has_variable (meth_name.to_std_string ().c_str ()))
-                {
-                  SF_ASSERT_eval_expr (
-                      0, Str{ "No such native method found: " } + meth_name);
-                }
+              SF_ASSERT_eval_expr (
+                  mod.has_variable (meth_name.to_std_string ().c_str ()),
+                  Str{ "No such native method found: " } + meth_name);
 
               Object *o_meth
                   = mod.get_variable (meth_name.to_std_string ().c_str ());
@@ -2728,11 +2722,9 @@ expr_eval (Module &mod, Expr *e)
             {
               Str meth_name = Str{ "{:}." } + member;
 
-              if (!mod.has_variable (meth_name.to_std_string ().c_str ()))
-                {
-                  SF_ASSERT_eval_expr (
-                      0, Str{ "No such native method found: " } + meth_name);
-                }
+              SF_ASSERT_eval_expr (
+                  mod.has_variable (meth_name.to_std_string ().c_str ()),
+                  Str{ "No such native method found: " } + meth_name);
 
               Object *o_meth
                   = mod.get_variable (meth_name.to_std_string ().c_str ());
@@ -2769,13 +2761,9 @@ expr_eval (Module &mod, Expr *e)
                   {
                     Str meth_name = Str{ "''." } + member;
 
-                    if (!mod.has_variable (
-                            meth_name.to_std_string ().c_str ()))
-                      {
-                        SF_ASSERT_eval_expr (
-                            0, Str{ "No such native method found: " }
-                                   + meth_name);
-                      }
+                    SF_ASSERT_eval_expr (
+                        mod.has_variable (meth_name.to_std_string ().c_str ()),
+                        Str{ "No such native method found: " } + meth_name);
 
                     // res = mod.get_variable (meth_name.get_internal_buffer
                     // ());
@@ -2833,13 +2821,9 @@ expr_eval (Module &mod, Expr *e)
                   {
                     Str meth_name = Str{ "0." } + member;
 
-                    if (!mod.has_variable (
-                            meth_name.to_std_string ().c_str ()))
-                      {
-                        SF_ASSERT_eval_expr (
-                            0, Str{ "No such native method found: " }
-                                   + meth_name);
-                      }
+                    SF_ASSERT_eval_expr (
+                        mod.has_variable (meth_name.to_std_string ().c_str ()),
+                        Str{ "No such native method found: " } + meth_name);
 
                     // res = mod.get_variable (meth_name.get_internal_buffer
                     // ());
