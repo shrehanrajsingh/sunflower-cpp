@@ -547,7 +547,7 @@ class C extends A, B
 c = C ()
 c.say ()
 
-import 'socket' as s
+import 'http' as s
 import 'file' as file
 
 a = s.Server ('0.0.0.0', 8000)

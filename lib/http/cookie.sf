@@ -1,0 +1,29 @@
+class Cookie
+    name = none
+    value = none
+    is_http_only = true
+    is_secure = false
+    max_age = 3600
+
+    fun _init (self, name, value, is_http_only, is_secure, max_age)
+        self.name = name
+        self.value = value
+        self.is_http_only = is_http_only
+        self.is_secure = is_secure
+        self.max_age = max_age
+
+    fun to_string (self)
+        s = "Set-Cookie: " + name + "=" + value + "; "
+
+        if self.is_http_only
+            s = s + "HttpOnly; "
+        
+        if self.is_secure
+            s = s + "Secure; "
+
+        s = s + self.max_age.to_string ()
+
+        return s
+
+fun _init (name, value)
+    return Cookie (name, value, true, false, 3600)

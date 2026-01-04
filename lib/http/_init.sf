@@ -1,3 +1,4 @@
 import 'server.sf' as _server
+import 'cookie.sf' as cookie
 
 Server = _server.Server

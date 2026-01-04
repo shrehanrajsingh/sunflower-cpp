@@ -1,5 +1,39 @@
-import 'socket' as s
+import 'http' as s
 import 'file' as file
 
-write (s.Server)
 a = s.Server ('0.0.0.0', 8000)
+
+fun home (req)
+    a = file ('server_assets/home.html', 'r')
+    r = a.read ()
+    a.close ()
+
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': r
+    }
+
+fun contact (req)
+    return {
+        'status': 200,
+        'Content-Type': 'text/html',
+        'body': '<h1>Contact</h1>'
+    }
+
+fun post_test (req)
+    return {
+        'status': 200,
+        'Content-Type': 'application/json',
+        'body': req.to_string (),
+        'cookie': [
+            s.cookie ("sessionID", "abc"),
+            s.cookie ("name", "shrehan")
+        ]
+    }
+
+a.add_get ('/', home)
+a.add_get ('/contact', contact)
+a.add_post ('/post', post_test)
+
+a.serve ()

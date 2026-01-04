@@ -1,10 +1,10 @@
-import 'socket' as s
+import 'http' as s
 import 'file' as file
 
 a = s.Server ('0.0.0.0', 8000)
 
 fun home (req)
-    a = file ('../../tests/server_assets/home.html', 'r')
+    a = file ('server_assets/home.html', 'r')
     r = a.read ()
     a.close ()
 

@@ -1,0 +1,26 @@
+import '_Native_Socket' as s
+
+class Socket
+    sock = -1
+    max_clients = 4096
+
+    fun _init (self)
+        self.sock = s.socket ()
+    
+    fun bind (self, host, port)
+        self.host = host
+        self.port = port
+
+        s.bind (self.sock, host, port)
+    
+    fun listen (self)
+        s.listen (self.sock, self.max_clients)
+    
+    fun accept (self)
+        return Socket (s.accept (self.sock, self.host, self.port))
+    
+    fun shutdown (self, code)
+        s.shutdown (self.sock, code)
+    
+    fun close (self)
+        s.close (self.sock)

@@ -31,6 +31,21 @@
       goto ambig_test;                                                        \
     }
 
+#define SF_ASSERT_call_func(X, Y)                                             \
+  if (!(X))                                                                   \
+    {                                                                         \
+      Object *amb_val = static_cast<Object *> (new ConstantObject (           \
+          static_cast<Constant *> (new StringConstant ((Y)))));               \
+      IR (amb_val);                                                           \
+      res = static_cast<Object *> (new AmbigObject (amb_val));                \
+      IR (res);                                                               \
+      mod.get_saw_ambig () = true;                                            \
+      mod.get_continue_exec () = false;                                       \
+      mod.get_ambig () = res;                                                 \
+      IR (res);                                                               \
+      goto before_nmod_del;                                                   \
+    }
+
 #define TODO                                                                  \
   {                                                                           \
     std::cerr << "TODO\n";                                                    \
@@ -2420,11 +2435,12 @@ expr_eval (Module &mod, Expr *e)
       {
         FuncCallExpr *fce = static_cast<FuncCallExpr *> (e);
 
-        Object *name_eval;
+        Object *name_eval = nullptr;
 
         TC (name_eval = expr_eval (mod, fce->get_name ()));
         AMBIG_CHECK (name_eval, {
-          DR (res);
+          if (res != nullptr)
+            DR (res);
           res = name_eval;
         });
         // std::cout << (name_eval->get_self_arg () == nullptr) << '\n';
@@ -3752,6 +3768,11 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
   nmod->get_code_lines () = mod.get_code_lines ();
   Object *res = nullptr;
 
+  if (mod.get_saw_ambig ())
+    {
+      goto before_nmod_del;
+    }
+
   switch (fname->get_type ())
     {
     case ObjectType::FuncObject:
@@ -3775,21 +3796,50 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                       //           '\n';
 
                       if (fname->get_self_arg () != nullptr)
-                        assert (cf->get_args ().get_size ()
-                                == fargs.get_size () + fv->get_self_arg ());
+                        {
+                          SF_ASSERT_call_func (
+                              cf->get_args ().get_size ()
+                                  == fargs.get_size () + fv->get_self_arg (),
+                              (std::string ("Invalid number of arguments (")
+                               + std::to_string (fargs.get_size ()
+                                                 + fv->get_self_arg ())
+                               + ") supplied to a function that takes "
+                               + std::to_string (cf->get_args ().get_size ())
+                               + " arguments")
+                                  .c_str ());
+                        }
                       else
-                        assert (cf->get_args ().get_size ()
-                                == fargs.get_size ());
+                        {
+                          SF_ASSERT_call_func (
+                              cf->get_args ().get_size () == fargs.get_size (),
+                              (std::string ("Invalid number of arguments (")
+                               + std::to_string (fargs.get_size ())
+                               + ") supplied to a function that takes "
+                               + std::to_string (cf->get_args ().get_size ())
+                               + (cf->get_args ().get_size () == 1
+                                      ? " argument"
+                                      : " arguments"))
+                                  .c_str ());
+                        }
                     }
                   else
                     {
-                      assert (cf->get_args ().get_size ()
-                              == fargs.get_size () + 1);
+                      SF_ASSERT_call_func (
+                          cf->get_args ().get_size () == fargs.get_size () + 1,
+                          (std::string ("Invalid number of arguments (")
+                           + std::to_string (fargs.get_size () + 1)
+                           + ") supplied to a function that takes "
+                           + std::to_string (cf->get_args ().get_size ())
+                           + (cf->get_args ().get_size () == 1 ? " argument"
+                                                               : " arguments"))
+                              .c_str ());
                     }
                 }
               else
-                assert (cf->get_args ().get_size ()
-                        > 0); /* at least one arg */
+                SF_ASSERT_call_func (
+                    cf->get_args ().get_size () > 0,
+                    "Function that takes variable arguments needs at-least "
+                    "one named argument"); /* at least one arg */
 
               nmod->get_code_lines () = cf->get_parent ()->get_code_lines ();
 
@@ -3957,12 +4007,25 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
               if (!nf->get_va_args ())
                 {
-                  assert (nf->get_args ().get_size ()
-                          == fargs.get_size () + fv->get_self_arg ());
+                  SF_ASSERT_call_func (
+                      nf->get_args ().get_size ()
+                          == fargs.get_size () + fv->get_self_arg (),
+                      (std::string ("Invalid number of arguments (")
+                       + std::to_string (fargs.get_size ()
+                                         + fv->get_self_arg ())
+                       + ") supplied to a function that takes "
+                       + std::to_string (nf->get_args ().get_size ())
+                       + (nf->get_args ().get_size () == 1 ? " argument"
+                                                           : " arguments"))
+                          .c_str ());
                 }
               else
-                assert (nf->get_args ().get_size ()
-                        > 0); /* at least one arg */
+                {
+                  SF_ASSERT_call_func (
+                      nf->get_args ().get_size () > 0,
+                      "Function that takes variable arguments needs at-least "
+                      "one named argument"); /* at least one arg */
+                }
 
               Object *self_arg = __self_Arg;
 
@@ -4173,7 +4236,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
         while (inh_objs.get_size ())
           {
             Object *t = inh_objs.pop_back ();
-            assert (t->get_type () == ObjectType::SfClass);
+            SF_ASSERT_call_func (t->get_type () == ObjectType::SfClass,
+                                 "MRO members need to be classes");
 
             SfClass *tsfc = static_cast<SfClass *> (t);
             Module *&mod_tsfc = tsfc->get_mod ();
@@ -4202,7 +4266,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
                 for (Object *&k : inh_objs)
                   {
-                    assert (k->get_type () == ObjectType::SfClass);
+                    SF_ASSERT_call_func (k->get_type () == ObjectType::SfClass,
+                                         "MRO members need to be classes");
 
                     if ((static_cast<SfClass *> (k)->get_mod ()
                          == static_cast<SfClass *> (j)->get_mod ())
@@ -4243,13 +4308,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
           {
             Object *f_init = objm->get_variable ("_init");
 
-            assert (f_init != nullptr);
-            if (!_sfobj_iscallable (*objm, f_init))
-              {
-                throw std::runtime_error ("class._init is not callable");
-              }
-
-            // args_eval.insert (0, co);
+            SF_ASSERT_call_func (_sfobj_iscallable (*objm, f_init),
+                                 "class._init is not callable");
 
             Object *ret = call_func (mod, f_init, fargs, co);
             // TODO: Ambig check
@@ -4269,13 +4329,9 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
           {
             Object *mo_init = mo_mod->get_variable ("_init");
 
-            assert (mo_init != nullptr);
-            if (mo_init->get_type ()
-                != ObjectType::FuncObject) /* only functions for now
-                                            */
-              {
-                ERRMSG ("Module._init is not a function");
-              }
+            SF_ASSERT_call_func (mo_init->get_type ()
+                                     == ObjectType::FuncObject,
+                                 "Module._init is not a function");
 
             FunctionObject *fo = static_cast<FunctionObject *> (mo_init);
 
@@ -4304,7 +4360,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
           }
         else
           {
-            ERRMSG ("Module is not callable (lacks _init () method)");
+            SF_ASSERT_call_func (0,
+                                 "Module is not callable (no _init method)");
           }
       }
       break;
@@ -4313,8 +4370,12 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
       break;
     }
 
+before_nmod_del:;
+
   if (nmod != nullptr)
     delete nmod;
+
+before_resret:;
 
   if (res == nullptr)
     {
