@@ -353,7 +353,7 @@ import '../../lib/thread/_init.sf' as thread
 
 fun test (a)
     s = 0
-    for i in 1 to 10000 # waste cycles
+    for i in 1 to 10000
         s = s + i
     write ("hi", a)
 
@@ -574,3 +574,222 @@ a.add_get ('/', home)
 a.add_get ('/contact', contact)
 
 a.serve ()
+
+# JSON FUNCTION
+fun json_parse (j)
+    fun is_number (s)
+        i = 0
+        c = 0
+        while i < len (s)
+            if s[i] == '.'
+                if not c
+                    c = c + 1
+                else
+                    return false
+            if not s[i] in '0123456789.'
+                return false
+            i = i + 1
+        return true
+    
+    fun to_number (s)
+        p = 0
+
+        d = {}
+        for i in 0 to 10
+            d[i.to_string ()] = i
+        
+        i = 0
+        saw_dot = false
+        while i < len (s)
+            sv = s[i]
+
+            if sv == '.'
+                saw_dot = true
+                break
+
+            p = p * 10 + d[sv]
+            i = i + 1
+        
+        if saw_dot
+            i = i + 1
+            q = 10
+            while i < len (s)
+                sv = s[i]
+                p = p + (d[sv] / q)
+                q = q * 10
+                i = i + 1
+
+        return p
+
+    jp = 0
+
+    while j[jp] == ' ' or j[jp] == '\t' or j[jp] == '\n'
+        jp = jp + 1
+    
+    if j[jp] != '{'
+        return? "Invalid character '" + j[jp] + "'"
+    
+    jp = jp + 1
+
+    res = {}
+
+    while jp < len (j)
+        while j[jp] == ' ' or j[jp] == '\t' or j[jp] == '\n'
+            jp = jp + 1
+        
+        if j[jp] != '\"'
+            return? "Invalid character '" + j[jp] + "'"
+        
+        jp = jp + 1
+
+        key = ""
+        while j[jp] != '\"'
+            key = key + j[jp]
+            jp = jp + 1
+        
+        jp = jp + 1
+
+        while j[jp] == ' ' or j[jp] == '\t' or j[jp] == '\n'
+            jp = jp + 1
+        
+        if j[jp] != ':'
+            return? "Invalid character '" + j[jp] + "'"
+        
+        jp = jp + 1
+        
+        in_string = false # inside string?
+        quote_str = "" # what type of quote binds the string? '' or ""
+
+        in_bracket = 0 # how many bracket levels deep are we?
+        value = ""
+
+        while jp < len (j)
+            jv = j[jp]
+
+            if jv == '}' and not in_bracket
+                break
+
+            if jv in '[{'
+                in_bracket = in_bracket + 1
+            
+            if jv in ']}'
+                in_bracket = in_bracket - 1
+            
+            if jv in '\'"'
+                if not in_string
+                    in_string = true
+                    quote_str = jv
+                else
+                    if j[jp - 1] != '\\'
+                        in_string = false
+                    else
+                        if jp > 1 and j[jp - 2] == '\\'
+                            in_string = false
+            
+            if jv == ',' and not in_string and not in_bracket
+                break
+
+            value = value + jv
+            jp = jp + 1
+        
+        vl = 0
+        vr = len (value) - 1
+
+        while value[vl] == ' ' or value[vl] == '\t' or value[vl] == '\n'
+            vl = vl + 1
+
+        while value[vr] == ' ' or value[vr] == '\t' or value[vr] == '\n'
+            vr = vr - 1
+        
+        value = value[vl to vr + 1]
+
+        if value[0] in '\'"'
+            value = value[1 to len (value) - 1]
+            res[key] = value
+
+        else if is_number (value)
+            res[key] = to_number (value)
+        
+        else if value[0] == '{'
+            res[key] = json_parse (value)
+        
+        else if value in ['true', 'false']
+            res[key] = value == 'true'
+        
+        else if value == 'none'
+            res[key] = none
+
+        else if value[0] == '['
+            vp = 1 # eat '['
+            idx = ""
+
+            in_string = 0
+            quote_str = ""
+            in_bracket = 0
+
+            idcs = []
+
+            while vp < len (value)
+                vv = value[vp]
+
+                if vv == ']' and not in_bracket
+                    idcs.push (idx)
+                    idx = ""
+                    break
+
+                if vv in '[{'
+                    in_bracket = in_bracket + 1
+                
+                if vv in ']}'
+                    in_bracket = in_bracket - 1
+                
+                if vv in '\'"'
+                    if not in_string
+                        in_string = true
+                        quote_str = vv
+                    else
+                        if j[vp - 1] != '\\'
+                            in_string = false
+                        else
+                            if vp > 1 and j[vp - 2] == '\\'
+                                in_string = false
+                
+                if vv == ',' and not in_string and not in_bracket
+                    idcs.push (idx)
+                    vp = vp + 1
+                    idx = ""
+                    continue
+                
+                idx = idx + vv
+                vp = vp + 1
+            
+            i = 0
+            while i < len (idcs)
+                iv = idcs[i]
+                il = 0
+                ir = len (iv) - 1
+
+                while iv[il] == ' ' or iv[il] == '\t' or iv[il] == '\n'
+                    il = il + 1
+
+                while iv[ir] == ' ' or iv[ir] == '\t' or iv[ir] == '\n'
+                    ir = ir - 1
+                
+                idcs[i] = idcs[i][il to ir + 1]
+
+                idcs[i] = json_parse ('{".":' + idcs[i] + '}')['.']
+
+                i = i + 1
+            
+            res[key] = idcs
+
+        jp = jp + 1
+
+    return res
+
+j = '{\n\t"b": 10,\n\t"a": {"c": [20, true, none]}}'
+i = 1
+while 1
+    write (i)
+    write (json_parse (j))
+    i = i + 1

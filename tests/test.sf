@@ -1,4 +1,3 @@
-a = [1, 2, 3]
-a[2] = a
+import 'json' as json
 
-write (a)
+write (json ('{"c": 20, "b": "Hello, World", "a": {"d": true}}'))

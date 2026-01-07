@@ -55,6 +55,7 @@ worker_loop ()
       Module *m = new Module (ModuleType::Function);
       m->set_parent (th->get_mod ());
       m->get_code_lines () = th->get_mod ()->get_code_lines ();
+      m->get_file_path () = th->get_mod ()->get_file_path ();
 
       try
         {
@@ -113,7 +114,7 @@ worker_loop ()
                   for (int i = 0; i < m->get_backtrace ().get_size (); i++)
                     {
                       std::string s = m->get_backtrace ()[i]
-                                          .second.to_std_string ()
+                                          .second.first.to_std_string ()
                                           .c_str ();
                       while (s.front () == ' ' || s.front () == '\t')
                         s.erase (s.begin ());

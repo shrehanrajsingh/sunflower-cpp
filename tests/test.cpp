@@ -301,6 +301,7 @@ test4 ()
       // while (1)
       {
         Module *m = new Module (ModuleType::File, ast, lines, sf_env);
+        m->get_file_path () = "../../tests/test.sf";
 
         mod_exec (*m);
 

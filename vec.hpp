@@ -140,7 +140,7 @@ public:
   void push_back (T &);
   void push_back (T &&);
   T &pop_back ();
-  T &remove (int);
+  T remove (int);
 
   T &
   operator[] (size_t i)
@@ -331,13 +331,13 @@ Vec<T>::pop_back ()
 }
 
 template <typename T>
-T &
+T
 Vec<T>::remove (int idx)
 {
   if (idx == -1)
     return pop_back ();
 
-  T &v = vals[idx];
+  T v = vals[idx];
   int c = idx + 1;
 
   while (c < get_size ())
@@ -345,6 +345,9 @@ Vec<T>::remove (int idx)
       vals[c - 1] = vals[c];
       c++;
     }
+
+  size--;
+  return v;
 }
 
 template <typename T> Vec<T>::~Vec () { delete[] vals; }

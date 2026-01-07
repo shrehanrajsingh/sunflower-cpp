@@ -9,7 +9,21 @@ _native_list_pop (Module *mod)
   Object *idx = mod->get_variable ("idx");
 
   assert (self->get_type () == ObjectType::ArrayObj && "self is not an array");
-  assert (OBJ_IS_INT (idx) && "Index must be an integer");
+  // assert (OBJ_IS_INT (idx) && "Index must be an integer");
+
+  if (!OBJ_IS_INT (idx))
+    {
+      Object *amb_val = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (
+              new StringConstant ("Index must be an integer"))));
+
+      IR (amb_val);
+
+      Object *ret = static_cast<Object *> (new AmbigObject (amb_val));
+
+      IR (ret);
+      return ret;
+    }
 
   int v_idx = static_cast<IntegerConstant *> (
                   static_cast<ConstantObject *> (idx)->get_c ().get ())
@@ -18,12 +32,15 @@ _native_list_pop (Module *mod)
   ArrayObject *ao = static_cast<ArrayObject *> (self);
   Vec<Object *> &ao_obj = ao->get_vals ();
 
-  Object *p;
+  Object *p = nullptr;
 
   if (v_idx == -1)
-    p = ao_obj.pop_back ();
+    {
+      p = ao_obj.pop_back ();
+    }
   else
     {
+      p = ao_obj.remove (v_idx);
     }
 
   /**
@@ -34,7 +51,7 @@ _native_list_pop (Module *mod)
    * Net: 0
    */
 
-  IR (p);
+  // IR (p);
   return p;
 }
 

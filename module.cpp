@@ -16,7 +16,8 @@
       mod.get_ambig () = static_cast<Object *> (new AmbigObject (amb_val));   \
       mod.get_backtrace ().push_back (                                        \
           { st->get_line_number (),                                           \
-            mod.get_code_lines ()[st->get_line_number ()] });                 \
+            { mod.get_code_lines ()[st->get_line_number ()],                  \
+              mod.get_file_path () } });                                      \
       goto ambig_test;                                                        \
     }
 
@@ -115,7 +116,8 @@ mod_exec (Module &mod)
               {
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
                 goto ambig_test;
               }
             else
@@ -126,7 +128,8 @@ mod_exec (Module &mod)
                   //           << '\n';
                   mod.get_backtrace ().push_back (
                       { st->get_line_number (),
-                        mod.get_code_lines ()[st->get_line_number ()] });
+                        { mod.get_code_lines ()[st->get_line_number ()],
+                          mod.get_file_path () } });
                   // std::cout << val_eval->get_ref_count () << '\n';
                   // mod.get_continue_exec () = false;
                   // mod.get_saw_ambig () = true;
@@ -252,14 +255,16 @@ mod_exec (Module &mod)
                     {
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                       goto ambig_test;
                     }
                   else
                     AMBIG_CHECK (oarr, {
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                     });
 
                   TC (oidx = expr_eval (mod, idx));
@@ -269,7 +274,8 @@ mod_exec (Module &mod)
                       DR (oarr);
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                       goto ambig_test;
                     }
                   else
@@ -277,7 +283,8 @@ mod_exec (Module &mod)
                       DR (oarr);
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                     });
 
                   switch (oarr->get_type ())
@@ -504,14 +511,16 @@ mod_exec (Module &mod)
                     {
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                       goto ambig_test;
                     }
                   else
                     AMBIG_CHECK (o_parent, {
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                     });
 
                   switch (o_parent->get_type ())
@@ -572,14 +581,16 @@ mod_exec (Module &mod)
               {
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
                 goto ambig_test;
               }
             else
               AMBIG_CHECK (name_eval, {
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
               });
 
             Vec<Object *> args_eval;
@@ -602,7 +613,8 @@ mod_exec (Module &mod)
                     DR (name_eval);
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                     goto ambig_test;
                   }
                 else
@@ -616,7 +628,8 @@ mod_exec (Module &mod)
                     //           << st->get_line_number () << '\n';
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                   });
 
                 /**
@@ -643,7 +656,8 @@ mod_exec (Module &mod)
                       DR (name_eval);
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                       goto ambig_test;
                     }
                   else
@@ -651,7 +665,8 @@ mod_exec (Module &mod)
                       DR (name_eval);
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                     });
 
                   if (mod.get_saw_ambig ())
@@ -659,7 +674,8 @@ mod_exec (Module &mod)
                       DR (name_eval);
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                       DR (ret);
                       goto ambig_test;
                     }
@@ -707,10 +723,22 @@ mod_exec (Module &mod)
                       DR (name_eval);
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                       DR (ret);
                       goto ambig_test;
                     }
+
+                  AMBIG_CHECK (ret, {
+                    mod.get_continue_exec () = false;
+                    mod.get_ambig () = ret;
+                    IR (ret);
+                    mod.get_saw_ambig () = true;
+                    mod.get_backtrace ().push_back (
+                        { st->get_line_number (),
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
+                  });
 
                   if (ret != nullptr)
                     DR (ret);
@@ -724,7 +752,8 @@ mod_exec (Module &mod)
                     DR (name_eval);
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                   });
 
                   DR (obj);
@@ -738,7 +767,8 @@ mod_exec (Module &mod)
                     DR (name_eval);
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                   });
 
                   if (mod.get_saw_ambig ())
@@ -746,7 +776,8 @@ mod_exec (Module &mod)
                       DR (name_eval);
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                       DR (ret);
                       goto ambig_test;
                     }
@@ -785,14 +816,16 @@ mod_exec (Module &mod)
               {
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
                 goto ambig_test;
               }
             else
               AMBIG_CHECK (cond_eval, {
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
               });
             /*
               Since expr_eval already returns an object with an incremented
@@ -819,8 +852,9 @@ mod_exec (Module &mod)
                             DR (cond_eval);
                             mod.get_backtrace ().push_back (
                                 { st->get_line_number (),
-                                  mod.get_code_lines ()
-                                      [st->get_line_number ()] });
+                                  { mod.get_code_lines ()
+                                        [st->get_line_number ()],
+                                    mod.get_file_path () } });
                             goto ambig_test;
                           }
                         else
@@ -828,8 +862,9 @@ mod_exec (Module &mod)
                             DR (cond_eval);
                             mod.get_backtrace ().push_back (
                                 { st->get_line_number (),
-                                  mod.get_code_lines ()
-                                      [st->get_line_number ()] });
+                                  { mod.get_code_lines ()
+                                        [st->get_line_number ()],
+                                    mod.get_file_path () } });
                           });
 
                         if (!_sfobj_isfalse (mod, iv))
@@ -885,7 +920,8 @@ mod_exec (Module &mod)
                 mod.get_stmts () = mod_body_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
                 goto ambig_test;
               }
             else
@@ -894,7 +930,8 @@ mod_exec (Module &mod)
                 mod.get_stmts () = mod_body_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
               });
 
             bool gil_pres = mod.get_inside_loop ();
@@ -1104,7 +1141,8 @@ mod_exec (Module &mod)
                   mod.get_ret () = nullptr;
                   mod.get_backtrace ().push_back (
                       { st->get_line_number (),
-                        mod.get_code_lines ()[st->get_line_number ()] });
+                        { mod.get_code_lines ()[st->get_line_number ()],
+                          mod.get_file_path () } });
                 });
               }
             else
@@ -1133,7 +1171,8 @@ mod_exec (Module &mod)
 
                       mod.get_backtrace ().push_back (
                           { st->get_line_number (),
-                            mod.get_code_lines ()[st->get_line_number ()] });
+                            { mod.get_code_lines ()[st->get_line_number ()],
+                              mod.get_file_path () } });
                     });
                     mref->get_continue_exec () = false;
 
@@ -1182,7 +1221,8 @@ mod_exec (Module &mod)
                 mod.get_stmts () = st_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
                 goto ambig_test;
               }
             else
@@ -1192,10 +1232,12 @@ mod_exec (Module &mod)
                 mod.get_stmts () = st_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
               });
 
-            while (!_sfobj_isfalse (mod, cond_eval) && !mod.get_saw_ambig ())
+            while (!_sfobj_isfalse (mod, cond_eval) && !mod.get_saw_ambig ()
+                   && mod.get_continue_exec ())
               {
                 if (mod.has_signal_break ())
                   break;
@@ -1216,7 +1258,8 @@ mod_exec (Module &mod)
                     mod.get_stmts () = st_pres;
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                     goto ambig_test;
                   }
                 else
@@ -1226,7 +1269,8 @@ mod_exec (Module &mod)
                     mod.get_stmts () = st_pres;
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                   });
               }
 
@@ -1237,7 +1281,8 @@ mod_exec (Module &mod)
                 mod.get_stmts () = st_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
                 goto ambig_test;
               }
             else
@@ -1247,7 +1292,8 @@ mod_exec (Module &mod)
                 mod.get_stmts () = st_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
               });
 
             DR (cond_eval);
@@ -1276,7 +1322,8 @@ mod_exec (Module &mod)
                 mod.get_stmts () = st_pres;
                 mod.get_backtrace ().push_back (
                     { st->get_line_number (),
-                      mod.get_code_lines ()[st->get_line_number ()] });
+                      { mod.get_code_lines ()[st->get_line_number ()],
+                        mod.get_file_path () } });
               });
 
             SF_ASSERT_mod_exec (o_cond && OBJ_IS_INT (o_cond),
@@ -1303,6 +1350,7 @@ mod_exec (Module &mod)
             ClassDeclStatement *cds = static_cast<ClassDeclStatement *> (st);
             Module *cmod = new Module (ModuleType::Class);
             cmod->get_code_lines () = mod.get_code_lines ();
+            cmod->get_file_path () = mod.get_file_path ();
 
             cmod->set_parent (&mod);
             cmod->get_stmts () = cds->get_body ();
@@ -1319,14 +1367,16 @@ mod_exec (Module &mod)
                   {
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                     goto ambig_test;
                   }
                 else
                   AMBIG_CHECK (o, {
                     mod.get_backtrace ().push_back (
                         { st->get_line_number (),
-                          mod.get_code_lines ()[st->get_line_number ()] });
+                          { mod.get_code_lines ()[st->get_line_number ()],
+                            mod.get_file_path () } });
                   });
 
                 inhs.push_back (o);
@@ -1348,6 +1398,8 @@ mod_exec (Module &mod)
 
             std::ifstream mfp (path.to_std_string ().c_str ());
             std::ifstream main_f;
+
+            std::string opened_file_path = path.to_std_string ();
 
             bool file_opened = false;
             bool is_native_module = false;
@@ -1383,6 +1435,7 @@ mod_exec (Module &mod)
 
                         if (!!file_np) /* found file in env */
                           {
+                            opened_file_path = np.c_str ();
                             file_np.close ();
                             main_f
                                 = std::ifstream (np.to_std_string ().c_str ());
@@ -1416,6 +1469,7 @@ mod_exec (Module &mod)
 
             if (!file_opened)
               {
+                opened_file_path = "<native_module>";
                 /* check through native modules */
                 Module *gm
                     = native_mod::get_mod (path.to_std_string ().c_str ());
@@ -1470,6 +1524,7 @@ mod_exec (Module &mod)
                 // for (auto i : n_env->get_syspaths ())
                 //   std::cout << i << '\n';
                 m->get_env () = n_env;
+                m->get_file_path () = opened_file_path.c_str ();
 
                 mod_exec (*m);
 
@@ -1521,6 +1576,7 @@ mod_exec (Module &mod)
               }
 
             m->set_parent (&mod);
+            m->get_file_path () = mod.get_file_path ();
 
             mod_exec (*m);
 
@@ -1659,7 +1715,7 @@ ambig_test:
           amb->print ();
         }
 
-      std::cerr << "\n------ Backtrace ------\n";
+      // std::cerr << "\n------ Backtrace ------\n";
       if (!mod.get_backtrace ().get_size ())
         {
           std::cerr << "No backtrace information available.\n";
@@ -1683,15 +1739,25 @@ ambig_test:
           //       }
           //   }
 
-          for (int i = 0; i < mod.get_backtrace ().get_size (); i++)
+          std::cerr << "\nCall Stack (most recent call last):\n";
+          for (int i = mod.get_backtrace ().get_size () - 1; i >= 0; i--)
             {
-              std::string s
-                  = mod.get_backtrace ()[i].second.to_std_string ().c_str ();
+              std::string s = mod.get_backtrace ()[i]
+                                  .second.first.to_std_string ()
+                                  .c_str ();
               while (s.front () == ' ' || s.front () == '\t')
                 s.erase (s.begin ());
 
-              std::cerr << "Line " << (mod.get_backtrace ()[i].first + 1)
-                        << ": " << s << "\n";
+              if (mod.get_backtrace ()[i].second.second.size ())
+                std::cerr << "  File \""
+                          << mod.get_backtrace ()[i].second.second
+                          << "\", line " << (mod.get_backtrace ()[i].first + 1)
+                          << "\n    " << s << "\n";
+              else
+                std::cerr << "  File \""
+                          << "<internal>"
+                          << "\", line " << (mod.get_backtrace ()[i].first + 1)
+                          << "\n    " << s << "\n";
             }
         }
       std::cerr << "========================\n\n";
@@ -3518,6 +3584,7 @@ expr_eval (Module &mod, Expr *e)
                     m->get_code_lines () = mod.get_code_lines ();
                     m->set_variable (vn.to_std_string ().c_str (), aov);
                     m->set_parent (&mod);
+                    m->get_file_path () = mod.get_file_path ();
 
                     res = expr_eval (*m, e_catch);
 
@@ -3766,6 +3833,8 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
   Module *nmod = new Module (ModuleType::Function);
 
   nmod->get_code_lines () = mod.get_code_lines ();
+  nmod->get_file_path () = mod.get_file_path ();
+
   Object *res = nullptr;
 
   if (mod.get_saw_ambig ())
@@ -4111,6 +4180,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
                   = new Module (ModuleType::Function, Vec<Statement *> (),
                                 mod.get_code_lines ());
               fmod->set_parent (&mod);
+              fmod->get_file_path () = mod.get_file_path ();
 
               if (nf->get_va_args ())
                 {
@@ -4183,6 +4253,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
         objm->get_code_lines ()
             = sfc->get_mod ()->get_parent ()->get_code_lines ();
+        objm->get_file_path () = mod.get_file_path ();
 
         objm->set_parent (sfc->get_mod ()->get_parent ());
         objm->get_stmts () = cds->get_body ();
@@ -4244,6 +4315,7 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
 
             Module *inh_mod = new Module (ModuleType::Class);
             inh_mod->get_code_lines () = mod.get_code_lines ();
+            inh_mod->get_file_path () = mod.get_file_path ();
 
             inh_mod->set_parent (mod_tsfc->get_parent ());
 
@@ -4292,8 +4364,9 @@ call_func (Module &mod, Object *fname, Vec<Object *> &fargs,
         //     SfClass *inh_sfc = static_cast<SfClass *> (i);
         //     Module *&inh_smod = inh_sfc->get_mod ();
 
-        //     Module *inh_mod = new Module (ModuleType::Class);
-        //     inh_mod->get_code_lines () = mod.get_code_lines ();
+        // Module *inh_mod = new Module (ModuleType::Class);
+        // inh_mod->get_code_lines () = mod.get_code_lines ();
+        // inh_mod->get_file_path () = mod.get_file_path ();
 
         //     Object *n_obj = static_cast<Object *> (new ClassObject
         //     (inh_mod)); IR (n_obj);

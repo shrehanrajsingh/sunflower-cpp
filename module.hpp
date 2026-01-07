@@ -46,10 +46,14 @@ private:
   Environment *env = nullptr;
 
   Vec<Str> code_lines;
-  Vec<std::pair<int, Str>> backtrace;
+  Vec<std::pair<int /* line */,
+                std::pair<Str /* line */, Str /* file path */>>>
+      backtrace;
 
   int exec_signals; /* break, continue */
   bool inside_loop;
+
+  Str file_path = "";
 
 public:
   Module () : type (ModuleType::File)
@@ -241,13 +245,15 @@ public:
     return code_lines;
   }
 
-  inline Vec<std::pair<int, Str>> &
+  inline Vec<std::pair<int /* line */,
+                       std::pair<Str /* line */, Str /* file path */>>> &
   get_backtrace ()
   {
     return backtrace;
   }
 
-  inline const Vec<std::pair<int, Str>> &
+  inline const Vec<std::pair<int /* line */,
+                             std::pair<Str /* line */, Str /* file path */>>> &
   get_backtrace () const
   {
     return backtrace;
@@ -287,6 +293,12 @@ public:
   get_inside_loop ()
   {
     return inside_loop;
+  }
+
+  inline Str &
+  get_file_path ()
+  {
+    return file_path;
   }
 
   Object *get_variable (std::string);
