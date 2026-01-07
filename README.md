@@ -11,6 +11,39 @@ This document summarizes the features that are currently implemented in the lang
 
 ---
 
+## Installation
+To install Sunflower on Linux:
+
+1. **Clone the repository:**
+  ```sh
+  git clone https://github.com/shrehanrajsingh/sunflower-cpp
+  cd sunflower-cpp
+  ```
+
+2. **Create a build directory and configure the project:**
+  ```sh
+  mkdir build
+  cd build
+  cmake .. -G "Unix Makefiles"
+  ```
+
+3. **Build the project:**
+  ```sh
+  make
+  ```
+
+4. **Generate Installer**
+  ```sh
+  cpack
+  ```
+
+This will generate the Sunflower interpreter binary in the `build/bin` directory. You can then run Sunflower programs using this binary.  
+`cpack` generates an installer based on the system on which the language is built in.
+
+For additional build options or platform-specific instructions, refer  `CMakeLists.txt`.
+
+---
+
 ## Core Syntax
 
 - **Indentation-based blocks**
@@ -316,16 +349,30 @@ This document summarizes the features that are currently implemented in the lang
     - `search` method using recursion and conditionals.
 
 - **Inheritance and `extends`**
-  - Classes can extend other classes using `extends`.
-  - `super` calls parent constructors/methods (see `tests/window.sf`).
+  - Classes can extend other classes using `extends` (see `tests/langfeatures.sf`).
 
   ```text
-  import dove
+  class Rectangle
+      w = 0
+      h = 0
 
-  class Window extends dove.Window
+      fun _init (self, w, h)
+          self.w = w
+          self.h = h
+      
+      fun area (self)
+          return self.w * self.h
 
-      fun _init (self)
-          super (dove.Window, dove.WIN_TYPE.Windowed, (800, 600), 'Hello, World!')
+  class Square extends Rectangle
+      fun _init (self, s)
+          Rectangle._init (self, s, s)
+      
+      fun perimeter (self)
+          return 4 * self.w
+
+  s = Square (5)
+  write (s.area ()) # 25
+  write (s.perimeter ()) # 20
   ```
 
 ---
@@ -490,40 +537,37 @@ Many built-ins are provided via the native layer (`native/*.cpp`), and re-export
           con = sock.accept ()
           data = con.read ()
           con.send ("hello")
+          con.close ()
       catch E
           write ("Error:", E)
   ```
 
 - **HTTP Server (`lib/http/_init.sf`, `lib/http/server.sf`)**
 
-  - Simple HTTP server abstraction built on `_Native_http`.
-
   ```text
-  import 'net' as net
+  import 'http' as s
+  import 'file' as file
 
-  server = net.Server (
-      port = 8000
-  )
+  a = s.Server ('0.0.0.0', 8000)
 
-  server.get ('/', fun (req, res) \ res.status (200).body ('<h1>Hello, World!</h1>'))
-  server.serve ()
-  ```
+  fun home ()
+      return {
+          'status': 200,
+          'Content-Type': 'text/html',
+          'body': '<h1>Home</h1>'
+      }
 
-- **SmallDB (`lib/smalldb/_init.sf`)**
+  fun contact ()
+      return {
+          'status': 200,
+          'Content-Type': 'text/html',
+          'body': '<h1>Contact</h1>'
+      }
 
-  - Very small file-backed database with a schema and tuples.
+  a.add_get ('/', home)
+  a.add_get ('/contact', contact)
 
-  ```text
-  import 'smalldb' as smalldb
-
-  db = smalldb ('./test.sdb')
-  schema = smalldb.Schema (['id', 'name', 'email'])
-
-  db.set_schema (schema)
-  db.commit_schema ()
-
-  db.add_tuple ([0, "name", "email@example.com"])
-  db.commit_tuples ()
+  a.serve ()
   ```
 
 ---
@@ -560,18 +604,6 @@ Many built-ins are provided via the native layer (`native/*.cpp`), and re-export
 
   thread.join_all ()
   ```
-
----
-
-## Experimental / Speculative Features
-
-Some features are present in `tests/testfeatures.sf` but are explicitly marked as **not implemented as of June 30, 2025**. They represent ideas for future evolution of the language:
-
-- **`unsafe` block syntax** for scoped error-handling sugar.
-- **`return?` shorthand** (no space) as an alternative to `return ?`.
-- **Custom iterator protocol via `_iter`** on classes to support `for i in c` with internal state.
-
-These are **not** currently part of the stable feature set but are documented in the repository for experimentation.
 
 ---
 
