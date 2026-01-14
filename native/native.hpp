@@ -16,6 +16,8 @@
 #include "string/count.hpp"
 #include "string/find.hpp"
 #include "string/replace.hpp"
+#include "string/split.hpp"
+#include "string/strip.hpp"
 
 /* integer methods */
 #include "int/base.hpp"

@@ -1475,11 +1475,11 @@ stmt_gen (Vec<Token *> &toks)
                 // std::cout << block_end_idx << '\t' << toks.get_size () <<
                 // '\n';
               l5:
-                while (
-                    block_end_idx < toks.get_size ()
-                    && (toks[block_end_idx]->get_type () == SFTokenType::Newline
-                        || toks[block_end_idx]->get_type ()
-                               == SFTokenType::Tabspace))
+                while (block_end_idx < toks.get_size ()
+                       && (toks[block_end_idx]->get_type ()
+                               == SFTokenType::Newline
+                           || toks[block_end_idx]->get_type ()
+                                  == SFTokenType::Tabspace))
                   block_end_idx++;
 
                 if (block_end_idx < toks.get_size ()
@@ -2000,7 +2000,8 @@ stmt_gen (Vec<Token *> &toks)
                     = static_cast<IdentifierToken *> (name)->get_val ();
 
                 // assert (i + 2 < toks.get_size ()
-                //         && toks[i + 2]->get_type () == SFTokenType::Newline);
+                //         && toks[i + 2]->get_type () ==
+                //         SFTokenType::Newline);
 
                 Token *next_name = toks[i + 2];
                 size_t block_st_idx;
@@ -2109,11 +2110,11 @@ stmt_gen (Vec<Token *> &toks)
 
                 st->get_try_body () = stmt_gen (trybody_toks);
 
-                while (
-                    block_end_idx < toks.get_size ()
-                    && (toks[block_end_idx]->get_type () == SFTokenType::Newline
-                        || toks[block_end_idx]->get_type ()
-                               == SFTokenType::Tabspace))
+                while (block_end_idx < toks.get_size ()
+                       && (toks[block_end_idx]->get_type ()
+                               == SFTokenType::Newline
+                           || toks[block_end_idx]->get_type ()
+                                  == SFTokenType::Tabspace))
                   block_end_idx++;
 
                 if (block_end_idx < toks.get_size ()
@@ -2472,7 +2473,8 @@ _sf_ast_getblock_idx (Vec<Token *> &data, size_t st, size_t tb)
                     if (nd->get_type () == SFTokenType::Tabspace)
                       {
                         if (i + 2 < data.get_size ()
-                            && data[i + 2]->get_type () == SFTokenType::Newline)
+                            && data[i + 2]->get_type ()
+                                   == SFTokenType::Newline)
                           continue;
 
                         if (static_cast<TabspaceToken *> (nd)->get_val ()

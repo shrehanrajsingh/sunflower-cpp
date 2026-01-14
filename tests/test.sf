@@ -1,3 +1,146 @@
-import 'json' as json
+x = "
+    <note id=\"2\" name=\"shrehan\">
+        <to id=\"4\">Tove</to>
+        <from>Jani</from>
+        <heading>Reminder</heading>
+        <body>Don't forget me this weekend!</body>
+    </note>
+    <note id=\"3\" name=\"shrehan\">
+        <to id=\"5\">John</to>
+        <from>Jani</from>
+        <heading>Reminder</heading>
+        <body>Don't forget me this weekend!</body>
+    </note>
+"
 
-write (json ('{"c": 20, "b": "Hello, World", "a": {"d": true}}'))
+class Tree
+    name = ""
+    attrs = none
+    children = none
+    next = none
+    raw = ""
+    root = true
+    text_node = false
+
+    fun _init (self, raw)
+        self.raw = raw.strip ()
+        self.attrs = {}
+        self.children = none
+        self.next = none
+        self.root = true
+    
+    fun parse (self)
+        if self.raw[0] != '<'
+            self.name = '$'
+            self.attrs['$'] = self.raw
+            self.text_node = true
+            return
+        
+        p = 1
+        while p < len (self.raw) and not self.raw[p] in '> '
+            p = p + 1
+        
+        self.name = self.raw[1 to p]
+
+        if self.raw[p] != '>'
+            # get attributes
+            p = p + 1
+
+            while p < len (self.raw) and self.raw[p] != '>'
+                eqi = p
+                while eqi < len (self.raw) and not self.raw[eqi] in '=>'
+                    eqi = eqi + 1
+                
+                key_name = self.raw[p to eqi].strip ()
+
+                if eqi < len (self.raw) and self.raw[eqi] == '='
+                    # get value
+                    eqi = eqi + 1
+                    while eqi < len (self.raw) and self.raw[eqi] in ' \t\n'
+                        eqi = eqi + 1
+
+                    if eqi < len (self.raw) and self.raw[eqi] != '\"'
+                        return? "Invalid syntax, expected \" after ="
+                    
+                    eqi = eqi + 1
+                    vi = eqi
+                    saw_backslash = false
+
+                    while vi < len (self.raw)
+                        v = self.raw[vi]
+
+                        if v == '\\'
+                            saw_backslash = not saw_backslash
+                        else
+                            saw_backslash = false
+
+                        if v == '"' and not saw_backslash
+                            break
+                        
+                        vi = vi + 1
+                        
+                    value = self.raw[eqi to vi]
+                    vi = vi + 1
+                    p = vi
+                    while vi < len (self.raw) and self.raw[vi] == ' '
+                        vi = vi + 1
+                
+                self.attrs[key_name] = value
+
+        p = p + 1
+        end_idx = self.raw.find ("</" + self.name)
+
+        self.children = Tree (self.raw[p to end_idx].strip ())
+        self.children.root = false
+        self.children.parse ()
+
+        if end_idx + len (self.name) + 4 < len (self.raw)
+            self.next = Tree (self.raw[end_idx + len (self.name) + 4 to len (self.raw)].strip ())
+            self.next.parse ()
+    
+    fun get_key (self, k)
+        res = []
+
+        while self
+            if self.name == k
+                res.push (self)
+            self = self.next
+
+        return res
+
+    fun q (self, r)
+        v = r.split ('.')
+        res = [self]
+
+        for i in v
+            p = []
+            for j in res
+                ar = j.get_key (i)
+                for k in ar
+                    p.push (k)
+
+            res = x.children for x in p
+        
+        return res
+
+    fun text (self)
+        if self.text_node
+            return self.attrs['$']
+
+        return? "Not a text node"
+    
+    fun print (self)
+        write (self.name, self.attrs)
+
+        if self.children
+            self.children.print ()
+        
+        if self.next
+            self.next.print ()
+
+
+a = Tree (x)
+a.parse ()
+
+write (x.name for x in a.get_key ("note"))
+write (x.text () for x in a.q ("note.to"))

@@ -281,6 +281,9 @@ tokenize (char *p)
                     v.push_back (d);
                   }
 
+                if (d == '\n')
+                  line_number++;
+
                 d = *++p;
               }
 

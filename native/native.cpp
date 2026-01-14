@@ -18,6 +18,8 @@ add_natives (Vec<Statement *> &m)
   _add_native_replace (m);
   _add_native_find (m);
   _add_native_count (m);
+  _add_native_strip (m);
+  _add_native_split (m);
 
   /* integer methods */
   _add_native_int_base (m);
