@@ -49,6 +49,24 @@ make ()
 
   mod->set_variable ("seek_write", static_cast<Object *> (fo_seek_write));
 
+  NativeFunction *nf_read_n = new NativeFunction (read_n, { "fileid", "nb" });
+  FunctionObject *fo_read_n
+      = new FunctionObject (static_cast<Function *> (nf_read_n));
+
+  mod->set_variable ("readn", static_cast<Object *> (fo_read_n));
+
+  NativeFunction *nf_tell_read = new NativeFunction (tell_read, { "fileid" });
+  FunctionObject *fo_tell_read
+      = new FunctionObject (static_cast<Function *> (nf_tell_read));
+
+  mod->set_variable ("tell_read", static_cast<Object *> (fo_tell_read));
+
+  NativeFunction *nf_lsf = new NativeFunction (lsf, { "path" });
+  FunctionObject *fo_lsf
+      = new FunctionObject (static_cast<Function *> (nf_lsf));
+
+  mod->set_variable ("lsf", static_cast<Object *> (fo_lsf));
+
   return mod;
 }
 } // namespace File

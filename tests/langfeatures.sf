@@ -793,3 +793,34 @@ while 1
     write (i)
     write (json_parse (j))
     i = i + 1
+
+import 'xml' as xml
+
+x = "
+    <note id=\"2\" name=\"shrehan\">
+        <to id=\"4\">Tove</to>
+        <from>Jani</from>
+        <heading>Reminder</heading>
+        <body>Don't forget me this weekend!</body>
+    </note>
+    <note id=\"3\" name=\"shrehan\">
+        <to id=\"5\">John</to>
+        <from>Davis</from>
+        <heading>Reminder</heading>
+        <body>Don't forget me this weekend!</body>
+    </note>
+"
+
+p = xml (x)
+p.children.parse ()
+
+write (i.text () for i in p.q ('note.to.$'))
+write (i.text () for i in p.q ('note.from.$'))
+
+spawn
+    s = 0
+    for i in 1 to 100
+        s = s + i
+    write (s)
+
+input ("hi")

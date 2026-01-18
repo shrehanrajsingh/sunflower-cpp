@@ -2,6 +2,7 @@
 
 #include "../../../header.hpp"
 #include "../../../module.hpp"
+#include <filesystem>
 
 namespace sf
 {
@@ -55,6 +56,9 @@ SF_API Object *write (Module *);
 SF_API Object *close (Module *);
 SF_API Object *seek_read (Module *);
 SF_API Object *seek_write (Module *);
+SF_API Object *tell_read (Module *);
+SF_API Object *read_n (Module *);
+SF_API Object *lsf (Module *);
 
 SF_API void destroy ();
 } // namespace File

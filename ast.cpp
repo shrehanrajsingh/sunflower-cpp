@@ -1990,6 +1990,28 @@ stmt_gen (Vec<Token *> &toks)
 
                 i = block_end_idx - 1;
               }
+            else if (kw == "spawn")
+              {
+                size_t block_end_idx = _sf_ast_getblock_idx (
+                    toks, i, _sf_ast_gettabspace (toks, i));
+
+                Vec<Token *> body_toks;
+                // std::cout << "-----\n";
+                for (size_t j = i + 1; j < block_end_idx; j++)
+                  {
+                    // toks[j]->print ();
+                    body_toks.push_back (toks[j]);
+                  }
+                // std::cout << "-----end\n";
+
+                Vec<Statement *> body = stmt_gen (body_toks);
+
+                res.push_back (
+                    static_cast<Statement *> (new SpawnBlock (body)));
+                SET_LINE_NUMBER (res, c);
+
+                i = block_end_idx - 1;
+              }
             else if (kw == "class")
               {
                 assert (i + 1 < toks.get_size ());

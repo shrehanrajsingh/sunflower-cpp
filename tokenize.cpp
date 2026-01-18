@@ -9,7 +9,7 @@ _is_keyword (const char *k)
       = { "if",    "else",     "for",     "while",  "in",  "to",
           "step",  "class",    "fun",     "return", "or",  "and",
           "not",   "repeat",   "import",  "as",     "try", "catch",
-          "break", "continue", "extends", NULL };
+          "break", "continue", "extends", "spawn",  NULL };
 
   for (size_t i = 0; KEYWORDS[i] != NULL; i++)
     if (!strcmp (KEYWORDS[i], k))
@@ -300,10 +300,15 @@ tokenize (char *p)
             if (*(p + 1) && *(p + 1) == '#')
               {
                 /* multi-line comment */
+                p++;
+                p++;
                 do
                   {
                     if (*p && *(p + 1) && *p == *(p + 1) && *p == '#')
-                      break;
+                      {
+                        p++;
+                        break;
+                      }
                     p++;
                   }
                 while (*p);

@@ -29,10 +29,18 @@ class File
         self._check_state ()
         return file.seek_write (self.id, o, w)
     
+    fun tellr (self)
+        self._check_state ()
+        return file.tell_read (self.id)
+    
     fun seek (self, o, w)
         self._check_state ()
         file.seek_read (self.id, o, w)
         file.seek_write (self.id, o, w)
+    
+    fun readn (self, n)
+        self._check_state ()
+        return file.readn (self.id, n)
     
     fun _check_state (self)
         if not self.id
@@ -42,6 +50,9 @@ class File
         if self.id
             file.close (self.id)
             self.id = 0
+
+fun lsf (f)
+    return file.lsf (f)
 
 fun _init (name, perms)
     a = File (name, perms)

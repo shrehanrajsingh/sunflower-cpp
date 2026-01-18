@@ -48,7 +48,7 @@ open (Module *mod)
 
   std::string file_name;
 
-  if (fname[0] == '/') /* absolute path */
+  if (fname[0] == '/' || fname.find (':') != -1) /* absolute path */
     file_name = fname.to_std_string ().c_str ();
   else
     file_name = _file_path + fname.to_std_string ().c_str ();
@@ -290,6 +290,146 @@ seek_write (Module *mod)
 
   IR (r);
   return r;
+}
+
+SF_API Object *
+read_n (Module *mod)
+{
+  Object *fileid = mod->get_variable ("fileid");
+  Object *o_nb = mod->get_variable ("nb");
+
+  assert (OBJ_IS_INT (fileid) && "File id must be an integer");
+  assert (OBJ_IS_INT (o_nb) && "bytes to read must be an integer");
+
+  size_t id = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (fileid)->get_c ().get ())
+          ->get_value ());
+
+  size_t nb = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (o_nb)->get_c ().get ())
+          ->get_value ());
+
+  if (!filemap.count (id))
+    {
+      std::cerr << "File with id " << id << " does not exist." << std::endl;
+      exit (-1);
+    }
+
+  FileHandle *fh = filemap[id];
+  std::fstream &fs = fh->get_fs ();
+
+  assert (fs.is_open () && "File has been closed");
+
+  std::vector<char> buffer (nb);
+  fs.read (buffer.data (), nb);
+
+  if (!fs)
+    {
+      std::stringstream ss;
+      ss << "Internal filesystem error, read " << fs.gcount ()
+         << " bytes out of " << nb;
+
+      Object *amb_val = static_cast<Object *> (new ConstantObject (
+          static_cast<Constant *> (new StringConstant (ss.str ().c_str ()))));
+
+      IR (amb_val);
+      Object *r = static_cast<Object *> (new AmbigObject (amb_val));
+
+      IR (r);
+      return r;
+    }
+
+  Str rstr;
+  for (char c : buffer)
+    rstr.push_back (c);
+
+  Object *r = static_cast<Object *> (new ConstantObject (
+      static_cast<Constant *> (new StringConstant (rstr))));
+
+  IR (r);
+  return r;
+}
+
+SF_API Object *
+tell_read (Module *mod)
+{
+  Object *fileid = mod->get_variable ("fileid");
+  assert (OBJ_IS_INT (fileid) && "File descriptor must be an integer");
+
+  size_t id = static_cast<size_t> (
+      static_cast<IntegerConstant *> (
+          static_cast<ConstantObject *> (fileid)->get_c ().get ())
+          ->get_value ());
+
+  if (!filemap.count (id))
+    {
+      std::cerr << "File with id " << id << " does not exist." << std::endl;
+      exit (-1);
+    }
+
+  FileHandle *fh = filemap[id];
+  std::fstream &fs = fh->get_fs ();
+
+  std::streampos sp = fs.tellg ();
+
+  Object *r = static_cast<Object *> (new ConstantObject (
+      static_cast<Constant *> (new IntegerConstant (static_cast<int> (sp)))));
+
+  IR (r);
+  return r;
+}
+
+SF_API Object *
+lsf (Module *mod)
+{
+  Object *o_path = mod->get_variable ("path");
+  assert (OBJ_IS_STR (o_path) && "path must be a string");
+
+  Str &path = static_cast<StringConstant *> (
+                  static_cast<ConstantObject *> (o_path)->get_c ().get ())
+                  ->get_value ();
+
+  std::string &_file_path = SF_ENV ("FILE_PATH");
+  std::string file_name;
+
+  if (path[0] == '/' || path.find (':') != -1) /* absolute path */
+    file_name = path.to_std_string ().c_str ();
+  else
+    file_name = _file_path + path.to_std_string ().c_str ();
+
+  Vec<Object *> ra;
+  Vec<std::string> path_stack;
+
+  path_stack.push_back (file_name);
+
+  while (path_stack.get_size ())
+    {
+      std::string fn = path_stack.pop_back ();
+      for (const auto &entry : std::filesystem::directory_iterator (fn))
+        {
+          if (std::filesystem::is_directory (entry))
+            {
+              path_stack.push_back (entry.path ().c_str ());
+              continue;
+            }
+
+          Str p = std::filesystem::canonical (entry).c_str ();
+          Object *o = static_cast<Object *> (new ConstantObject (
+              static_cast<Constant *> (new StringConstant (p))));
+
+          IR (o);
+          ra.push_back (o);
+        }
+    }
+
+  ArrayObject *ao = new ArrayObject (ra);
+
+  Object *res = static_cast<Object *> (ao);
+  IR (res);
+
+  return res;
 }
 
 SF_API void

@@ -26,6 +26,8 @@ SF_API Object *read (Module *);
 SF_API Object *send (Module *);
 SF_API Object *close (Module *);
 SF_API Object *shutdown (Module *);
+SF_API Object *broadcast_socket (Module *);
+SF_API Object *broadcast_sendto (Module *);
 } // namespace Socket
 } // namespace native_mod
 } // namespace sf

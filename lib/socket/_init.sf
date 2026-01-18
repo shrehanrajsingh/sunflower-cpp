@@ -1,3 +1,4 @@
-import './server.sf' as serv
+import './socket.sf' as _sock
 
-Server = serv.Server
+Socket = _sock.Socket
+BroadcastSocket = _sock.BroadcastSocket

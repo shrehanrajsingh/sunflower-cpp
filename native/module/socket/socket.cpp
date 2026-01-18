@@ -418,6 +418,136 @@ shutdown (Module *mod)
   return res;
 }
 
+SF_API Object *
+broadcast_socket (Module *mod)
+{
+  Object *o_host = mod->get_variable ("host");
+  Object *o_port = mod->get_variable ("port");
+
+  assert (OBJ_IS_STR (o_host) && "host must be a string");
+  assert (OBJ_IS_INT (o_port) && "port must be an integer");
+
+  std::string host_str
+      = static_cast<StringConstant *> (
+            static_cast<ConstantObject *> (o_host)->get_c ().get ())
+            ->get_value ()
+            .to_std_string ();
+
+  int port = static_cast<IntegerConstant *> (
+                 static_cast<ConstantObject *> (o_port)->get_c ().get ())
+                 ->get_value ();
+
+  Object *res = nullptr;
+
+#ifdef _WIN32
+  ensure_wsa_initialized ();
+
+  SOCKET fd = ::socket (AF_INET, SOCK_DGRAM, 0);
+
+  assert (fd != INVALID_SOCKET && "failed to create socket");
+
+  int enable = 1;
+  if (::setsockopt (fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof (enable))
+      < 0)
+    {
+      perror ("setsockopt(SO_BROADCAST)");
+      ::close (fd);
+      exit (-1);
+    }
+
+  sockaddr_in addr;
+  memset (&addr, 0, sizeof (addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons (port);
+  addr.sin_addr.s_addr = inet_addr (host_str.c_str ());
+
+  res = static_cast<Object *> (new ConstantObject (
+      static_cast<Constant *> (new IntegerConstant (static_cast<int> (fd)))));
+
+#else
+  int fd = ::socket (AF_INET, SOCK_DGRAM, 0);
+
+  assert (fd >= 0 && "failed to create socket");
+
+  int enable = 1;
+  if (::setsockopt (fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof (enable))
+      < 0)
+    {
+      perror ("setsockopt(SO_BROADCAST)");
+      ::close (fd);
+      exit (-1);
+    }
+
+  sockaddr_in addr;
+  memset (&addr, 0, sizeof (addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons (port);
+  addr.sin_addr.s_addr = inet_addr (host_str.c_str ());
+
+  res = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new IntegerConstant (fd))));
+#endif
+
+  IR (res);
+  return res;
+}
+
+SF_API Object *
+broadcast_sendto (Module *mod)
+{
+  Object *o_sock = mod->get_variable ("sock");
+  Object *o_msg = mod->get_variable ("msg");
+
+  Object *o_host = mod->get_variable ("host");
+  Object *o_port = mod->get_variable ("port");
+
+  assert (OBJ_IS_STR (o_host) && "host must be a string");
+  assert (OBJ_IS_INT (o_port) && "port must be an integer");
+
+  assert (OBJ_IS_INT (o_sock) && "socket id must be an integer");
+  assert (OBJ_IS_STR (o_msg) && "message must be a string");
+
+  std::string host_str
+      = static_cast<StringConstant *> (
+            static_cast<ConstantObject *> (o_host)->get_c ().get ())
+            ->get_value ()
+            .to_std_string ();
+
+  int port = static_cast<IntegerConstant *> (
+                 static_cast<ConstantObject *> (o_port)->get_c ().get ())
+                 ->get_value ();
+
+  Str &msg = static_cast<StringConstant *> (
+                 static_cast<ConstantObject *> (o_msg)->get_c ().get ())
+                 ->get_value ();
+
+  int sock = static_cast<IntegerConstant *> (
+                 static_cast<ConstantObject *> (o_sock)->get_c ().get ())
+                 ->get_value ();
+
+  sockaddr_in addr;
+  memset (&addr, 0, sizeof (addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons (port);
+  addr.sin_addr.s_addr = inet_addr (host_str.c_str ());
+
+  ssize_t sent = sendto (sock, msg.c_str (), strlen (msg.c_str ()), 0,
+                         (sockaddr *)&addr, sizeof (addr));
+
+  if (sent < 0)
+    {
+      perror ("sendto");
+      exit (-1);
+    }
+
+  Object *res
+      = static_cast<Object *> (new ConstantObject (static_cast<Constant *> (
+          new IntegerConstant (static_cast<int> (sent)))));
+
+  IR (res);
+  return res;
+}
+
 } // namespace Socket
 } // namespace native_mod
 } // namespace sf

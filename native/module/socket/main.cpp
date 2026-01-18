@@ -62,6 +62,22 @@ make ()
 
   mod->set_variable ("shutdown", static_cast<Object *> (fo_shutdown));
 
+  NativeFunction *nf_broadcast_socket
+      = new NativeFunction (broadcast_socket, { "host", "port" });
+  FunctionObject *fo_broadcast_socket
+      = new FunctionObject (static_cast<Function *> (nf_broadcast_socket));
+
+  mod->set_variable ("broadcast_socket",
+                     static_cast<Object *> (fo_broadcast_socket));
+
+  NativeFunction *nf_broadcast_sendto = new NativeFunction (
+      broadcast_sendto, { "sock", "msg", "host", "port" });
+  FunctionObject *fo_broadcast_sendto
+      = new FunctionObject (static_cast<Function *> (nf_broadcast_sendto));
+
+  mod->set_variable ("broadcast_sendto",
+                     static_cast<Object *> (fo_broadcast_sendto));
+
   return mod;
 }
 } // namespace Socket

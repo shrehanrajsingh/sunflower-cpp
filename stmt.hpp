@@ -19,6 +19,7 @@ enum class StatementType
   TryCatchStmt = 10,
   BreakStmt = 11,
   ContinueStmt = 12,
+  SpawnBlock = 13,
   NoStmt,
 };
 
@@ -710,5 +711,35 @@ public:
   }
 
   ~ContinueStmt () {}
+};
+
+class SpawnBlock : public Statement
+{
+private:
+  Vec<Statement *> body;
+
+public:
+  SpawnBlock () : Statement (StatementType::SpawnBlock) {}
+  SpawnBlock (Vec<Statement *> _Body)
+      : Statement (StatementType::SpawnBlock), body (_Body)
+  {
+  }
+
+  void
+  print () override
+  {
+    std::cout << "Spawn Block:\n";
+
+    for (Statement *&i : body)
+      i->print ();
+  }
+
+  inline Vec<Statement *> &
+  get_body ()
+  {
+    return body;
+  }
+
+  ~SpawnBlock () {}
 };
 } // namespace sf

@@ -573,7 +573,7 @@ mod_exec (Module &mod)
         case StatementType::FuncCall:
           {
             FuncCallStatement *fst = static_cast<FuncCallStatement *> (st);
-            Object *name_eval;
+            Object *name_eval = nullptr;
 
             TC (name_eval = expr_eval (mod, fst->get_name ()));
 
@@ -1033,6 +1033,30 @@ mod_exec (Module &mod)
                         }
 
                       mod_exec (mod);
+
+                      if (mod.get_saw_ambig ())
+                        {
+                          mod.get_inside_loop () = gil_pres;
+                          mod.get_exec_signal () = es_pres;
+                          mod.get_stmts () = mod_body_pres;
+                          mod.get_backtrace ().push_back (
+                              { st->get_line_number (),
+                                { mod.get_code_lines ()
+                                      [st->get_line_number ()],
+                                  mod.get_file_path () } });
+                          goto ambig_test;
+                        }
+                      else
+                        AMBIG_CHECK (it_eval, {
+                          mod.get_inside_loop () = gil_pres;
+                          mod.get_exec_signal () = es_pres;
+                          mod.get_stmts () = mod_body_pres;
+                          mod.get_backtrace ().push_back (
+                              { st->get_line_number (),
+                                { mod.get_code_lines ()
+                                      [st->get_line_number ()],
+                                  mod.get_file_path () } });
+                        });
                     }
                 }
                 break;
@@ -1597,21 +1621,22 @@ mod_exec (Module &mod)
                 // std::cout << amb_obj->get_ref_count () << '\t'
                 //           << amb_val->get_ref_count () << '\n';
 
-                switch (catch_clause->get_type ())
-                  {
-                  case ExprType::Variable:
+                if (catch_clause != nullptr)
+                  switch (catch_clause->get_type ())
                     {
-                      Str &vname = static_cast<VariableExpr *> (catch_clause)
-                                       ->get_name ();
+                    case ExprType::Variable:
+                      {
+                        Str &vname = static_cast<VariableExpr *> (catch_clause)
+                                         ->get_name ();
 
-                      m->set_variable (vname.to_std_string ().c_str (),
-                                       amb_val);
+                        m->set_variable (vname.to_std_string ().c_str (),
+                                         amb_val);
+                      }
+                      break;
+
+                    default:
+                      break;
                     }
-                    break;
-
-                  default:
-                    break;
-                  }
 
                 m->set_parent (&mod);
 
@@ -1678,6 +1703,54 @@ mod_exec (Module &mod)
             SF_ASSERT_mod_exec (mod.get_inside_loop (),
                                 "Illegal call to break outside of a loop");
             mod.set_signal_continue ();
+          }
+          break;
+
+        case StatementType::SpawnBlock:
+          {
+            SpawnBlock *sb = static_cast<SpawnBlock *> (st);
+            Vec<Statement *> &body = sb->get_body ();
+
+            auto handler = [&] ()
+              {
+                Module *nm = new Module (ModuleType::File, body);
+
+                nm->get_code_lines () = mod.get_code_lines ();
+                nm->set_parent (&mod);
+
+                // Environment *n_env = new Environment ();
+                // n_env->get_args () = mod.get_env ()->get_args ();
+                // n_env->get_syspaths () = mod.get_env ()->get_syspaths ();
+                // nm->get_env () = n_env;
+
+                mod_exec (*nm);
+
+                if (nm->get_saw_ambig ())
+                  {
+                    DR (nm->get_ambig ());
+                    // mod.get_saw_ambig () = true;
+                    // mod.get_ambig () = nm->get_ambig ();
+                    // IR (mod.get_ambig ());
+
+                    // mod.get_backtrace ().push_back (
+                    //     { st->get_line_number (),
+                    //       { mod.get_code_lines ()[st->get_line_number ()],
+                    //         mod.get_file_path () } });
+
+                    for (std::pair<int, std::pair<Str, Str>> &i :
+                         nm->get_backtrace ())
+                      mod.get_backtrace ().push_back (i);
+
+                    nm->set_parent (nullptr);
+                    delete nm;
+                  }
+
+                nm->set_parent (nullptr);
+                delete nm;
+              };
+
+            std::thread ost (handler);
+            ost.detach ();
           }
           break;
 
@@ -1875,7 +1948,7 @@ expr_eval (Module &mod, Expr *e)
 
             SF_ASSERT_eval_expr (
                 res != nullptr,
-                ("Variable " + p + " does not exist").c_str ());
+                ("Variable '" + p + "' does not exist").c_str ());
 
             IR (res);
 
@@ -2622,9 +2695,13 @@ expr_eval (Module &mod, Expr *e)
 
         Str &member = static_cast<VariableExpr *> (e_child)->get_name ();
 
-        Object *o_parent;
+        Object *o_parent = nullptr;
         TC (o_parent = expr_eval (mod, e_parent));
-        AMBIG_CHECK (o_parent, {});
+        // o_parent->print ();
+        AMBIG_CHECK (o_parent, {
+          res = mod.get_ambig ();
+          IR (res);
+        });
         // std::cout << "Parent type: " << int (o_parent->get_type ())
         //           << std::endl;
 
@@ -3574,7 +3651,8 @@ expr_eval (Module &mod, Expr *e)
                 else
                   {
                     SF_ASSERT_eval_expr (
-                        e_catch_var->get_type () == ExprType::Variable,
+                        e_catch_var != nullptr
+                            && e_catch_var->get_type () == ExprType::Variable,
                         "catch clause expects a named argument to capture");
 
                     Str &vn = static_cast<VariableExpr *> (e_catch_var)
@@ -3769,6 +3847,7 @@ ambig_test:; /* skip by default */
     {
       if (!OBJ_IS_AMBIG (res))
         {
+          here;
           res = static_cast<Object *> (new AmbigObject (nullptr));
         }
       // else
@@ -3784,6 +3863,7 @@ ambig_test:; /* skip by default */
 
   mod.get_continue_exec () = false;
   mod.get_ambig () = res;
+  // res->print ();
   IR (res);
 
   // std::cout << res->get_ref_count () << '\n';
