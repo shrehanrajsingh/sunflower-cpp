@@ -32,13 +32,22 @@ class Socket
     fun shutdown (self, code)
         s.shutdown (self.sock, code)
     
+    fun receive (self, b)
+        t = s.receive (self.sock, b)
+
+        return {
+            'host': t[0],
+            'port': t[1],
+            'resp': t[2]
+        }
+    
     fun close (self)
         s.close (self.sock)
 
 class BroadcastSocket
     sock = -1
-    host = -1
-    port = -1
+    host = none
+    port = none
 
     fun _init (self, host, port)
         self.host = host
@@ -48,6 +57,38 @@ class BroadcastSocket
     
     fun send (self, msg)
         s.broadcast_sendto (self.sock, msg, self.host, self.port)
+
+    fun receive (self, b)
+        t = s.receive (self.sock, b)
+
+        return {
+            'host': t[0],
+            'port': t[1],
+            'resp': t[2]
+        }
     
     fun close (self)
         s.close (self.sock)
+
+class DGramSocket
+    sock = -1
+    host = none
+    port = none
+
+    fun _init (self, host, port)
+        self.host = host
+        self.port = port
+
+        self.sock = s.socket_dgram ()
+    
+    fun bind (self)
+        s.bind (self.sock, self.host, self.port)
+    
+    fun receive (self, b)
+        t = s.receive (self.sock, b)
+
+        return {
+            'host': t[0],
+            'port': t[1],
+            'resp': t[2]
+        }

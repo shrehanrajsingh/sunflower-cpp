@@ -17,6 +17,12 @@ make ()
 
   mod->set_variable ("socket", static_cast<Object *> (fo_socket));
 
+  NativeFunction *nf_socket_dgram = new NativeFunction (socket_dgram, {});
+  FunctionObject *fo_socket_dgram
+      = new FunctionObject (static_cast<Function *> (nf_socket_dgram));
+
+  mod->set_variable ("socket_dgram", static_cast<Object *> (fo_socket_dgram));
+
   NativeFunction *nf_bind
       = new NativeFunction (bind, { "sock", "host", "port" });
   FunctionObject *fo_bind
@@ -77,6 +83,13 @@ make ()
 
   mod->set_variable ("broadcast_sendto",
                      static_cast<Object *> (fo_broadcast_sendto));
+
+  NativeFunction *nf_receive
+      = new NativeFunction (receive, { "sock", "bytes" });
+  FunctionObject *fo_receive
+      = new FunctionObject (static_cast<Function *> (nf_receive));
+
+  mod->set_variable ("receive", static_cast<Object *> (fo_receive));
 
   return mod;
 }

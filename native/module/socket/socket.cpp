@@ -57,6 +57,34 @@ socket (Module *mod)
 }
 
 SF_API Object *
+socket_dgram (Module *mod)
+{
+  Object *res;
+
+#ifdef _WIN32
+  ensure_wsa_initialized ();
+
+  SOCKET fd = ::socket (AF_INET, SOCK_DGRAM, 0);
+
+  assert (fd != INVALID_SOCKET && "failed to create socket");
+
+  res = static_cast<Object *> (new ConstantObject (
+      static_cast<Constant *> (new IntegerConstant (static_cast<int> (fd)))));
+
+#else
+  int fd = ::socket (AF_INET, SOCK_DGRAM, 0);
+
+  assert (fd >= 0 && "failed to create socket");
+
+  res = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new IntegerConstant (fd))));
+#endif
+
+  IR (res);
+  return res;
+}
+
+SF_API Object *
 bind (Module *mod)
 {
   Object *o_sock = mod->get_variable ("sock");
@@ -545,6 +573,72 @@ broadcast_sendto (Module *mod)
           new IntegerConstant (static_cast<int> (sent)))));
 
   IR (res);
+  return res;
+}
+
+SF_API Object *
+receive (Module *mod)
+{
+  Object *o_sock = mod->get_variable ("sock");
+  Object *o_bytes = mod->get_variable ("bytes");
+
+  assert (OBJ_IS_INT (o_sock) && "socket id is not an integer");
+  assert (OBJ_IS_INT (o_bytes) && "bytes is not an integer");
+
+  int fd = static_cast<IntegerConstant *> (
+               static_cast<ConstantObject *> (o_sock)->get_c ().get ())
+               ->get_value ();
+
+  int bt = static_cast<IntegerConstant *> (
+               static_cast<ConstantObject *> (o_bytes)->get_c ().get ())
+               ->get_value ();
+
+  sockaddr_in src;
+  socklen_t slen = sizeof (src);
+  char *buf = new char[bt + 1];
+
+  if (::recvfrom (fd, buf, bt, 0, (sockaddr *)&src, &slen) < 0)
+    {
+      std::cerr << strerror (errno) << std::endl;
+
+      Object *r = static_cast<Object *> (
+          new ConstantObject (static_cast<Constant *> (new NoneConstant ())));
+
+      IR (r);
+      return r;
+    }
+
+  buf[bt] = '\0';
+
+  Vec<Object *> ao_v;
+
+  Object *o_ip
+      = static_cast<Object *> (new ConstantObject (static_cast<Constant *> (
+          new StringConstant (inet_ntoa (src.sin_addr)))));
+
+  IR (o_ip);
+
+  Object *o_port = static_cast<Object *> (new ConstantObject (
+      static_cast<Constant *> (new IntegerConstant (ntohs (src.sin_port)))));
+
+  IR (o_port);
+
+  Object *o_buf = static_cast<Object *> (
+      new ConstantObject (static_cast<Constant *> (new StringConstant (buf))));
+
+  IR (o_buf);
+
+  ao_v.push_back (o_ip);
+  ao_v.push_back (o_port);
+  ao_v.push_back (o_buf);
+
+  ArrayObject *ao = new ArrayObject (ao_v);
+
+  Object *res = static_cast<Object *> (ao);
+  IR (res);
+
+  delete[] buf;
+
   return res;
 }
 

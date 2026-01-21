@@ -411,11 +411,11 @@ lsf (Module *mod)
         {
           if (std::filesystem::is_directory (entry))
             {
-              path_stack.push_back (entry.path ().c_str ());
+              path_stack.push_back (entry.path ().u8string ().c_str ());
               continue;
             }
 
-          Str p = std::filesystem::canonical (entry).c_str ();
+          Str p = std::filesystem::canonical (entry).u8string ().c_str ();
           Object *o = static_cast<Object *> (new ConstantObject (
               static_cast<Constant *> (new StringConstant (p))));
 

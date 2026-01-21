@@ -423,9 +423,17 @@ test6 ()
   ifs.close ();
 }
 
+void
+on_terminate ()
+{
+  std::abort ();
+}
+
 int
 main (int argc, char const *argv[])
 {
+  std::set_terminate (on_terminate);
+
   sf_env = new sf::Environment ();
   sf_env->add_path ("../../lib/");
 

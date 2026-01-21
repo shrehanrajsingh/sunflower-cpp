@@ -5,6 +5,7 @@
 #include "../object.hpp"
 
 /* native functions */
+#include "exit.hpp"
 #include "input.hpp"
 #include "len.hpp"
 #include "put.hpp"

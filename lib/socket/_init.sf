@@ -2,3 +2,4 @@ import './socket.sf' as _sock
 
 Socket = _sock.Socket
 BroadcastSocket = _sock.BroadcastSocket
+DGramSocket = _sock.DGramSocket

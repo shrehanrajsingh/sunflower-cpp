@@ -1,145 +1,25 @@
 import 'socket' as s
 import 'thread' as thread
-import 'file' as file
-import 'json' as json
 
-p = s.Socket ()
-p.bind ('localhost', 8000)
-p.listen ()
+b = s.BroadcastSocket ('255.255.255.255', 50000)
 
-emit_sock = s.BroadcastSocket ('255.255.255.255', 50000)
+r = s.DGramSocket ('0.0.0.0', 50000)
+r.bind ()
 
-dcf = file ('.dc-config', 'r')
-cd = dcf.read ().split ('\n')
-dcf.close ()
-
-# process ENV
-config = {}
-for i in cd
-    i = i.split ('=')
-    if len (i) > 1
-        config[i[0]] = i[1].strip ()
-
-dir = file.lsf (try config['SHARED_DIR'] catch './shared/')
-
-##
-    If we have >=2 files to share,
-    compare any 2 files and find the common path
-    and hide it to prevent data leak when sharing 
-    file info
-##
-common = ''
-if len (dir) > 1
-    pp = dir[0]
-    qq = dir[1]
-
-    last_slash = none
-
-    for i in 0 to len (pp)
-        if i >= len (qq)
-            break
-
-        if pp[i] == '/' or pp[i] == '\\'
-            last_slash = i
-        
-        if pp[i] != qq[i]
-            break
-    
-    # common path is from 0 to last_slash
-    if last_slash != none
-        common = pp[0 to last_slash + 1]
-
-        for i in 0 to len (dir)
-            dir[i] = dir[i][len (common) to len (dir[i])]
-    
-# write (common)
-# write (dir)
-
-##
-    process payload
-    payload types:
-Type 1)
-    REQUEST
-    (req_type: shared|connections|chat|file)
-
-Type 2)
-    DOWNLOAD
-    (file_name)
-##
-fun process (sock)
-    pl = sock.read ().split ('\n')
-    # write (pl)
-
-    code = pl[0]
-
-    if code == 'REQUEST'
-        type = pl[1]
-
-        if type == 'shared'
-            j = {
-                'files': dir
-            }
-
-            sock.send (j.to_string ())
-        
-        else if type == 'file'
-            name = common + pl[2]
-            df = file (name, 'r')
-            df.seekr (0, 2) # end
-            sz = df.tellr()
-            chunk_count = 0
-            CHUNK_SIZE = 4096
-
-            ssz = sz
-            while ssz > CHUNK_SIZE
-                chunk_count = chunk_count + 1
-                ssz = ssz - CHUNK_SIZE
-            
-            df.seekr (0, 0)
-            chunk_count = chunk_count + 1
-            # write (chunk_count, sz)
-
-            sock.send ("DOWNLOAD\nSIZE " + sz.to_string () + "\nCHUNKS " + chunk_count.to_string () + "\n")
-            i = 0
-            while sz > 0
-                sock.send ("CHUNK " + i.to_string () + "\n")
-                if sz < CHUNK_SIZE
-                    sock.send (df.readn (sz))
-                    sz = 0
-                else
-                    sock.send (df.readn (CHUNK_SIZE))
-                    sz = sz - CHUNK_SIZE
-
-                sock.send ("\nEOFCHUNK\n")
-                i = i + 1
-                chunk_count = chunk_count - 1
-
-            df.close ()
-
-    sock.shutdown (1)
-    sock.close ()
-
-fun p_input ()
-    m = input ('>>> ')
-    while m != '/exit'
-        write (m)
-        m = input ('>>> ')
-    
-fun emit_presence ()
+fun emit (sock)
     while 1
-        emit_sock.send ('hello\n')
+        sock.send ('hello\n')
         sleep (2000)
 
-th_ep = thread (emit_presence, [])
-th_ep.run ()
+fun rec (sock)
+    while 1
+        write (sock.receive (5))
+        sleep (1500)
 
-# th_inp = thread (p_input, [])
-# th_inp.run ()
+et = thread (emit, [b])
+et.run ()
 
-while 1
-    a = p.accept ()
-
-    th = thread (process, [a])
-    th.run ()
+rt = thread (rec, [r])
+rt.run ()
 
 thread.join_all ()

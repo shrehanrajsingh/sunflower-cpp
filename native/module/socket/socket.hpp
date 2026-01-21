@@ -19,6 +19,7 @@ namespace native_mod
 namespace Socket
 {
 SF_API Object *socket (Module *);
+SF_API Object *socket_dgram (Module *);
 SF_API Object *bind (Module *);
 SF_API Object *listen (Module *);
 SF_API Object *accept (Module *);
@@ -28,6 +29,7 @@ SF_API Object *close (Module *);
 SF_API Object *shutdown (Module *);
 SF_API Object *broadcast_socket (Module *);
 SF_API Object *broadcast_sendto (Module *);
+SF_API Object *receive (Module *);
 } // namespace Socket
 } // namespace native_mod
 } // namespace sf

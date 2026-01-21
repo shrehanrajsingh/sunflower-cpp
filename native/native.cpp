@@ -13,6 +13,7 @@ add_natives (Vec<Statement *> &m)
   _add_native_input (m);
   _add_native_sleep (m);
   _add_native_len (m);
+  _add_native_exit (m);
 
   /* string methods */
   _add_native_replace (m);
