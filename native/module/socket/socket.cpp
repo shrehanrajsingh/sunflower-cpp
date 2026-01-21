@@ -474,8 +474,9 @@ broadcast_socket (Module *mod)
 
   assert (fd != INVALID_SOCKET && "failed to create socket");
 
-  int enable = 1;
-  if (::setsockopt (fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof (enable))
+  BOOL enable = TRUE;
+  if (::setsockopt (fd, SOL_SOCKET, SO_BROADCAST,
+                    reinterpret_cast<const char *> (&enable), sizeof (enable))
       < 0)
     {
       perror ("setsockopt(SO_BROADCAST)");
