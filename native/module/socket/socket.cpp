@@ -479,7 +479,7 @@ broadcast_socket (Module *mod)
       < 0)
     {
       perror ("setsockopt(SO_BROADCAST)");
-      ::close (fd);
+      ::closesocket (static_cast<SOCKET> (fd));
       exit (-1);
     }
 
